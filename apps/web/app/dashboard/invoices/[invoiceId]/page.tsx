@@ -230,7 +230,7 @@ export default function InvoiceDetailPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div className="bg-white/5 border border-white/10 rounded-xl p-3">
               <p className="text-slate-400">Created</p>
               <p className="font-semibold text-white">{new Date(invoice.created_at).toLocaleDateString("en-SG")}</p>
@@ -239,16 +239,16 @@ export default function InvoiceDetailPage() {
               <p className="text-slate-400 flex items-center gap-1">
                 Due Date <CalendarDays className="h-3 w-3" />
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   type="date"
                   value={dueDate || invoice.due_date || ""}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-slate-800/50 border-white/10 text-white h-9 flex-1"
+                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full sm:flex-1"
                 />
                 <Button
                   size="sm"
-                  className="bg-blue-600 text-white hover:bg-blue-500 h-9 px-4"
+                  className="bg-blue-600 text-white hover:bg-blue-500 h-9 px-4 w-full sm:w-auto"
                   disabled={updateDueDate.isPending || !(dueDate && dueDate !== invoice.due_date)}
                   onClick={() => updateDueDate.mutate({ invoiceId, dueDate })}
                 >
@@ -299,7 +299,7 @@ export default function InvoiceDetailPage() {
         <CardContent className="p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">Actions</h2>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
               className="flex-1 border-white/15 text-slate-300 hover:bg-white/10 hover:text-white"
