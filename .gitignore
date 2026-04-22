@@ -53,3 +53,12 @@ coverage
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# AI Agent and tool directories
+.claude/
+.agent/
+.agents/
+.gemini/
+.kiro/
+graphify-out/
+
