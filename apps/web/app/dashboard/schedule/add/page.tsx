@@ -12,9 +12,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { IOSPicker } from "@/components/ui/ios-picker";
-import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
+import { DateWheelPicker, TimeWheelPicker } from "@/components/ui/date-wheel-picker";
 import { cn } from "@/lib/utils";
+import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
 import { BackButton } from "@/components/ui/back-button";
@@ -63,10 +63,7 @@ function AddEvent() {
     // Custom Date/Time State
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    const [selectedHour, setSelectedHour] = useState("09");
-    const [selectedMinute, setSelectedMinute] = useState("00");
-    const [selectedAmPm, setSelectedAmPm] = useState("AM");
+    const [time24, setTime24] = useState("09:00");
 
     useEffect(() => {
         async function loadBookingForEdit() {
@@ -99,35 +96,12 @@ function AddEvent() {
 
                 const hour = start.getHours();
                 const minute = start.getMinutes();
-                const isPm = hour >= 12;
-                const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-
-                setSelectedHour(hour12 < 10 ? `0${hour12}` : `${hour12}`);
-                setSelectedMinute(minute < 10 ? `0${minute}` : `${minute}`);
-                setSelectedAmPm(isPm ? "PM" : "AM");
+                setTime24(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
             }
         }
 
         loadBookingForEdit();
     }, [bookingId, push]);
-
-    // Date Picker Options
-    const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
-    const days = Array.from({ length: daysInMonth }, (_, i) => ({ value: i + 1, label: (i + 1).toString() }));
-    const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ].map((m, i) => ({ value: i, label: m }));
-    const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i)
-        .map(y => ({ value: y, label: y.toString() }));
-
-    // Time Picker Options
-    const hours = Array.from({ length: 12 }, (_, i) => {
-        const val = i + 1;
-        return { value: val < 10 ? `0${val}` : `${val}`, label: val.toString() };
-    });
-    const minutes = ["00", "15", "30", "45"].map(m => ({ value: m, label: m }));
-    const ampm = [{ value: "AM", label: "AM" }, { value: "PM", label: "PM" }];
 
     // SEC-H6: Use tRPC mutations instead of direct Supabase insert/update
     const createJobMutation = api.schedule.createJob.useMutation({
@@ -173,12 +147,10 @@ function AddEvent() {
         }
 
         // Parse time to Date
-        let hour24 = parseInt(selectedHour);
-        if (selectedAmPm === "PM" && hour24 !== 12) hour24 += 12;
-        if (selectedAmPm === "AM" && hour24 === 12) hour24 = 0;
+        const [h, m] = time24.split(":").map(Number);
 
         const combinedDate = new Date(selectedDate);
-        combinedDate.setHours(hour24, parseInt(selectedMinute), 0, 0);
+        combinedDate.setHours(h, m, 0, 0);
 
         // Calculate ISO date string in local timezone (YYYY-MM-DD)
         const tzOffset = combinedDate.getTimezoneOffset() * 60000;
@@ -263,7 +235,7 @@ function AddEvent() {
                                 )}
                             </div>
 
-                            {/* iOS Style Date Picker Accordion */}
+                            {/* Date Picker Accordion */}
                             <div className="space-y-2">
                                 <Label className="text-slate-600 font-semibold">Date</Label>
                                 <div className="border border-slate-200/60 bg-white/50 rounded-xl overflow-hidden transition-all duration-300">
@@ -288,43 +260,16 @@ function AddEvent() {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 className="border-t border-slate-200/60 overflow-hidden"
                                             >
-                                                <div className="flex gap-1 p-4 bg-slate-50/50">
-                                                    <div className="flex-1">
-                                                        <IOSPicker
-                                                            items={days}
-                                                            value={selectedDate.getDate()}
-                                                            onChange={(val) => {
-                                                                const newDate = new Date(selectedDate);
-                                                                newDate.setDate(val as number);
-                                                                setSelectedDate(newDate);
-                                                            }}
-                                                            height={150}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <IOSPicker
-                                                            items={months}
-                                                            value={selectedDate.getMonth()}
-                                                            onChange={(val) => {
-                                                                const newDate = new Date(selectedDate);
-                                                                newDate.setMonth(val as number);
-                                                                setSelectedDate(newDate);
-                                                            }}
-                                                            height={150}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <IOSPicker
-                                                            items={years}
-                                                            value={selectedDate.getFullYear()}
-                                                            onChange={(val) => {
-                                                                const newDate = new Date(selectedDate);
-                                                                newDate.setFullYear(val as number);
-                                                                setSelectedDate(newDate);
-                                                            }}
-                                                            height={150}
-                                                        />
-                                                    </div>
+                                                <div className="p-4 bg-slate-50/50">
+                                                    <DateWheelPicker
+                                                        value={selectedDate}
+                                                        onChange={setSelectedDate}
+                                                        minYear={new Date().getFullYear()}
+                                                        maxYear={new Date().getFullYear() + 5}
+                                                        size="sm"
+                                                        variant="light"
+                                                        fadeColor="#f9fafb"
+                                                    />
                                                 </div>
                                             </motion.div>
                                         )}
@@ -332,34 +277,18 @@ function AddEvent() {
                                 </div>
                             </div>
 
-                            {/* iOS Style Time Picker */}
+                            {/* Time Picker */}
                             <div className="space-y-2">
                                 <Label className="text-slate-600 font-semibold">Time</Label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="relative">
-                                        <IOSPicker
-                                            items={hours}
-                                            value={selectedHour}
-                                            onChange={(val) => setSelectedHour(val as string)}
-                                            height={120}
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <IOSPicker
-                                            items={minutes}
-                                            value={selectedMinute}
-                                            onChange={(val) => setSelectedMinute(val as string)}
-                                            height={120}
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <IOSPicker
-                                            items={ampm}
-                                            value={selectedAmPm}
-                                            onChange={(val) => setSelectedAmPm(val as string)}
-                                            height={120}
-                                        />
-                                    </div>
+                                <div className="border border-slate-200/60 bg-white/50 rounded-xl p-4">
+                                    <TimeWheelPicker
+                                        value={time24}
+                                        onChange={setTime24}
+                                        size="sm"
+                                        minuteStep={15}
+                                        variant="light"
+                                        fadeColor="#ffffff"
+                                    />
                                 </div>
                             </div>
 

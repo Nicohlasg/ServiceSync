@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Job } from "@/lib/types";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { IOSPicker } from "@/components/ui/ios-picker";
+import { MonthWheelPicker } from "@/components/ui/date-wheel-picker";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
@@ -164,14 +164,6 @@ export default function SchedulePage() {
     // Filter events for selected day
     const selectedEvents = jobs.filter(e => isSameDay(new Date(e.date), selectedDate));
 
-    // Generate Month/Year Options for Picker
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ].map((m, i) => ({ value: i, label: m }));
-
-    const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i)
-        .map(y => ({ value: y, label: y.toString() }));
 
     const handleDelete = async (id: string) => {
         const supabase = createSupabaseBrowserClient();
@@ -330,29 +322,15 @@ export default function SchedulePage() {
                                     <Check className="h-6 w-6 text-blue-600" />
                                 </Button>
                             </div>
-                            <div className="flex gap-2 p-6 h-[250px] bg-slate-50/50">
-                                <div className="flex-1">
-                                    <IOSPicker
-                                        items={months}
-                                        value={currentMonth.getMonth()}
-                                        onChange={(val) => {
-                                            const newDate = new Date(currentMonth);
-                                            newDate.setMonth(val as number);
-                                            setCurrentMonth(newDate);
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <IOSPicker
-                                        items={years}
-                                        value={currentMonth.getFullYear()}
-                                        onChange={(val) => {
-                                            const newDate = new Date(currentMonth);
-                                            newDate.setFullYear(val as number);
-                                            setCurrentMonth(newDate);
-                                        }}
-                                    />
-                                </div>
+                            <div className="p-6 bg-slate-50/50">
+                                <MonthWheelPicker
+                                    value={currentMonth}
+                                    onChange={setCurrentMonth}
+                                    minYear={new Date().getFullYear() - 5}
+                                    maxYear={new Date().getFullYear() + 5}
+                                    variant="light"
+                                    fadeColor="#f9fafb"
+                                />
                             </div>
                         </motion.div>
                         {/* Click outside to close */}

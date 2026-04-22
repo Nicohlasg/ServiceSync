@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowRight, Calendar as CalendarIcon, MapPin, Clock, ShieldCheck, Zap } from "lucide-react";
 import { SkeletonLineLight, SkeletonCardLight } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
@@ -13,9 +12,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Calendar } from "@/components/ui/calendar";
-import { IOSPicker } from "@/components/ui/ios-picker";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 
 interface ProviderInfo { id: string; name: string; }
@@ -31,12 +28,8 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
     const [pageLoading, setPageLoading] = useState(true);
 
     const [bookingMode, setBookingMode] = useState<"standard" | "priority">("standard");
-    const [dateDrawerOpen, setDateDrawerOpen] = useState(false);
-    const [timeDrawerOpen, setTimeDrawerOpen] = useState(false);
 
-    const [hour, setHour] = useState("09");
-    const [minute, setMinute] = useState("00");
-    const timeStr = `${hour}:${minute}`;
+    const [timeStr, setTimeStr] = useState("09:00");
 
     const [bookingData, setBookingData] = useState({
         serviceId: "",
@@ -149,8 +142,6 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
         });
     };
 
-    const hoursOptions = Array.from({ length: 24 }).map((_, i) => ({ value: i.toString().padStart(2, "0"), label: i.toString().padStart(2, "0") }));
-    const minuteOptions = ["00", "15", "30", "45"].map(m => ({ value: m, label: m }));
 
     const depositAmountCents = 1500;
 
@@ -274,54 +265,21 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                                     <CalendarIcon className="h-5 w-5 text-blue-500" /> Date & Time
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {/* Date Drawer */}
-                                    <Drawer open={dateDrawerOpen} onOpenChange={setDateDrawerOpen}>
-                                        <DrawerTrigger asChild>
-                                            <Button variant="outline" className="h-12 justify-start font-bold text-foreground border-border bg-card rounded-xl hover:bg-muted">
-                                                {format(bookingData.dateObj, "MMM d, yyyy")}
-                                            </Button>
-                                        </DrawerTrigger>
-                                        <DrawerContent className="rounded-t-[2.5rem]">
-                                            <div className="p-4 pb-12 w-full max-w-sm mx-auto flex flex-col items-center">
-                                                <DrawerHeader className="text-center w-full mb-2">
-                                                    <DrawerTitle className="text-xl font-black">Select Date</DrawerTitle>
-                                                </DrawerHeader>
-                                                {/* Calendar inside Drawer needs to be centered and not forced white */}
-                                                <div className="flex justify-center w-full">
-                                                    <Calendar 
-                                                        mode="single" 
-                                                        selected={bookingData.dateObj} 
-                                                        onSelect={(d) => { if (d) { setBookingData(prev => ({...prev, dateObj: d})); setDateDrawerOpen(false); } }} 
-                                                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
-                                                        fixedWeeks 
-                                                        className="border border-border rounded-xl bg-card shadow-sm p-3 inline-block"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </DrawerContent>
-                                    </Drawer>
-
-                                    {/* Time Drawer */}
-                                    <Drawer open={timeDrawerOpen} onOpenChange={setTimeDrawerOpen}>
-                                        <DrawerTrigger asChild>
-                                            <Button variant="outline" className="h-12 justify-start font-bold text-foreground border-border bg-card rounded-xl hover:bg-muted">
-                                                {timeStr}
-                                            </Button>
-                                        </DrawerTrigger>
-                                        <DrawerContent className="rounded-t-[2.5rem]">
-                                            <div className="p-4 pb-12 w-full max-w-sm mx-auto flex flex-col items-center">
-                                                <DrawerHeader className="text-center w-full mb-4">
-                                                    <DrawerTitle className="text-xl font-black">Select Time</DrawerTitle>
-                                                </DrawerHeader>
-                                                <div className="flex justify-center items-center h-48 w-full gap-2 relative bg-card rounded-3xl border border-border">
-                                                    <IOSPicker items={hoursOptions} value={hour} onChange={(v) => setHour(v as string)} />
-                                                    <div className="flex items-center text-2xl font-black text-foreground animate-pulse">:</div>
-                                                    <IOSPicker items={minuteOptions} value={minute} onChange={(v) => setMinute(v as string)} />
-                                                </div>
-                                                <Button className="w-full mt-6 h-12 rounded-xl text-lg font-bold bg-foreground text-background" onClick={() => setTimeDrawerOpen(false)}>Done</Button>
-                                            </div>
-                                        </DrawerContent>
-                                    </Drawer>
+                                    <Input
+                                        type="date"
+                                        value={format(bookingData.dateObj, "yyyy-MM-dd")}
+                                        onChange={(e) => {
+                                            if (e.target.value) setBookingData(prev => ({...prev, dateObj: new Date(e.target.value + "T00:00:00")}));
+                                        }}
+                                        min={format(new Date(), "yyyy-MM-dd")}
+                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl"
+                                    />
+                                    <Input
+                                        type="time"
+                                        value={timeStr}
+                                        onChange={(e) => setTimeStr(e.target.value)}
+                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl"
+                                    />
                                 </div>
                             </div>
 

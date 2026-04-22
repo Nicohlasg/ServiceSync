@@ -13,16 +13,7 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerClose,
-  DrawerFooter,
-} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
 
 type InvoiceStatus = "draft" | "pending" | "awaiting_qr_confirmation" | "paid_cash" | "paid_qr" | "disputed" | "void";
 type InvoiceLineItem = { description: string; amountCents: number };
@@ -73,7 +64,6 @@ export default function InvoiceDetailPage() {
   );
 
   const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | "">("");
-  const [editingDueDate, setEditingDueDate] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeAction, setActiveAction] = useState<"download" | "resend" | null>(null);
@@ -95,7 +85,6 @@ export default function InvoiceDetailPage() {
   const updateDueDate = api.invoices.updateDueDate.useMutation({
     onSuccess: async () => {
       toast.success("Due date updated");
-      setEditingDueDate(false);
       await utils.invoices.getById.invalidate({ invoiceId });
     },
     onError: (error) => {
@@ -246,67 +235,27 @@ export default function InvoiceDetailPage() {
               <p className="text-slate-400">Created</p>
               <p className="font-semibold text-white">{new Date(invoice.created_at).toLocaleDateString("en-SG")}</p>
             </div>
-            <Drawer open={editingDueDate} onOpenChange={setEditingDueDate}>
-              <DrawerTrigger asChild>
-                <div
-                  className="bg-white/5 border border-white/10 rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-white/10 transition-colors"
-                  onClick={() => {
-                    setDueDate(invoice.due_date ?? '');
-                    setEditingDueDate(true);
-                  }}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+              <p className="text-slate-400 flex items-center gap-1">
+                Due Date <CalendarDays className="h-3 w-3" />
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={dueDate || invoice.due_date || ""}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="bg-slate-800/50 border-white/10 text-white h-9 flex-1"
+                />
+                <Button
+                  size="sm"
+                  className="bg-blue-600 text-white hover:bg-blue-500 h-9 px-4"
+                  disabled={updateDueDate.isPending || !(dueDate && dueDate !== invoice.due_date)}
+                  onClick={() => updateDueDate.mutate({ invoiceId, dueDate })}
                 >
-                  <p className="text-slate-400 flex items-center gap-1">
-                    Due Date <CalendarDays className="h-3 w-3" />
-                  </p>
-                  <p className="font-medium text-slate-200">
-                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("en-SG", { day: '2-digit', month: 'short', year: 'numeric' }) : "Tap to set"}
-                  </p>
-                </div>
-              </DrawerTrigger>
-
-              <DrawerContent className="bg-[#1c1c1e] border-white/10 text-white pb-6 rounded-t-[2rem]">
-                <DrawerHeader className="border-b border-white/10 mb-4 pb-4">
-                  <DrawerTitle className="text-center font-semibold text-white">Select Due Date</DrawerTitle>
-                </DrawerHeader>
-                <div className="flex justify-center flex-1 px-4 min-h-[340px] items-start">
-                  <div className="bg-[#2c2c2e] rounded-3xl overflow-hidden p-4 shadow-xl border border-white/10 w-full max-w-[340px]">
-                    <Calendar
-                      mode="single"
-                      fixedWeeks={true}
-                      selected={dueDate ? new Date(dueDate) : undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          const yyyy = date.getFullYear();
-                          const mm = String(date.getMonth() + 1).padStart(2, '0');
-                          const dd = String(date.getDate()).padStart(2, '0');
-                          setDueDate(`${yyyy}-${mm}-${dd}`);
-                        } else {
-                          setDueDate('');
-                        }
-                      }}
-                      className="bg-transparent text-white p-0 flex justify-center w-full"
-                    />
-                  </div>
-                </div>
-                <DrawerFooter className="flex-row gap-3 pt-6 px-6">
-                  <DrawerClose asChild>
-                    <Button variant="outline" className="flex-1 rounded-xl h-12 bg-[#2c2c2e] border-transparent text-white hover:bg-[#3a3a3c] hover:text-white font-semibold">
-                      Cancel
-                    </Button>
-                  </DrawerClose>
-                  <Button 
-                    className="flex-1 rounded-xl h-12 bg-blue-600 text-white hover:bg-blue-500 font-semibold"
-                    disabled={updateDueDate.isPending}
-                    onClick={() => {
-                      updateDueDate.mutate({ invoiceId, dueDate });
-                      setEditingDueDate(false);
-                    }}
-                  >
-                    {updateDueDate.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save"}
-                  </Button>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
+                  {updateDueDate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

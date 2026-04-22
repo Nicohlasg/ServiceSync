@@ -70,8 +70,8 @@ function Login() {
             />
 
             <div className="relative z-10 w-full max-w-md">
-                <div className="mb-8 text-center">
-                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">ServiceSync</h1>
+                <div className="mb-8 text-center flex flex-col items-center">
+                    <img src="/brand.png" alt="ServiceSync" className="h-20 w-auto mb-3 drop-shadow-lg" />
                     <p className="text-zinc-400">{t("brandSubtitle")}</p>
                 </div>
 
