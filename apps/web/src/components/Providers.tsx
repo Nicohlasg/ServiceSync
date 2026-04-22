@@ -43,6 +43,8 @@ function getErrorInfo(error: unknown) {
   };
 }
 
+import { PwaProvider } from '@/components/PwaInstallPrompt';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => {
     const handleError = (error: unknown) => {
@@ -52,9 +54,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         message?.includes('UNAUTHORIZED') ||
         message?.includes('Not authenticated');
 
-      // Fresh signups don't have a profiles row yet. NOT_FOUND is the
-      // contract for "no profile" and is handled per-feature (checklist
-      // renders fallback, tutorial hook retries). Don't toast the user.
       const isMissingProfile =
         code === 'NOT_FOUND' ||
         message === 'Profile not found';
@@ -97,13 +96,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <AuthGuard>
-          {children}
-        </AuthGuard>
-        <Toaster />
-        <PwaInstallPrompt />
-        <OfflineDetector />
-        <CookieConsent />
+        <PwaProvider>
+          <AuthGuard>
+            {children}
+          </AuthGuard>
+          <Toaster />
+          <PwaInstallPrompt />
+          <OfflineDetector />
+          <CookieConsent />
+        </PwaProvider>
       </QueryClientProvider>
     </api.Provider>
   );

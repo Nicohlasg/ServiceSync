@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon } from "lucide-react";
+import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon, Smartphone, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useState, useCallback, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { LocalePicker } from "@/components/onboarding/LocalePicker";
+import { usePwa } from "@/components/PwaInstallPrompt";
 import { useTutorialGate } from "@/components/tutorial/useTutorialGate";
 import { api } from "@/lib/api";
 import Link from "next/link";
@@ -461,6 +462,9 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* App Installation */}
+            <AppInstallSection />
+
             {/* App Info & Logout */}
             <div className="space-y-3 pt-2">
                 <Button
@@ -535,5 +539,58 @@ export default function SettingsPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+function AppInstallSection() {
+    const { isInstallable, install } = usePwa();
+    const [isStandalone, setIsStandalone] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
+        }
+    }, []);
+
+    if (isStandalone) return null;
+
+    return (
+        <Card className="rounded-3xl overflow-hidden border-blue-500/20 bg-blue-500/5">
+            <CardContent className="p-5 space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                            <Smartphone className="h-3.5 w-3.5" /> App Installation
+                        </h3>
+                        <p className="text-sm text-slate-300 font-medium">Install ServiceSync on your device</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            Get a faster, more reliable experience with our app. 
+                            Access your dashboard directly from your home screen.
+                        </p>
+                    </div>
+                    <div className="bg-blue-500/10 p-2.5 rounded-2xl">
+                        <Download className="h-5 w-5 text-blue-400" />
+                    </div>
+                </div>
+
+                {isInstallable ? (
+                    <Button 
+                        onClick={install}
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/20"
+                    >
+                        Install App Now
+                    </Button>
+                ) : (
+                    <div className="rounded-2xl bg-slate-900/50 p-4 border border-white/5">
+                        <p className="text-xs text-slate-400 flex items-start gap-2">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                            <span>
+                                To install: Open your browser settings and select <strong>&quot;Add to Home Screen&quot;</strong> or <strong>&quot;Install App&quot;</strong>.
+                            </span>
+                        </p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
