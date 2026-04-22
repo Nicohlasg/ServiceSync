@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Modern Menu Vars - Adapted for Dark Glass Theme */
+  --component-inactive-color: #94a3b8; /* slate-400 */
+  --component-bg: rgba(15, 23, 42, 0.85); /* slate-900 with high opacity */
+  --component-shadow: rgba(255, 255, 255, 0.1);
+  --component-active-bg: rgba(59, 130, 246, 0.2); /* blue-500/20 */
+  --component-line-inactive-color: rgba(255, 255, 255, 0.1);
+  --component-active-color-default: #60a5fa; /* blue-400 */
+}
+
+.menu {
+  background-color: var(--component-bg);
+  box-shadow: 0 -4px 20px -5px var(--component-shadow);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom);
+  position: relative;
+  overflow: hidden;
+}
+
+.menu__item {
+  all: unset;
+  flex-grow: 1;
+  display: flex;
+  cursor: pointer;
+  position: relative;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+  transition: flex-grow var(--timing-function) var(--transition-duration);
+}
+
+.menu__item::before {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  content: "";
+  position: absolute;
+  border-radius: 2rem;
+  transform: scale(0);
+  background-color: var(--component-active-bg);
+  transition: transform var(--timing-function) var(--transition-duration);
+}
+
+.menu__item.active {
+  flex-grow: 3;
+}
+
+.menu__item.active::before {
+  transform: scale(1);
+}
+
+.menu__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--component-inactive-color);
+  transition: color var(--timing-function) var(--transition-duration);
+}
+
+.menu__item.active .menu__icon {
+  color: var(--component-active-color);
+}
+
+.menu__item.active .menu__icon .icon {
+  animation: iconBounce var(--animation-duration) var(--timing-function) both;
+}
+
+.menu__text {
+  opacity: 0;
+  height: 1.5rem;
+  font-size: 0.85rem;
+  max-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  color: var(--component-active-color);
+  transition: opacity var(--timing-function) var(--transition-duration),
+              max-width var(--timing-function) var(--transition-duration),
+              margin-left var(--timing-function) var(--transition-duration);
+}
+
+.menu__text.active {
+  opacity: 1;
+  max-width: 100px;
+  margin-left: 0.5rem;
+}
+
+:root {
+  --timing-function: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --transition-duration: 0.4s;
+  --animation-duration: 0.5s;
+}
+
+/* GLOBAL SCROLLBAR HIDING */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-y: auto; /* Allow vertical scroll */
+  overscroll-behavior-y: none; /* Prevent bounce */
+}
+
+body {
+  background-color: #0f172a; /* Slate 900 base */
+  /* Background image moved to layout.tsx to avoid build issues with external URLs in CSS */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* Removed #root selector as it does not exist in Next.js structure */
+
+/* Glass utilities are defined in app/globals.css — do not duplicate here */
+
+/* Modern Menu Styles */
+.menu {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem;
+  background-color: var(--component-bg);
+  box-shadow: 0 -4px 20px -5px rgba(0,0,0,0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--component-shadow);
+}
+
+.menu__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.menu__item.active {
+  transform: translateY(-5px);
+}
+
+.menu__icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--component-inactive-color);
+  transition: color 0.3s ease;
+  z-index: 2;
+}
+
+.menu__item.active .menu__icon {
+  color: var(--component-active-color, var(--component-active-color-default));
+  animation: iconBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.menu__text {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--component-inactive-color);
+  margin-top: 0.2rem;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  transform: scale(0.9);
+}
+
+.menu__item.active .menu__text {
+  color: var(--component-active-color, var(--component-active-color-default));
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Active background pill */
+.menu__item::before {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 3rem;
+  height: 3rem;
+  background-color: var(--component-active-bg);
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1;
+}
+
+.menu__item.active::before {
+  transform: translateX(-50%) scale(1);
+}
+
+/* Active line indicator */
+.menu__item::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  width: var(--lineWidth, 0px);
+  height: 3px;
+  background-color: var(--component-active-color, var(--component-active-color-default));
+  border-radius: 3px 3px 0 0;
+  transform: translateX(-50%) scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), width 0.3s ease;
+}
+
+.menu__item.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-4px); }
+  40% { transform: translateY(0); }
+  60% { transform: translateY(-2px); }
+  80% { transform: translateY(0); }
+}
+
+@layer base {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

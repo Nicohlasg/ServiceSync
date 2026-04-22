@@ -1,0 +1,203 @@
+{
+  "_status": "pending-translation",
+  "_note": "Structure must match en-SG (master). Values are English fallback until Task P2-18 native-speaker translation lands.",
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "skip": "Skip",
+    "start": "Start",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "hideForNow": "Hide for now"
+  },
+  "locale": {
+    "pickerLabel": "Choose your language",
+    "pickerSubtitle": "You can change this any time in Settings.",
+    "current": "Language"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Now in private beta — Singapore tradesmen",
+      "title": "Keep every\ndollar you earn.\nPaid the same day.",
+      "subtitle": "ServiceSync is the zero-commission business-in-a-box for Singapore plumbers, electricians, aircon techs, and locksmiths. Invoice, collect PayNow, and handshake with clients on WhatsApp — from one mobile app that works off-grid.",
+      "signupCta": "Join the beta",
+      "loginCta": "I already have an account",
+      "legalIntro": "By creating an account, you agree to our",
+      "legalJoiner": "and",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "legalTail": "We are PDPA-compliant and never sell your data or your customers' contact details.",
+      "valueHeading": "What you get on day one",
+      "valueProps": {
+        "zeroCommission": {
+          "title": "Zero commission, ever",
+          "body": "You keep every dollar you earn. We charge a flat monthly subscription — no percentage cuts on jobs or invoices."
+        },
+        "paynow": {
+          "title": "PayNow QR on every invoice",
+          "body": "One tap to generate an SGQR. Customers scan, pay, and the invoice flips to paid automatically."
+        },
+        "offline": {
+          "title": "Works when your signal doesn't",
+          "body": "Issue invoices in a basement car park or a lift lobby — it syncs the moment you reconnect."
+        },
+        "singapore": {
+          "title": "Built in Singapore for Singapore trades",
+          "body": "SGT scheduling, HDB addressing, Chinese/English WhatsApp handshakes — no US-first defaults to fight against."
+        }
+      }
+    }
+  },
+  "signup": {
+    "brandSubtitle": "Zero-commission. Built for Singapore trades.",
+    "title": "Join the beta",
+    "subtitle": "Takes under a minute. Phone number later.",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "tradeLabel": "Primary Trade",
+    "tradePlaceholder": "Select your expertise",
+    "trade": {
+      "aircon": "Aircon Servicing",
+      "plumbing": "Plumbing",
+      "electrical": "Electrical Wiring",
+      "handyman": "General Handyman",
+      "cleaning": "Home Cleaning"
+    },
+    "submit": "Join the beta",
+    "loading": "Creating account...",
+    "legalIntro": "By signing up, you agree to our",
+    "legalJoiner": "and",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "backHome": "Back to Home"
+  },
+  "login": {
+    "brandSubtitle": "Zero-commission. Built for Singapore trades.",
+    "title": "Welcome Back",
+    "subtitle": "Enter your email and password to sign in",
+    "email": "Email Address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "loading": "Logging in...",
+    "submit": "Log In",
+    "needAccount": "Don't have an account?",
+    "signup": "Sign up",
+    "backHome": "Back to Home",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "wizard": {
+    "title": "Let's set you up",
+    "rerunTitle": "Run setup again",
+    "rerunSubtitle": "We'll walk through every step. Your existing details stay until you change them.",
+    "intro": "The more you fill in, the more clients trust you.",
+    "step1": {
+      "heading": "Which language would you like to use?",
+      "helper": "Tap one. You can change it later.",
+      "footer": "We'll save this to your profile and use it across the app."
+    },
+    "step2": { "heading": "Your name", "helper": "This is what clients see on invoices." },
+    "step3": { "heading": "Business number (optional)", "helper": "UEN if you have one. Skip if not." },
+    "step4": { "heading": "Where do you work?", "helper": "We'll use this to sort your jobs." },
+    "step5": { "heading": "Your base fee", "helper": "In SGD. You can add more services later." }
+  },
+  "tutorial": {
+    "startButton": "Mula lawatan",
+    "skipButton": "Langkau dulu",
+    "progress": "Langkah {current} daripada {total}",
+    "tapHighlighted": "Tekan butang yang diserlahkan untuk teruskan",
+    "goToDashboard": "Kembali ke papan pemuka",
+    "goToProfile": "Buka profil",
+    "welcome": { "title": "Lawatan ringkas", "body": "Saya akan tunjuk 5 butang. Tekan setiap satu apabila ia menyala." },
+    "addService": { "title": "Tambah perkhidmatan", "body": "Tekan Perkhidmatan untuk senaraikan kerja anda." },
+    "addClient": { "title": "Tambah pelanggan", "body": "Tekan Pelanggan untuk simpan nama, nombor, nota." },
+    "collectPayment": { "title": "Kutip bayaran", "body": "Tekan Kutip Bayaran untuk buat invois PayNow." },
+    "profile": { "title": "Profil anda", "body": "Tekan avatar anda untuk buka tetapan." },
+    "workingHours": { "title": "Tetapkan waktu kerja", "body": "Tekan Waktu Kerja untuk tetapkan hari cuti." },
+    "ready": { "title": "Anda dah sedia!", "body": "Anda boleh main semula bila-bila dari profil." }
+  },
+  "checklist": {
+    "title": "Finish setting up",
+    "subtitle": "Three quick steps to your first invoice.",
+    "rowService": "Add your first service",
+    "rowServiceBody": "The work you do and what you charge.",
+    "rowClient": "Add your first client",
+    "rowClientBody": "Their number, address, and any notes.",
+    "rowPaynow": "See how PayNow works",
+    "rowPaynowBody": "A 10-second preview of an invoice + QR.",
+    "progress": "{done} of {total} done",
+    "completeTitle": "You're all set",
+    "completeBody": "You can still replay the tour from your profile.",
+    "nextHub": "What's next",
+    "nextSchedule": "Open schedule",
+    "nextInvoices": "Go to invoices",
+    "nextHelp": "Help & walkthroughs",
+    "hideCta": "Hide for now",
+    "resumeCta": "Show setup checklist"
+  },
+  "dashboard": {
+    "greeting": "Welcome, {name}",
+    "emptyJobsTitle": "No jobs today",
+    "emptyJobsBody": "When a client books, you'll see it here.",
+    "emptyClientsTitle": "No clients yet",
+    "emptyClientsBody": "Add your first client to send an invoice.",
+    "emptyInvoicesTitle": "No invoices yet",
+    "emptyInvoicesBody": "Create one from a job — it takes about 10 seconds.",
+    "emptyServicesTitle": "No services yet",
+    "emptyServicesBody": "Add the work you do and what you charge. We'll use it on every invoice."
+  },
+  "paynowPreview": {
+    "title": "How PayNow works",
+    "subtitle": "Your client scans this QR. Money lands in your bank.",
+    "sampleBadge": "SAMPLE",
+    "sampleCaption": "This is a demo — no money will move.",
+    "lineService": "Plumbing repair — 1 hour",
+    "lineAmount": "Total",
+    "amountValue": "S$120.00",
+    "reference": "Invoice",
+    "referenceValue": "#SAMPLE-0001",
+    "legal": "When the real QR is scanned and paid, we mark the invoice paid automatically.",
+    "ctaConfirm": "Got it",
+    "ctaDismiss": "Close"
+  },
+  "profile": {
+    "title": "Your profile",
+    "onboardingTitle": "Onboarding & help",
+    "onboardingBody": "Replay the quick tour, reopen the setup checklist, or change the language you use every day.",
+    "languageTitle": "Language",
+    "languageBody": "Pick the language that feels easiest on-site. We'll apply it across your app.",
+    "rerunWizardTitle": "Re-run setup wizard",
+    "rerunWizardBody": "Change your name, language, base address, services, or PayNow. We'll take you through each step.",
+    "rerunWizardCta": "Start over",
+    "replayTourTitle": "Replay the tour",
+    "replayTourBody": "Watch the 2-minute walkthrough again.",
+    "replayTourCta": "Play",
+    "replayTourToast": "The quick tour will replay on your dashboard.",
+    "checklistTitle": "Show setup checklist",
+    "checklistBody": "Bring back the three setup steps on your dashboard if you hid them earlier.",
+    "checklistCta": "Open checklist",
+    "checklistToast": "Your setup checklist is back on the dashboard.",
+    "help": {
+      "title": "Help videos",
+      "body": "Short videos live here once we've confirmed the biggest friction points from beta calls.",
+      "emptyTitle": "Videos publish after real beta calls",
+      "emptyBody": "We'll only ship help videos once the topics come from real onboarding friction, not guesses.",
+      "paynowTitle": "Send your first PayNow invoice",
+      "paynowBody": "See the exact taps for sending a simple invoice and showing the client the QR.",
+      "clientTitle": "Add a client in 30 seconds",
+      "clientBody": "A quick walk-through for saving a customer before you send the first invoice.",
+      "qrTitle": "What to do if the QR won't work",
+      "qrBody": "The short checklist to follow before you assume the payment failed."
+    }
+  },
+  "errors": {
+    "network": "We can't reach our server. Check your connection and try again.",
+    "generic": "Something went wrong. Please try again.",
+    "required": "This field is required."
+  }
+}

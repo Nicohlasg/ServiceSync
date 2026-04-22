@@ -1,0 +1,14 @@
+{
+  "id": "session-1776250800735",
+  "startedAt": "2026-04-15T11:00:00.735Z",
+  "cwd": "/mnt/c/Users/User/ServiceSyncSG/servicesync-v2/apps/web",
+  "context": {},
+  "metrics": {
+    "edits": 18,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-04-15T11:23:00.546Z",
+  "duration": 1379812
+}

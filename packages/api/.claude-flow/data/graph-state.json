@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "updatedAt": 1776248558005,
+  "nodeCount": 8,
+  "nodes": {
+    "mem-MEMORY-project-overview": {
+      "id": "mem-MEMORY-project-overview",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-tech-stack": {
+      "id": "mem-MEMORY-tech-stack",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-project-structure": {
+      "id": "mem-MEMORY-project-structure",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-cash-payment-features-implemen": {
+      "id": "mem-MEMORY-cash-payment-features-implemen",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-key-constants": {
+      "id": "mem-MEMORY-key-constants",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-required-environment-variables": {
+      "id": "mem-MEMORY-required-environment-variables",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "mem-MEMORY-db-tables-added--schema-sql-": {
+      "id": "mem-MEMORY-db-tables-added--schema-sql-",
+      "category": "core",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776007261992
+    },
+    "insight-1776021628330-q1wo": {
+      "id": "insight-1776021628330-q1wo",
+      "category": "insights",
+      "confidence": 0.5,
+      "accessCount": 0,
+      "createdAt": 1776021628330
+    }
+  },
+  "edges": [
+    {
+      "sourceId": "mem-MEMORY-project-overview",
+      "targetId": "mem-MEMORY-tech-stack",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-tech-stack",
+      "targetId": "mem-MEMORY-project-structure",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-project-structure",
+      "targetId": "mem-MEMORY-cash-payment-features-implemen",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-cash-payment-features-implemen",
+      "targetId": "mem-MEMORY-key-constants",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-key-constants",
+      "targetId": "mem-MEMORY-required-environment-variables",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-required-environment-variables",
+      "targetId": "mem-MEMORY-db-tables-added--schema-sql-",
+      "type": "temporal",
+      "weight": 0.5
+    }
+  ],
+  "pageRanks": {
+    "mem-MEMORY-project-overview": 0.045455386884667395,
+    "mem-MEMORY-tech-stack": 0.08409241648487831,
+    "mem-MEMORY-project-structure": 0.11693391579734488,
+    "mem-MEMORY-cash-payment-features-implemen": 0.14484927892683164,
+    "mem-MEMORY-key-constants": 0.16857742939656423,
+    "mem-MEMORY-required-environment-variables": 0.18874636750028423,
+    "mem-MEMORY-db-tables-added--schema-sql-": 0.2058898181247621,
+    "insight-1776021628330-q1wo": 0.045455386884667395
+  }
+}

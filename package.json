@@ -1,0 +1,45 @@
+{
+  "name": "servicesync-v2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ServiceSync SG - Full-stack PWA for Singapore home service professionals",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "typecheck": "turbo run typecheck",
+    "db:push": "cd packages/db && npx prisma db push",
+    "db:migrate": "cd packages/db && npx prisma migrate dev",
+    "db:studio": "cd packages/db && npx prisma studio",
+    "db:generate": "cd packages/db && npx prisma generate",
+    "test:e2e": "bash ./scripts/playwright-runtime.sh --project=e2e-chromium --project=e2e-mobile-safari",
+    "test:api": "bash ./scripts/playwright-runtime.sh --project=api",
+    "test": "bash ./scripts/playwright-runtime.sh",
+    "postinstall": "rm -rf node_modules/@react-pdf/reconciler/node_modules/scheduler && node scripts/patch-react-pdf-reconciler.cjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.59.1",
+    "@react-pdf/types": "^2.11.1",
+    "@turbo/gen": "^1.13.0",
+    "@types/node": "^25.6.0",
+    "eslint": "^9.39.4",
+    "prettier": "^3.2.5",
+    "turbo": "^2.9.5",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.58.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling/*"
+  ],
+  "packageManager": "npm@10.2.4",
+  "dependencies": {
+    "@claude-flow/guidance": "^3.0.0-alpha.1"
+  },
+  "overrides": {
+    "scheduler": "0.23.2"
+  }
+}

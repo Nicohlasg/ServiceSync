@@ -1,0 +1,107 @@
+[
+  {
+    "id": "mem-MEMORY-project-overview",
+    "key": "project-overview",
+    "content": "Singapore Vertical SaaS for independent home service professionals (aircon, plumbing, electrical).",
+    "summary": "Project Overview",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-tech-stack",
+    "key": "tech-stack",
+    "content": "- **Frontend**: Next.js 14+ App Router + TailwindCSS (designed with Onlook visual editor)\r\n- **API**: tRPC + Zod (type-safe endpoints)\r\n- **Database/Auth**: Supabase (PostgreSQL + RLS)\r\n- **Messaging**: WhatsApp Business Cloud API (Meta Graph API v18.0)\r\n- **Payments**: PayNow via NETS/DBS open-banking APIs\r\n- **PDF**: Puppeteer (serverless) / React-PDF",
+    "summary": "Tech Stack",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-project-structure",
+    "key": "project-structure",
+    "content": "```\r\n/mnt/c/Users/User/ServiceSyncSG/\r\n├── docs/                          # Workflow documentation\r\n│   └── servicecync-workflows.md  # Main workflow spec (v1.0)\r\n├── onlook/                        # Onlook visual editor (design tool only)\r\n└── src/                           # ServiceSync application code\r\n    ├── lib/types/payment.ts       # Payment domain types\r\n    ├── server/\r\n    │   ├── db/schema.sql          # Extended DB schema (cash payments)\r\n    │   ├── trpc.ts                # tRPC i",
+    "summary": "Project Structure",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-cash-payment-features-implemen",
+    "key": "cash-payment-features-implemented",
+    "content": "1. **One-tap cash reconciliation** — PaymentScreen with QR vs Cash buttons\r\n2. **Auto-calculated balance** — \"Collect exactly $85. Deposit of $15 already paid\"\r\n3. **Cash adjust stepper** — ±$1 steps for tips/discounts (max ±$50)\r\n4. **Digital handshake** — WhatsApp confirmation sent instantly on cash collection\r\n5. **Glass-screen signature** — TouchCanvas for jobs ≥ $500, embedded in PDF\r\n6. **Escrow release** — Deposit transferred to technician bank on confirmation\r\n7. **Till management** — Da",
+    "summary": "Cash Payment Features Implemented",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-key-constants",
+    "key": "key-constants",
+    "content": "- Signature threshold: $500 (50,000 cents) — src/lib/types/payment.ts\r\n- All monetary values stored in cents (integers)\r\n- Cash stepper step: $1 (100 cents)\r\n- Max tip/discount via stepper: $50 (5,000 cents)",
+    "summary": "Key Constants",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-required-environment-variables",
+    "key": "required-environment-variables",
+    "content": "- NEXT_PUBLIC_SUPABASE_URL\r\n- NEXT_PUBLIC_SUPABASE_ANON_KEY\r\n- SUPABASE_SERVICE_ROLE_KEY\r\n- WHATSAPP_PHONE_NUMBER_ID\r\n- WHATSAPP_ACCESS_TOKEN\r\n- NETS_API_BASE_URL\r\n- NETS_API_KEY\r\n- NETS_MERCHANT_ID\r\n- NETS_WEBHOOK_SECRET\r\n- PLATFORM_TRANSACTION_FEE_BPS (default: 50 = 0.5%)\r\n- NEXT_PUBLIC_APP_URL",
+    "summary": "Required Environment Variables",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "mem-MEMORY-db-tables-added--schema-sql-",
+    "key": "db-tables-added-schema-sql-",
+    "content": "- cash_payments — one cash payment per invoice\r\n- till_entries — daily cash float ledger\r\n- escrow_releases — audit trail for deposit releases\r\n- till_daily_summary — convenience view for dashboard",
+    "summary": "DB Tables Added (schema.sql)",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/home/nicoh/.claude/projects/-mnt-c-Users-User-ServiceSyncSG/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1776007261992
+  },
+  {
+    "id": "insight-1776021628330-q1wo",
+    "key": "frequent-edit-unknown",
+    "content": "File unknown was edited 23 times this session — likely a hot path worth monitoring.",
+    "summary": "Frequently edited: unknown (23x)",
+    "namespace": "insights",
+    "type": "procedural",
+    "metadata": {
+      "sourceFile": "unknown",
+      "editCount": 23,
+      "autoGenerated": true
+    },
+    "createdAt": 1776021628330
+  }
+]

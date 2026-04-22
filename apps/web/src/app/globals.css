@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 64% 33%;
+    --radius: 0.5rem;
+    
+    --component-inactive-color: hsl(var(--muted-foreground));
+    --component-bg: hsl(var(--card));
+    --component-shadow: hsl(var(--border));
+    --component-active-bg: hsl(var(--secondary));
+    --component-line-inactive-color: hsl(var(--border));
+    --component-active-color-default: hsl(var(--accent-foreground));
+  }
+}
+
+.dark {
+  --component-inactive-color: hsl(var(--muted-foreground));
+  --component-bg: hsl(var(--card));
+  --component-shadow: hsl(var(--border));
+  --component-active-bg: hsl(var(--secondary));
+  --component-line-inactive-color: hsl(var(--muted-foreground));
+  --component-active-color-default: hsl(var(--accent-foreground));
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar removed for clean UI */
+::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  height: 0px;
+}
+
+/* Glassmorphism utilities */
+@layer utilities {
+  .glass {
+    @apply bg-slate-900/65 backdrop-blur-md border border-white/15;
+  }
+  
+  .glass-light {
+    @apply bg-slate-100/25 backdrop-blur-md border border-white/30;
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .glass-card {
+    @apply rounded-2xl glass;
+  }
+  
+  .glass-container {
+    @apply rounded-3xl glass;
+  }
+}
+
+/* Touch action for mobile */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-0.3em);
+  }
+  40% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(-0.1em);
+  }
+  80% {
+    transform: translateY(0);
+  }
+}

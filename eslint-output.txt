@@ -1,0 +1,39 @@
+﻿node : 
+At line:1 char:1
++ node "..\..\node_modules\esli
+nt\bin\eslint.js" "src" --ext 
+".ts,.tsx" ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: (:String) []  
+  , RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+Oops! Something went wrong! :(
+
+ESLint: 8.57.1
+
+ESLint couldn't find a 
+configuration file. To set up 
+a configuration file for this 
+project, please run:
+
+    npm init @eslint/config
+
+ESLint looked for 
+configuration files in C:\Users
+\User\ServiceSyncSG\servicesync
+-v2\apps\web\src\app\api\trpc\[
+trpc] and its ancestors. If it 
+found none, it then looked in 
+your home directory.
+
+If you think you already have 
+a configuration file or if you 
+need more help, please stop by 
+the ESLint Discord server: 
+https://eslint.org/chat
+

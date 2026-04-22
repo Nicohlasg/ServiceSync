@@ -1,0 +1,201 @@
+{
+  "common": {
+    "continue": "继续",
+    "back": "返回",
+    "skip": "跳过",
+    "start": "开始",
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中…",
+    "retry": "重试",
+    "hideForNow": "暂时隐藏"
+  },
+  "locale": {
+    "pickerLabel": "请选择您的语言",
+    "pickerSubtitle": "稍后可在设置中更改。",
+    "current": "语言"
+  },
+  "landing": {
+    "hero": {
+      "badge": "现正内测 — 新加坡师傅专用",
+      "title": "每一块钱\n都归您。\n当天就能收款。",
+      "subtitle": "ServiceSync 是给新加坡水喉、电工、冷气和开锁师傅用的零抽佣工具。开账单、收 PayNow、发 WhatsApp，一部手机就够，用得离线也没问题。",
+      "signupCta": "加入内测",
+      "loginCta": "我已有账户",
+      "legalIntro": "创建账户即表示您同意我们的",
+      "legalJoiner": "和",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "legalTail": "我们遵守 PDPA，不会出售您的资料，也不会出售您客户的联系信息。",
+      "valueHeading": "第一天就能用到的功能",
+      "valueProps": {
+        "zeroCommission": {
+          "title": "永不抽佣",
+          "body": "您赚多少，就拿多少。我们只收固定月费，不抽工作单，也不抽账单金额。"
+        },
+        "paynow": {
+          "title": "每张账单都有 PayNow QR",
+          "body": "一点就生成 SGQR。客户一扫就能付款，账单也会自动变成已付款。"
+        },
+        "offline": {
+          "title": "没信号也照样能开单",
+          "body": "在停车场、机房、楼梯间也能先开账单，连回网络后就会自动同步。"
+        },
+        "singapore": {
+          "title": "专为新加坡师傅而做",
+          "body": "新加坡时间、HDB 地址、英文加中文 WhatsApp 话术，不用硬套美国软件的做法。"
+        }
+      }
+    }
+  },
+  "signup": {
+    "brandSubtitle": "零抽佣，专为新加坡师傅打造。",
+    "title": "加入内测",
+    "subtitle": "不到一分钟。电话号码之后再填。",
+    "fullName": "姓名",
+    "email": "电子邮件地址",
+    "password": "密码",
+    "tradeLabel": "主要工种",
+    "tradePlaceholder": "选择您的专长",
+    "trade": {
+      "aircon": "冷气保养",
+      "plumbing": "水管维修",
+      "electrical": "电线电路",
+      "handyman": "综合杂工",
+      "cleaning": "住家清洁"
+    },
+    "submit": "加入内测",
+    "loading": "正在创建账户...",
+    "legalIntro": "注册即表示您同意我们的",
+    "legalJoiner": "和",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "haveAccount": "已有账户?",
+    "login": "登录",
+    "backHome": "返回首页"
+  },
+  "login": {
+    "brandSubtitle": "零抽佣，专为新加坡师傅打造。",
+    "title": "欢迎回来",
+    "subtitle": "输入您的邮箱和密码即可登录",
+    "email": "电子邮件地址",
+    "password": "密码",
+    "forgotPassword": "忘记密码?",
+    "loading": "正在登录...",
+    "submit": "登录",
+    "needAccount": "还没有账户?",
+    "signup": "注册",
+    "backHome": "返回首页",
+    "terms": "条款",
+    "privacy": "隐私"
+  },
+  "wizard": {
+    "title": "开始设置",
+    "rerunTitle": "重新设置",
+    "rerunSubtitle": "我们会再带您走一遍。之前填的内容还在,直到您自己改动。",
+    "intro": "填得越完整，客户越放心。",
+    "step1": {
+      "heading": "您想使用哪种语言?",
+      "helper": "点一下即可。之后也能更改。",
+      "footer": "我们会把这个语言存进您的资料，并在整个应用中使用。"
+    },
+    "step2": { "heading": "您的姓名", "helper": "客户在账单上看到的就是这个。" },
+    "step3": { "heading": "公司编号(可选)", "helper": "若有 UEN 请填入;没有就跳过。" },
+    "step4": { "heading": "您在哪里接单?", "helper": "我们用它来整理您的工作。" },
+    "step5": { "heading": "基本收费", "helper": "以新币计。之后可添加更多服务。" }
+  },
+  "tutorial": {
+    "startButton": "开始导览",
+    "skipButton": "暂时跳过",
+    "progress": "第 {current} 步,共 {total} 步",
+    "tapHighlighted": "点击高亮按钮继续",
+    "goToDashboard": "返回主页",
+    "goToProfile": "打开个人资料",
+    "welcome": { "title": "快速导览", "body": "我会带您认识 5 个按钮,请在按钮亮起时逐个点击。" },
+    "addService": { "title": "添加服务", "body": "点击「服务」列出您的工作内容。" },
+    "addClient": { "title": "添加客户", "body": "点击「客户」保存姓名、电话和备注。" },
+    "collectPayment": { "title": "收款", "body": "点击「收款」生成 PayNow 账单。" },
+    "profile": { "title": "个人资料", "body": "点击头像打开设置。" },
+    "workingHours": { "title": "设置工作时间", "body": "点击「工作时间」设定休息日。" },
+    "ready": { "title": "已就绪!", "body": "您可以随时从个人资料重播。" }
+  },
+  "checklist": {
+    "title": "完成设置",
+    "subtitle": "三个小步骤,即可发出第一张账单。",
+    "rowService": "添加您的第一项服务",
+    "rowServiceBody": "您的服务项目和收费。",
+    "rowClient": "添加您的第一位客户",
+    "rowClientBody": "姓名、电话、地址和备注。",
+    "rowPaynow": "了解 PayNow 怎么用",
+    "rowPaynowBody": "10 秒看懂账单 + 二维码。",
+    "progress": "已完成 {done}/{total}",
+    "completeTitle": "一切就绪",
+    "completeBody": "您仍可在「个人资料」重播导览。",
+    "nextHub": "下一步",
+    "nextSchedule": "打开日程",
+    "nextInvoices": "查看账单",
+    "nextHelp": "帮助与教学",
+    "hideCta": "暂时隐藏",
+    "resumeCta": "再次显示清单"
+  },
+  "dashboard": {
+    "greeting": "{name},欢迎回来",
+    "emptyJobsTitle": "今天没有工作",
+    "emptyJobsBody": "客户下单后,将显示于此。",
+    "emptyClientsTitle": "还没有客户",
+    "emptyClientsBody": "添加第一位客户,即可发送账单。",
+    "emptyInvoicesTitle": "还没有账单",
+    "emptyInvoicesBody": "从工作一键生成账单,大约 10 秒。",
+    "emptyServicesTitle": "还没有服务项目",
+    "emptyServicesBody": "添加您的服务和收费。每张账单都会用到。"
+  },
+  "paynowPreview": {
+    "title": "PayNow 怎么用",
+    "subtitle": "客户扫这个二维码,钱就进您户口。",
+    "sampleBadge": "示例",
+    "sampleCaption": "这是演示,不会真的扣钱。",
+    "lineService": "水管维修 — 1 小时",
+    "lineAmount": "总额",
+    "amountValue": "新币 120.00",
+    "reference": "账单",
+    "referenceValue": "#SAMPLE-0001",
+    "legal": "真实的二维码扫码付款后,我们会自动把账单标为已付。",
+    "ctaConfirm": "明白了",
+    "ctaDismiss": "关闭"
+  },
+  "profile": {
+    "title": "个人资料",
+    "onboardingTitle": "上手与帮助",
+    "onboardingBody": "您可以重播快速导览、重新打开设置清单，或更改每天使用的语言。",
+    "languageTitle": "语言",
+    "languageBody": "选择您在现场最顺手的语言。我们会套用到整个应用。",
+    "rerunWizardTitle": "重新运行设置向导",
+    "rerunWizardBody": "更改姓名、语言、基地地址、服务或 PayNow。我们会一步一步带您走。",
+    "rerunWizardCta": "重新开始",
+    "replayTourTitle": "再看一次导览",
+    "replayTourBody": "再看两分钟的快速介绍。",
+    "replayTourCta": "播放",
+    "replayTourToast": "快速导览会在主页重新播放。",
+    "checklistTitle": "再次显示设置清单",
+    "checklistBody": "如果您之前隐藏了主页上的三个设置步骤，这里可以把它叫回来。",
+    "checklistCta": "打开清单",
+    "checklistToast": "设置清单已回到主页。",
+    "help": {
+      "title": "教学视频",
+      "body": "等我们确认 beta 用户最常卡住的地方后，短视频会放在这里。",
+      "emptyTitle": "视频会在真实 beta 通话后上线",
+      "emptyBody": "我们只会根据真实上手阻力来做视频，不会凭空猜题目。",
+      "paynowTitle": "如何发出第一张 PayNow 账单",
+      "paynowBody": "一步一步看清楚怎样开一张简单账单，并让客户看到二维码。",
+      "clientTitle": "30 秒添加一个客户",
+      "clientBody": "快速走一遍先存客户，再发第一张账单的流程。",
+      "qrTitle": "二维码扫不了时怎么办",
+      "qrBody": "在怀疑付款失败之前，先照着这个短清单检查一次。"
+    }
+  },
+  "errors": {
+    "network": "无法连接服务器。请检查网络后重试。",
+    "generic": "出错了。请再试一次。",
+    "required": "此栏为必填。"
+  }
+}

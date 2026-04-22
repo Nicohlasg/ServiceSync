@@ -1,0 +1,62 @@
+name: E2E (LR-2.4)
+
+# Phase 10 launch gate: blocks merge to main when any of the five critical
+# user journeys regress, and re-proves PayNow webhook idempotency (LR-2.3 /
+# SEC-L4) on every PR.
+#
+# Required GitHub Action secrets:
+#   NEXT_PUBLIC_SUPABASE_URL      — Supabase project URL (test project!)
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY — Supabase anon key
+#   SUPABASE_SERVICE_ROLE_KEY     — Supabase service-role key (test project)
+#   FIELD_ENCRYPTION_KEY          — 32-byte hex; env.ts fails to boot without it
+#   NETS_WEBHOOK_SECRET           — required for the webhook-idempotency test
+#   NEXT_PUBLIC_APP_URL           — should match BASE_URL below
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      BASE_URL: 'http://localhost:3000'
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      FIELD_ENCRYPTION_KEY: ${{ secrets.FIELD_ENCRYPTION_KEY }}
+      NETS_WEBHOOK_SECRET: ${{ secrets.NETS_WEBHOOK_SECRET }}
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Playwright suite
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
