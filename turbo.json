@@ -3,6 +3,20 @@
   "globalDependencies": [
     "**/.env.*local"
   ],
+  "globalEnv": [
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "NETS_API_BASE_URL",
+    "NETS_API_KEY",
+    "NETS_MERCHANT_ID",
+    "NETS_WEBHOOK_SECRET",
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "VAPID_SUBJECT",
+    "FIELD_ENCRYPTION_KEY",
+    "INTERNAL_PDF_RENDER_SECRET",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [
