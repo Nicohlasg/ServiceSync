@@ -108,7 +108,7 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
               isActive ? "text-blue-400" : "text-slate-400 hover:text-slate-200"
             )}
             onClick={() => handleItemClick(index)}
-            ref={(el) => (itemRefs.current[index] = el)}
+            ref={(el) => { itemRefs.current[index] = el }}
             style={{ color: isActive ? accentColor : undefined }}
           >
             {/* Active Indicator Line */}
@@ -134,7 +134,7 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
                 "absolute bottom-[6px] text-[10px] uppercase tracking-wider font-semibold transition-all duration-300 pointer-events-none",
                 isActive ? "opacity-100 translate-y-0 text-current" : "opacity-0 translate-y-4"
               )}
-              ref={(el) => (textRefs.current[index] = el)}
+              ref={(el) => { textRefs.current[index] = el }}
             >
               {item.label}
             </strong>

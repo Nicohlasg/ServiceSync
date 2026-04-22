@@ -85,8 +85,8 @@ interface DropdownSeparatorProps {
 type DropdownContextType = {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  triggerRef: React.RefObject<HTMLDivElement | null>
-  contentRef: React.RefObject<HTMLDivElement | null>
+  triggerRef: React.RefObject<HTMLDivElement>
+  contentRef: React.RefObject<HTMLDivElement>
 }
 
 const DropdownContext = React.createContext<DropdownContextType | undefined>(
