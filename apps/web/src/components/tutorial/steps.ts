@@ -22,7 +22,10 @@ export type TutorialStepConfig = {
     | 'addService'
     | 'addClient'
     | 'collectPayment'
+    | 'setupPayment'
     | 'profile'
+    | 'profileButton'
+    | 'editProfile'
     | 'workingHours'
     | 'ready';
   icon: LucideIcon;
@@ -66,6 +69,15 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     ctaLabelKey: 'goToDashboard',
   },
   {
+    id: 'setupPayment',
+    translationKey: 'setupPayment',
+    icon: FileText,
+    targetSelector: null,
+    route: '/dashboard/invoices/new',
+    ctaRoute: '/dashboard',
+    ctaLabelKey: 'goToDashboard',
+  },
+  {
     id: 'profile',
     translationKey: 'profile',
     icon: UserCircle,
@@ -73,6 +85,24 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     route: '/dashboard',
     ctaRoute: '/dashboard',
     ctaLabelKey: 'goToDashboard',
+  },
+  {
+    id: 'profileButton',
+    translationKey: 'profileButton',
+    icon: UserCircle,
+    targetSelector: '[data-tutorial-target="dropdown-profile-btn"]',
+    route: '/dashboard',
+    ctaRoute: '/dashboard',
+    ctaLabelKey: 'goToDashboard',
+  },
+  {
+    id: 'editProfile',
+    translationKey: 'editProfile',
+    icon: UserCircle,
+    targetSelector: '[data-tutorial-target="edit-profile-btn"]',
+    route: '/dashboard/profile',
+    ctaRoute: '/dashboard/profile',
+    ctaLabelKey: 'goToProfile',
   },
   {
     id: 'workingHours',

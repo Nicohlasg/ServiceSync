@@ -1,61 +1,61 @@
 {
   "version": 1,
-  "updatedAt": 1776868227775,
+  "updatedAt": 1776879578658,
   "nodeCount": 8,
   "nodes": {
     "mem-MEMORY-project-overview": {
       "id": "mem-MEMORY-project-overview",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-tech-stack": {
       "id": "mem-MEMORY-tech-stack",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-project-structure": {
       "id": "mem-MEMORY-project-structure",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-cash-payment-features-implemen": {
       "id": "mem-MEMORY-cash-payment-features-implemen",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-key-constants": {
       "id": "mem-MEMORY-key-constants",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-required-environment-variables": {
       "id": "mem-MEMORY-required-environment-variables",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "mem-MEMORY-db-tables-added--schema-sql-": {
       "id": "mem-MEMORY-db-tables-added--schema-sql-",
       "category": "core",
-      "confidence": 0.5,
+      "confidence": 0.445,
       "accessCount": 0,
       "createdAt": 1775925787735
     },
     "insight-1775944020047-f4ue": {
       "id": "insight-1775944020047-f4ue",
       "category": "insights",
-      "confidence": 0.5,
+      "confidence": 0.45,
       "accessCount": 0,
       "createdAt": 1775944020047
     }

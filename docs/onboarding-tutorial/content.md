@@ -97,7 +97,49 @@
 
 ---
 
-## Step 7 — You're ready
+## Step 7 — Setup payment details
+
+| Field | Value |
+|-------|-------|
+| **ID** | `setupPayment` |
+| **Icon** | `FileText` |
+| **Title** | Setup payment |
+| **Body** | Before invoicing, you need your phone and address. Let's go to your profile. |
+| **CTA** | Next |
+| **Dwell** | ~15 s |
+| **Visual** | Coachmark points to the center of the screen, providing a CTA to navigate back to Dashboard. |
+
+---
+
+## Step 8 — Profile settings
+
+| Field | Value |
+|-------|-------|
+| **ID** | `profileButton` |
+| **Icon** | `UserCircle` |
+| **Title** | Profile settings |
+| **Body** | Tap Profile to go to your settings page. |
+| **CTA** | Next |
+| **Dwell** | ~15 s |
+| **Visual** | Coachmark points to the Profile item in the avatar dropdown. |
+
+---
+
+## Step 9 — Edit details
+
+| Field | Value |
+|-------|-------|
+| **ID** | `editProfile` |
+| **Icon** | `UserCircle` |
+| **Title** | Edit details |
+| **Body** | Tap Edit here to add your phone for PayNow and address for invoices. |
+| **CTA** | Next |
+| **Dwell** | ~15 s |
+| **Visual** | Coachmark points to the Edit Profile button. |
+
+---
+
+## Step 10 — You're ready
 
 | Field | Value |
 |-------|-------|

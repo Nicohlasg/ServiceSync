@@ -418,5 +418,89 @@
         "accessCount": 0
       }
     ]
+  },
+  {
+    "timestamp": 1776879578671,
+    "nodes": 8,
+    "edges": 6,
+    "pageRankSum": 1.0000000000000002,
+    "confidences": [
+      0.445,
+      0.445,
+      0.445,
+      0.445,
+      0.445,
+      0.445,
+      0.445,
+      0.45
+    ],
+    "accessCounts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "topPatterns": [
+      {
+        "id": "mem-MEMORY-db-tables-added--schema-sql-",
+        "summary": "DB Tables Added (schema.sql)",
+        "confidence": 0.445,
+        "pageRank": 0.2058898181247621,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-required-environment-variables",
+        "summary": "Required Environment Variables",
+        "confidence": 0.445,
+        "pageRank": 0.18874636750028423,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-key-constants",
+        "summary": "Key Constants",
+        "confidence": 0.445,
+        "pageRank": 0.16857742939656423,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-cash-payment-features-implemen",
+        "summary": "Cash Payment Features Implemented",
+        "confidence": 0.445,
+        "pageRank": 0.14484927892683164,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-project-structure",
+        "summary": "Project Structure",
+        "confidence": 0.445,
+        "pageRank": 0.11693391579734488,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-tech-stack",
+        "summary": "Tech Stack",
+        "confidence": 0.445,
+        "pageRank": 0.08409241648487831,
+        "accessCount": 0
+      },
+      {
+        "id": "insight-1775944020047-f4ue",
+        "summary": "Frequently edited: unknown (55x)",
+        "confidence": 0.45,
+        "pageRank": 0.045455386884667395,
+        "accessCount": 0
+      },
+      {
+        "id": "mem-MEMORY-project-overview",
+        "summary": "Project Overview",
+        "confidence": 0.445,
+        "pageRank": 0.045455386884667395,
+        "accessCount": 0
+      }
+    ]
   }
 ]

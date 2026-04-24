@@ -29,7 +29,8 @@ interface ClientHistoryItem {
 export default function DashboardPage() {
     const [userProfile, setUserProfile] = useState<{ name: string; avatar_url?: string; base_lat?: number; base_lng?: number } | null>(null);
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [todayEarnings, setTodayEarnings] = useState(0);
+    const [cashInPocket, setCashInPocket] = useState(0);
+    const [bankTransfers, setBankTransfers] = useState(0);
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
@@ -95,16 +96,23 @@ export default function DashboardPage() {
                 // 3. Fetch Today's Earnings (from invoices paid today)
                 const { data: invoices } = await supabase
                     .from('invoices')
-                    .select('total_cents, paid_at, status')
+                    .select('total_cents, paid_at, status, payment_method')
                     .eq('provider_id', user.id)
                     .in('status', ['paid_cash', 'paid_qr']);
 
                 if (invoices) {
-                    const todayEarnedCents = invoices
-                        .filter(inv => inv.paid_at && inv.paid_at.startsWith(todayStr))
-                        .reduce((sum, inv) => sum + (inv.total_cents ?? 0), 0);
+                    let cashCents = 0;
+                    let bankCents = 0;
+                    
+                    invoices.forEach(inv => {
+                        if (inv.paid_at && inv.paid_at.startsWith(todayStr)) {
+                            if (inv.payment_method === 'cash') cashCents += (inv.total_cents ?? 0);
+                            else bankCents += (inv.total_cents ?? 0);
+                        }
+                    });
 
-                    setTodayEarnings(todayEarnedCents / 100);
+                    setCashInPocket(cashCents / 100);
+                    setBankTransfers(bankCents / 100);
                 }
 
                 // 4. Fetch Pending Requests Count
@@ -186,10 +194,9 @@ export default function DashboardPage() {
         push('/auth/login');
     };
 
-    // Till Management logic mappings (split is illustrative when there is earnings)
+    // Till Management logic
+    const todayEarnings = cashInPocket + bankTransfers;
     const hasEarningsToday = todayEarnings > 0;
-    const cashInPocket = hasEarningsToday ? (todayEarnings * 0.4 > 100 ? 150 : todayEarnings * 0.4) : 0;
-    const bankTransfers = hasEarningsToday ? todayEarnings - cashInPocket : 0;
 
     // Upcoming today
     const upcomingJobs = jobs;
@@ -246,7 +253,7 @@ export default function DashboardPage() {
                             </div>
                         </DropdownTrigger>
                         <DropdownContent align="start" className="w-56 mt-2 border border-slate-700/50 bg-slate-900/95 backdrop-blur-xl">
-                            <DropdownItem className="gap-3 font-medium text-slate-200 py-3" onClick={() => push('/dashboard/profile')}>
+                            <DropdownItem data-tutorial-target="dropdown-profile-btn" className="gap-3 font-medium text-slate-200 py-3" onClick={() => push('/dashboard/profile')}>
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </DropdownItem>

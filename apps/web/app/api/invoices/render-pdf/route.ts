@@ -17,6 +17,20 @@ export const dynamic = 'force-dynamic';
 const REACT_ELEMENT_TYPE = Symbol.for('react.element');
 const REACT_TRANSITIONAL_TYPE = Symbol.for('react.transitional.element');
 
+// ---------------------------------------------------------------------------
+// GLOBAL FIX: Turbopack emits JSX elements with $$typeof = Symbol.for("react.transitional.element")
+// but @react-pdf/reconciler only recognises Symbol.for("react.element").
+// This global override ensures any symbol request for the transitional type 
+// returns the standard type, fixing Error #31 across the entire render tree.
+// ---------------------------------------------------------------------------
+if (typeof Symbol !== 'undefined' && Symbol.for) {
+  const originalSymbolFor = Symbol.for;
+  Symbol.for = (key: string) => {
+    if (key === 'react.transitional.element') return REACT_ELEMENT_TYPE;
+    return originalSymbolFor(key);
+  };
+}
+
 /**
  * Recursively walk a React element tree and replace every
  * `$$typeof: react.transitional.element` with `$$typeof: react.element`.

@@ -164,12 +164,17 @@ export const invoicesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const now = new Date().toISOString();
       const isPaidStatus = input.status === 'paid_cash' || input.status === 'paid_qr';
+      
+      let paymentMethod = undefined;
+      if (input.status === 'paid_cash') paymentMethod = 'cash';
+      if (input.status === 'paid_qr') paymentMethod = 'paynow_qr';
 
       const { data, error } = await ctx.supabase
         .from('invoices')
         .update({
           status: input.status,
           paid_at: isPaidStatus ? now : null,
+          ...(paymentMethod ? { payment_method: paymentMethod } : {}),
         })
         .eq('id', input.invoiceId)
         .eq('provider_id', ctx.user.id)
@@ -426,7 +431,7 @@ export const invoicesRouter = router({
       // Fetch related records separately
       const { data: profile } = await ctx.supabase
         .from('profiles')
-        .select('name, phone, acra_uen, acra_verified, paynow_key, paynow_key_type')
+        .select('name, phone, acra_uen, acra_verified, paynow_key, paynow_key_type, base_address')
         .eq('id', ctx.user.id)
         .single();
 
@@ -504,6 +509,7 @@ export const invoicesRouter = router({
         providerId: ctx.user.id,
         providerName: profile?.name?.trim() || 'Provider',
         providerPhone: profile?.phone ?? '',
+        providerAddress: profile?.base_address ?? '',
         providerAcraUen: profile?.acra_uen ?? undefined,
         providerAcraVerified: !!profile?.acra_verified,
         clientName: client?.name?.trim() || booking?.client_name?.trim() || 'Client',
@@ -524,6 +530,7 @@ export const invoicesRouter = router({
         paidAt: invoice.paid_at,
         paymentMethod: invoice.payment_method,
         renderBaseUrl: ctx.requestOrigin,
+        isPro: !!profile?.acra_verified,
       });
 
       if (!pdfResult.success) {

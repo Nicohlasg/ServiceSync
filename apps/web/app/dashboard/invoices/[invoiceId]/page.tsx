@@ -21,10 +21,8 @@ type InvoiceLineItem = { description: string; amountCents: number };
 const statusOptions: { value: InvoiceStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
   { value: "pending", label: "Pending" },
-  { value: "awaiting_qr_confirmation", label: "Awaiting QR Confirmation" },
   { value: "paid_cash", label: "Paid (Cash)" },
   { value: "paid_qr", label: "Paid (QR)" },
-  { value: "disputed", label: "Disputed" },
   { value: "void", label: "Void" },
 ];
 

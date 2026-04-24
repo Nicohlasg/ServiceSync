@@ -115,7 +115,10 @@
     "addService": { "title": "Add a service", "body": "Tap Services to list the work you do." },
     "addClient": { "title": "Add a client", "body": "Tap Clients to save names, numbers, notes." },
     "collectPayment": { "title": "Collect payment", "body": "Tap Collect Payment to make a PayNow invoice." },
+    "setupPayment": { "title": "Setup payment", "body": "Before invoicing, you need your phone and address. Let's go to your profile." },
     "profile": { "title": "Your profile", "body": "Tap your avatar to open your settings." },
+    "profileButton": { "title": "Profile settings", "body": "Tap Profile to go to your settings page." },
+    "editProfile": { "title": "Edit details", "body": "Tap Edit here to add your phone for PayNow and address for invoices." },
     "workingHours": { "title": "Set your hours", "body": "Tap Working Hours to set your days off." },
     "ready": { "title": "You're ready!", "body": "Replay this anytime from your profile." }
   },

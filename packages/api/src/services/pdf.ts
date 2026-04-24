@@ -75,6 +75,7 @@ export interface InvoicePdfInput {
   providerId: string;
   providerName: string;
   providerPhone: string;
+  providerAddress?: string;
   providerAcraUen?: string;
   providerAcraVerified: boolean;
   clientName: string;
@@ -95,6 +96,8 @@ export interface InvoicePdfInput {
   paidAt?: string | null;
   paymentMethod?: string | null;
   renderBaseUrl?: string;
+  /** Higher tier users get premium styling */
+  isPro?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,7 +153,10 @@ export async function generateInvoicePdf(
   input: InvoicePdfInput
 ): Promise<PdfGenerateResult> {
   try {
-    const pdfBuffer = await renderInvoiceWithPdfx(input);
+    // SWITCH: Moved from PDFx (React-PDF) to Puppeteer for maximum reliability
+    // and to avoid Turbopack React symbol conflicts (Error #31).
+    const html = buildInvoiceHtml(input);
+    const pdfBuffer = await renderHtmlToPdf(html);
 
     const now = new Date();
     const year = now.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'Asia/Singapore' });
@@ -247,8 +253,225 @@ function getInternalPdfRenderSecret(): string | undefined {
 }
 
 // ---------------------------------------------------------------------------
-// HTML Template
+// HTML Templates
 // ---------------------------------------------------------------------------
+
+/**
+ * Builds a professional invoice HTML template (IRAS compliant).
+ */
+function buildInvoiceHtml(input: InvoicePdfInput): string {
+  const {
+    invoiceNumber,
+    createdAt,
+    dueDate,
+    providerName,
+    providerPhone,
+    providerAcraUen,
+    providerAcraVerified,
+    clientName,
+    clientPhone,
+    clientAddress,
+    serviceType,
+    serviceDate,
+    lineItems,
+    subtotalCents,
+    taxCents,
+    totalCents,
+    depositAmountCents,
+    balanceDueCents,
+    paynowQrDataUrl,
+    notes,
+    status,
+    paymentMethod,
+    paidAt,
+  } = input;
+
+  const isPaid = status === 'paid_cash' || status === 'paid_qr';
+  const isVoid = status === 'void';
+  
+  const statusLabel = isPaid ? 'PAID' : isVoid ? 'VOID' : status.toUpperCase().replace('_', ' ');
+  const statusClass = isPaid ? 'status-paid' : isVoid ? 'status-void' : 'status-pending';
+
+  const acraLine = providerAcraUen
+    ? `UEN: ${providerAcraUen}${providerAcraVerified ? ' <span class="verified">✓ ACRA Verified</span>' : ''}`
+    : '';
+
+  // Escape all user-controlled strings to prevent XSS (CRIT-01)
+  const eProvider = escapeHtml(providerName);
+  const eClient = escapeHtml(clientName);
+  const eClientAddr = escapeHtml(clientAddress || '');
+  const eService = escapeHtml(serviceType);
+  const eNotes = notes ? escapeHtml(notes) : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1e293b; margin: 0; padding: 40px; line-height: 1.5; }
+  .invoice-container { position: relative; }
+  
+  /* Header */
+  .header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }
+  .brand-section h1 { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em; }
+  .provider-name { font-size: 15px; font-weight: 600; color: #334155; margin-top: 4px; }
+  .acra-info { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .verified { color: #16a34a; font-weight: 600; }
+  
+  .meta-section { text-align: right; }
+  .invoice-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .invoice-number { font-size: 20px; font-weight: 700; color: #0ea5e9; margin: 0; }
+  
+  /* Status Badge */
+  .status-badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .status-paid { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .status-void { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .status-pending { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+
+  /* Info Grid */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .info-box h3 { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+  .info-content { font-size: 13px; }
+  .info-content p { margin: 2px 0; }
+  .client-name { font-weight: 700; color: #0f172a; font-size: 14px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  th { background: #f8fafc; text-align: left; padding: 12px 8px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .col-desc { width: 70%; }
+  .col-amt { width: 30%; text-align: right; }
+  .item-desc { font-weight: 500; color: #334155; }
+
+  /* Summary Section */
+  .summary-container { display: flex; justify-content: flex-end; gap: 40px; }
+  .payment-info { flex: 1; max-width: 300px; }
+  .summary-box { width: 250px; }
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .summary-row.total { border-top: 2px solid #0ea5e9; margin-top: 8px; padding-top: 12px; font-weight: 800; font-size: 16px; color: #0f172a; }
+  .summary-row.balance { color: #0ea5e9; font-weight: 700; }
+  
+  /* PayNow QR */
+  .qr-container { margin-top: 20px; text-align: center; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; display: inline-block; }
+  .qr-image { width: 140px; height: 140px; }
+  .qr-label { font-size: 10px; font-weight: 700; color: #64748b; margin-top: 8px; display: block; }
+  
+  /* Footer */
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 11px; text-align: center; }
+  .notes-section { margin-top: 40px; background: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid #e2e8f0; }
+  .notes-label { font-weight: 700; color: #475569; margin-bottom: 4px; display: block; }
+</style>
+</head>
+<body>
+<div class="invoice-container">
+  <div class="header">
+    <div class="brand-section">
+      <h1>ServiceSync</h1>
+      <div class="provider-name">${eProvider}</div>
+      <div class="acra-info">${acraLine}</div>
+      <div class="acra-info">${providerPhone}</div>
+    </div>
+    <div class="meta-section">
+      <div class="invoice-label">Tax Invoice</div>
+      <div class="invoice-number">${invoiceNumber}</div>
+      <div class="status-badge ${statusClass}">${statusLabel}</div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-box">
+      <h3>Billed To</h3>
+      <div class="info-content">
+        <p class="client-name">${eClient}</p>
+        <p>${clientPhone || ''}</p>
+      </div>
+    </div>
+    <div class="info-box">
+      <h3>Details</h3>
+      <div class="info-content">
+        <p><strong>Service:</strong> ${eService}</p>
+        <p><strong>Service Date:</strong> ${fmtDate(serviceDate)}</p>
+        <p><strong>Issue Date:</strong> ${fmtDate(createdAt)}</p>
+        ${dueDate ? `<p><strong>Due Date:</strong> ${fmtDate(dueDate)}</p>` : ''}
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-desc">Description</th>
+        <th class="col-amt">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lineItems.map(item => `
+        <tr>
+          <td class="col-desc item-desc">${escapeHtml(item.description)}</td>
+          <td class="col-amt">${fc(item.amountCents)}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="summary-container">
+    <div class="payment-info">
+      ${!isPaid && paynowQrDataUrl ? `
+        <div class="qr-container">
+          <img src="${paynowQrDataUrl}" class="qr-image" alt="PayNow QR Code" />
+          <span class="qr-label">Scan to Pay via PayNow</span>
+        </div>
+      ` : ''}
+      ${isPaid && paidAt ? `
+        <div class="notes-section" style="border-left-color: #16a34a; background: #f0fdf4;">
+          <span class="notes-label" style="color: #166534;">Payment Received</span>
+          <p style="margin:0; color: #15803d;">Paid via ${paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'paynow_qr' ? 'PayNow' : 'electronic transfer'} on ${fmtDateTime(paidAt)}</p>
+        </div>
+      ` : ''}
+    </div>
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>${fc(subtotalCents)}</span>
+      </div>
+      ${taxCents > 0 ? `
+        <div class="summary-row">
+          <span>GST (9%)</span>
+          <span>${fc(taxCents)}</span>
+        </div>
+      ` : ''}
+      <div class="summary-row total">
+        <span>Total</span>
+        <span>${fc(totalCents)}</span>
+      </div>
+      ${depositAmountCents > 0 ? `
+        <div class="summary-row">
+          <span>Deposit Paid</span>
+          <span>-${fc(depositAmountCents)}</span>
+        </div>
+      ` : ''}
+      <div class="summary-row balance">
+        <span>Balance Due</span>
+        <span>${fc(balanceDueCents)}</span>
+      </div>
+    </div>
+  </div>
+
+  ${eNotes ? `
+    <div class="notes-section">
+      <span class="notes-label">Notes</span>
+      <p style="margin:0;">${eNotes}</p>
+    </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>Generated electronically by ServiceSync &middot; servicesync.sg</p>
+    <p>This document serves as a formal record for your bookkeeping, tax, and audit requirements.</p>
+  </div>
+</div>
+</body>
+</html>`;
+}
 
 function buildReceiptHtml(input: CashReceiptPdfInput): string {
   const {
@@ -339,8 +562,8 @@ function buildReceiptHtml(input: CashReceiptPdfInput): string {
   </div>
 
   <table>
-    <tr><th>Bill To</th><th>Service Address</th></tr>
-    <tr><td>${eClientName}</td><td>${eClientAddr}</td></tr>
+    <tr><th>Bill To</th></tr>
+    <tr><td>${eClientName} <br/> ${clientPhone || ''}</td></tr>
   </table>
 
   <table>

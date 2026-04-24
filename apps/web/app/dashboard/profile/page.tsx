@@ -397,6 +397,7 @@ export default function ProfilePage() {
             {/* Edit Toggle */}
             <div className="flex justify-end px-1">
                 <Button
+                    data-tutorial-target="edit-profile-btn"
                     variant="ghost"
                     size="sm"
                     onClick={() => setEditing(!editing)}
