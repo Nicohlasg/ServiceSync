@@ -610,7 +610,7 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
       chromiumArgs = chromium.default.args;
       // Use remote pack to avoid Vercel 50MB function limit issues
       executablePath = await chromium.default.executablePath(
-        'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.tar'
+        'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar'
       );
     } catch (err: any) {
       console.error('Production PDF generation setup failed:', err);
