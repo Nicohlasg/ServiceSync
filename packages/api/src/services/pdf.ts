@@ -608,8 +608,12 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
       puppeteer = await import('puppeteer-core');
       const chromium = await import('@sparticuz/chromium');
       chromiumArgs = chromium.default.args;
-      executablePath = await chromium.default.executablePath();
+      // Use remote pack to avoid Vercel 50MB function limit issues
+      executablePath = await chromium.default.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.tar'
+      );
     } catch (err: any) {
+      console.error('Production PDF generation setup failed:', err);
       throw new Error('Production PDF generation failed to load @sparticuz/chromium: ' + err.message);
     }
   } else {
@@ -617,23 +621,29 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
     try {
       puppeteer = await import('puppeteer');
     } catch (err: any) {
+      console.error('Local PDF generation setup failed:', err);
       throw new Error('Local PDF generation requires the full "puppeteer" package: ' + err.message);
     }
   }
 
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    args: chromiumArgs,
-    ...(executablePath ? { executablePath } : {}),
-  });
-
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close();
+    const browser = await puppeteer.default.launch({
+      headless: true,
+      args: chromiumArgs,
+      ...(executablePath ? { executablePath } : {}),
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdf = await page.pdf({ format: 'A4', printBackground: true });
+      return Buffer.from(pdf);
+    } finally {
+      await browser.close();
+    }
+  } catch (err: any) {
+    console.error('Browser launch or PDF generation failed:', err);
+    throw err;
   }
 }
 
