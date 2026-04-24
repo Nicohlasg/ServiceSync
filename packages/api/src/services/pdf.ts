@@ -563,7 +563,7 @@ function buildReceiptHtml(input: CashReceiptPdfInput): string {
 
   <table>
     <tr><th>Bill To</th></tr>
-    <tr><td>${eClientName} <br/> ${clientPhone || ''}</td></tr>
+    <tr><td>${eClientName}</td></tr>
   </table>
 
   <table>
