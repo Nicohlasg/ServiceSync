@@ -42,8 +42,13 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
     }
   );
 
-  const { data } = await supabase.auth.getUser();
-  const user = data.user ?? null;
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user ?? null;
+  } catch (err) {
+    console.error('[tRPC] supabase.auth.getUser() failed — returning anonymous context:', err);
+  }
 
   const forwarded = opts.req.headers.get('x-forwarded-for');
   const clientIp =

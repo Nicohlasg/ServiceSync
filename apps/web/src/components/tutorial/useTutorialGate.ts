@@ -46,6 +46,7 @@ function writeCache(seen: boolean) {
 export function useTutorialGate() {
   const [state, setState] = useState<GateState>(() => (readCache() ? 'hide' : 'unknown'));
 
+  const utils = api.useUtils();
   const tutorialStatus = api.provider.getTutorialStatus.useQuery(undefined, {
     // Stale time is effectively forever — completion is a write-once event.
     staleTime: Infinity,
@@ -99,6 +100,9 @@ export function useTutorialGate() {
   const reset = useCallback(async () => {
     writeCache(false);
     setState('show');
+    // Invalidate the cached query so shouldShow re-evaluates immediately
+    // without needing a page refresh.
+    utils.provider.getTutorialStatus.setData(undefined, { tutorialCompletedAt: null });
     try {
       await resetMutation.mutateAsync();
     } catch (err) {
@@ -107,7 +111,7 @@ export function useTutorialGate() {
         console.warn('[tutorial] reset failed:', err);
       }
     }
-  }, [resetMutation]);
+  }, [resetMutation, utils.provider.getTutorialStatus]);
 
   return {
     /** True when the overlay should be mounted + visible. */

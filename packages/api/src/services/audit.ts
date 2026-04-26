@@ -30,7 +30,9 @@ export type AuditAction =
     | 'payment_confirm'
     | 'payment_confirm_qr'
     | 'signature_capture'
-    | 'escrow_release';
+    | 'escrow_release'
+    | 'payment_void'
+    | 'pdpa_consent';
 
 export interface AuditEvent {
     actorId: string | null;

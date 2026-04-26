@@ -78,6 +78,8 @@ export interface InvoicePdfInput {
   providerAddress?: string;
   providerAcraUen?: string;
   providerAcraVerified: boolean;
+  /** Task 1.6: Only show "Tax Invoice" when provider is GST-registered */
+  providerGstRegistered?: boolean;
   clientName: string;
   clientPhone: string;
   clientAddress: string;
@@ -372,7 +374,7 @@ function buildInvoiceHtml(input: InvoicePdfInput): string {
       <div class="acra-info">${providerPhone}</div>
     </div>
     <div class="meta-section">
-      <div class="invoice-label">Tax Invoice</div>
+      <div class="invoice-label">${providerAcraVerified && input.providerGstRegistered ? 'Tax Invoice' : 'Invoice'}</div>
       <div class="invoice-number">${invoiceNumber}</div>
       <div class="status-badge ${statusClass}">${statusLabel}</div>
     </div>

@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { AuthGuard } from '@/components/AuthGuard';
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 
 // Lazy-load non-critical UI overlays — these render nothing on mount
 // (they wait for browser events / timeouts), so deferring them avoids
@@ -23,6 +24,14 @@ const OfflineDetector = dynamic(
 );
 const CookieConsent = dynamic(
   () => import('@/components/CookieConsent').then(m => ({ default: m.CookieConsent })),
+  { ssr: false },
+);
+const SessionTimeoutWarning = dynamic(
+  () => import('@/components/SessionTimeoutWarning').then(m => ({ default: m.SessionTimeoutWarning })),
+  { ssr: false },
+);
+const SwUpdatePrompt = dynamic(
+  () => import('@/components/SwUpdatePrompt').then(m => ({ default: m.SwUpdatePrompt })),
   { ssr: false },
 );
 
@@ -78,6 +87,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
           staleTime: 5000,
           refetchOnWindowFocus: false,
         },
+        mutations: {
+          retry: 2,
+          retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
+          onError: (error) => {
+            const { message } = getErrorInfo(error);
+            if (message?.includes('Failed to fetch') || message?.includes('NetworkError') || message?.includes('Load failed')) {
+              toast.error('Network issue — saved locally, will retry when online.');
+            }
+          },
+        },
       },
     });
   });
@@ -88,6 +107,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: '/api/trpc',
           transformer: superjson,
+          async headers() {
+            // Silently refresh the Supabase session before each tRPC batch
+            // so long form-fills don't hit an expired JWT.
+            try {
+              const supabase = createSupabaseBrowserClient();
+              await supabase.auth.getSession();
+            } catch {
+              // Refresh failed — let the request proceed with the existing cookie;
+              // the server-side auth check will handle the expired session.
+            }
+            return {};
+          },
         }),
       ],
     })
@@ -104,6 +135,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <PwaInstallPrompt />
           <OfflineDetector />
           <CookieConsent />
+          <SessionTimeoutWarning />
+          <SwUpdatePrompt />
         </PwaProvider>
       </QueryClientProvider>
     </api.Provider>

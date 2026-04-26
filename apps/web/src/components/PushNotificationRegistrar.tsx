@@ -85,6 +85,16 @@ export function PushNotificationRegistrar() {
         },
         { onConflict: "endpoint" },
       );
+
+      // Sprint 3 Task 3.5: Deactivate stale subscriptions from previous
+      // devices. Any subscription for this user with a different endpoint is
+      // from an old phone/browser — mark inactive to stop wasted VAPID sends.
+      await supabase
+        .from("push_subscriptions")
+        .update({ is_active: false })
+        .eq("user_id", user.id)
+        .neq("endpoint", endpoint)
+        .eq("is_active", true);
     }
 
     registerPush().catch(() => {

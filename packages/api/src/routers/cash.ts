@@ -13,6 +13,7 @@ import { createHmac } from 'crypto';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '@/server/trpc';
 import { generateDigitalHandshakeLink } from '@/server/services/whatsapp-simple';
+import { addDaysSGT } from '../utils/date-sgt';
 import { releaseEscrowDeposit } from '@/server/services/escrow';
 import { recordTillEntry, getDailySummary } from '@/server/services/till';
 import { generateCashReceiptPdf } from '@/server/services/pdf';
@@ -372,7 +373,7 @@ export const cashRouter = router({
         .from('client_assets')
         .update({
           last_service_date: now,
-          next_service_date: addDays(now, 90),
+          next_service_date: addDaysSGT(now, 90),
         })
         .eq('client_id', client.id)
         .eq('provider_id', providerId);
@@ -450,6 +451,93 @@ export const cashRouter = router({
     }),
 
   /**
+   * Task 1.4: Void a cash payment within 24 hours.
+   * Reverses the till entry, resets invoice to pending, and records the reason.
+   */
+  voidCashPayment: protectedProcedure
+    .input(z.object({
+      invoiceId: z.string().uuid(),
+      reason: z.string().min(3).max(500),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const providerId = ctx.user.id;
+      const now = new Date();
+
+      // Fetch cash payment
+      const { data: cashPayment, error: cpErr } = await ctx.supabase
+        .from('cash_payments')
+        .select('id, collected_at, amount_collected_cents, voided_at')
+        .eq('invoice_id', input.invoiceId)
+        .eq('provider_id', providerId)
+        .single();
+
+      if (cpErr || !cashPayment) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Cash payment not found' });
+      }
+
+      if (cashPayment.voided_at) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Payment already voided' });
+      }
+
+      // Enforce 24-hour void window
+      const collectedAt = new Date(cashPayment.collected_at);
+      const hoursSince = (now.getTime() - collectedAt.getTime()) / (1000 * 60 * 60);
+      if (hoursSince > 24) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Cash payments can only be voided within 24 hours of collection',
+        });
+      }
+
+      // Mark cash payment as voided
+      await ctx.supabase
+        .from('cash_payments')
+        .update({
+          voided_at: now.toISOString(),
+          voided_by: providerId,
+          void_reason: input.reason,
+        })
+        .eq('id', cashPayment.id);
+
+      // Reset invoice status back to pending
+      await ctx.supabase
+        .from('invoices')
+        .update({
+          status: 'pending',
+          payment_method: null,
+          paid_at: null,
+          cash_amount_collected_cents: null,
+          cash_collected_at: null,
+        })
+        .eq('id', input.invoiceId)
+        .eq('provider_id', providerId);
+
+      // Reverse till entry
+      await recordTillEntry({
+        providerId,
+        invoiceId: input.invoiceId,
+        amountCents: -cashPayment.amount_collected_cents,
+        type: 'cash_in',
+        description: `VOID — ${input.reason}`,
+      });
+
+      void emitAuditEvent({
+        actorId: providerId,
+        actorIp: ctx.clientIp,
+        entityType: 'cash_payment',
+        entityId: cashPayment.id,
+        action: 'payment_void',
+        diff: {
+          invoice_id: input.invoiceId,
+          void_reason: input.reason,
+          original_amount_cents: cashPayment.amount_collected_cents,
+        },
+      });
+
+      return { success: true, voidedAt: now.toISOString() };
+    }),
+
+  /**
    * Manually confirms that a PayNow QR payment was received.
    * Used when there's no webhook integration — the technician confirms
    * they received the money before proceeding.
@@ -494,6 +582,18 @@ export const cashRouter = router({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to confirm payment' });
       }
 
+      // Task 1.2: Insert a payments row so manual QR confirmations are visible
+      // to the reconciliation query (mirrors what the PayNow webhook does).
+      await ctx.supabase.from('payments').insert({
+        invoice_id: input.invoiceId,
+        provider_id: ctx.user.id,
+        amount_cents: invoice.amount,
+        payment_method: 'paynow_qr',
+        status: 'confirmed',
+        reference: `manual-qr-${input.invoiceId.slice(-8)}`,
+        confirmed_at: now,
+      });
+
       // Record the FULL invoice amount as a bank_transfer in the daily till.
       // This ensures the till summary correctly reports QR payments as
       // "bank transfers processing" instead of splitting them incorrectly.
@@ -531,8 +631,4 @@ export const cashRouter = router({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function addDays(isoDate: string, days: number): string {
-  const d = new Date(isoDate);
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
-}
+// addDays moved to utils/date-sgt.ts as addDaysSGT (Sprint 3 Task 3.4)

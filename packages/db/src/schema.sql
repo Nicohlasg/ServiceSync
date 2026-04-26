@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS profiles (
   avg_rating        NUMERIC(3,2) DEFAULT 0,
   review_count      INTEGER NOT NULL DEFAULT 0,
 
+  -- Compliance
+  gst_registered         BOOLEAN NOT NULL DEFAULT FALSE,
+  pdpa_consent_at        TIMESTAMPTZ,
+
   -- Onboarding (masterplan §4.1, §4.2, §4.3)
   preferred_locale       TEXT NOT NULL DEFAULT 'en-SG'
                          CHECK (preferred_locale IN ('en-SG', 'zh-Hans-SG', 'ms-SG', 'ta-SG')),
@@ -590,6 +594,11 @@ CREATE TABLE IF NOT EXISTS cash_payments (
 
   collected_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Void support (Task 1.4)
+  voided_at                   TIMESTAMPTZ,
+  voided_by                   UUID REFERENCES profiles(id),
+  void_reason                 TEXT,
 
   CONSTRAINT cash_payments_unique_invoice UNIQUE (invoice_id)
 );

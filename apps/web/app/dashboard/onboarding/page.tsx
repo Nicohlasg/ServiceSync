@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,13 @@ import { LocalePicker } from "@/components/onboarding/LocalePicker";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { motion, AnimatePresence } from "framer-motion";
 import { BackButton } from "@/components/ui/back-button";
+import { useFormDraft } from "@/lib/useFormDraft";
 
 function isProfileComplete(name: string | null | undefined, phone: string | null | undefined): boolean {
     return Boolean(name?.trim() && phone?.trim());
 }
 
 export default function OnboardingPage() {
-    const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [bootstrapping, setBootstrapping] = useState(true);
@@ -37,7 +37,7 @@ export default function OnboardingPage() {
     const wizardStartedAtRef = useRef<number | null>(null);
     const TOTAL_STEPS = 4;
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData, clearOnboardingDraft] = useFormDraft('draft-onboarding-wizard', {
         businessName: "",
         uen: "",
         bio: "",
@@ -45,7 +45,15 @@ export default function OnboardingPage() {
         basePrice: "50",
         serviceName: "",
         servicePrice: "",
+        wizardStep: 1,
     });
+
+    // Task 2.4: Wizard step persisted in draft so phone-death mid-wizard
+    // resumes at the correct step instead of step 1.
+    const step = formData.wizardStep;
+    const setStep = useCallback((s: number) => {
+        setFormData(prev => ({ ...prev, wizardStep: s }));
+    }, [setFormData]);
 
     useEffect(() => {
         const supabase = createSupabaseBrowserClient();
@@ -172,6 +180,7 @@ export default function OnboardingPage() {
             ]);
         }
 
+        clearOnboardingDraft();
         toast.success("You're all set! Welcome to ServiceSync 🚀");
         push("/dashboard");
     };

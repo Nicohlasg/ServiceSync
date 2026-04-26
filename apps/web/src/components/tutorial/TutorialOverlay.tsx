@@ -13,9 +13,8 @@ import { TutorialProgress } from './TutorialProgress';
 import { useTutorialGate } from './useTutorialGate';
 
 // Coachmark tour (Intercom/Pendo style). Renders a small anchored popup near
-// the UI the user should tap, plus a pulse ring on the target. The rest of
-// the screen stays fully interactive — no backdrop, no blur. On tap of the
-// target we advance to the next step, giving the user hands-on practice.
+// the UI the user should tap, plus a pulse ring on the target. A spotlight SVG
+// mask dims the rest of the screen so the target stands out.
 //
 // Hybrid gating (`useTutorialGate`) decides if the tour should show at all.
 
@@ -93,13 +92,10 @@ export function TutorialOverlay({ open, onClose }: Props) {
     setIndex((i) => Math.max(0, i - 1));
   }, []);
 
+  // ---- Popup card ref ----
+  const popupRef = useRef<HTMLDivElement>(null);
+
   // ---- Target tracking ----
-  //
-  // We re-read the target rect on:
-  //   (a) step change
-  //   (b) DOM mutations (target appears/disappears, sibling reflow)
-  //   (c) scroll / resize (rect drifts)
-  // The popup and pulse ring snap to the updated rect each frame.
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const targetEl = useRef<Element | null>(null);
 
@@ -156,9 +152,13 @@ export function TutorialOverlay({ open, onClose }: Props) {
       const target = e.target as Element | null;
       if (!target) return;
       if (target.closest(selector)) {
-        // Let the user's tap through to the real UI — we just listen.
-        // Delay the advance slightly so the navigation/press animation starts
-        // before the popup hops to the next step.
+        // If the step wants to navigate on tap (e.g. profile avatar → profile page),
+        // prevent the default behaviour (opening a dropdown) and navigate instead.
+        if (current.navigateOnTap) {
+          e.preventDefault();
+          e.stopPropagation();
+          router.push(current.navigateOnTap);
+        }
         window.setTimeout(() => {
           if (isLast) close('completed');
           else goNext();
@@ -167,7 +167,7 @@ export function TutorialOverlay({ open, onClose }: Props) {
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
-  }, [isOpen, current.targetSelector, isLast, close, goNext]);
+  }, [isOpen, current.targetSelector, current.navigateOnTap, isLast, close, goNext, router]);
 
   // ---- Keyboard support (desktop / assistive) ----
   useEffect(() => {
@@ -188,10 +188,6 @@ export function TutorialOverlay({ open, onClose }: Props) {
   }, [isOpen, isLast, isFirst, close, goNext, goBack]);
 
   // ---- Popup placement ----
-  //
-  // If there's no target (welcome / ready / route-mismatch) → centered card.
-  // Otherwise decide above vs below based on available space, then clamp
-  // horizontally to keep the card inside the viewport.
   const placement = useMemo<{
     mode: 'center' | 'anchored';
     style: React.CSSProperties;
@@ -208,6 +204,19 @@ export function TutorialOverlay({ open, onClose }: Props) {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: `min(${POPUP_WIDTH}px, calc(100vw - 32px))`,
+        },
+        caret: null,
+      };
+    }
+
+    // Bottom-right fixed positioning for form detail steps
+    if (current.popupPosition === 'bottom-right') {
+      return {
+        mode: 'anchored',
+        style: {
+          bottom: 80,
+          right: POPUP_VIEWPORT_MARGIN,
+          width: Math.min(POPUP_WIDTH, viewportW - POPUP_VIEWPORT_MARGIN * 2),
         },
         caret: null,
       };
@@ -236,10 +245,9 @@ export function TutorialOverlay({ open, onClose }: Props) {
       },
       caret: placeBelow ? 'top' : 'bottom',
     };
-  }, [targetRect, current.targetSelector]);
+  }, [targetRect, current.targetSelector, current.popupPosition]);
 
   // Route-mismatch: target selector is set but we're on the wrong route.
-  // Show a center card with a "Go to …" CTA instead of an anchored popup.
   const showingRouteCta =
     current.targetSelector !== null &&
     targetRect === null &&
@@ -250,8 +258,6 @@ export function TutorialOverlay({ open, onClose }: Props) {
   return (
     <AnimatePresence>
       {isOpen ? (
-        // pointer-events: none on the layer so the rest of the app stays tappable.
-        // Interactive children (card, skip, ring) opt back in with pointer-events: auto.
         <motion.div
           key="tutorial-overlay"
           data-testid="tutorial-overlay"
@@ -265,7 +271,36 @@ export function TutorialOverlay({ open, onClose }: Props) {
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
-          {/* Pulse ring around the target — pure visual, never intercepts taps. */}
+          {/* Spotlight backdrop — dims everything except the target element.
+              pointer-events-none so clicks pass through to both the popup card
+              (rendered above) and the highlighted target element. */}
+          <div className="pointer-events-none fixed inset-0">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <mask id="tutorial-spotlight">
+                  <rect width="100%" height="100%" fill="white" />
+                  {targetRect && !showingRouteCta && (
+                    <rect
+                      x={targetRect.left - RING_PADDING}
+                      y={targetRect.top - RING_PADDING}
+                      width={targetRect.width + RING_PADDING * 2}
+                      height={targetRect.height + RING_PADDING * 2}
+                      rx={16}
+                      fill="black"
+                    />
+                  )}
+                </mask>
+              </defs>
+              <rect
+                width="100%"
+                height="100%"
+                fill="rgba(0,0,0,0.55)"
+                mask="url(#tutorial-spotlight)"
+              />
+            </svg>
+          </div>
+
+          {/* Pulse ring around the target */}
           {targetRect && !showingRouteCta ? (
             <motion.div
               key={`ring-${current.id}`}
@@ -288,7 +323,7 @@ export function TutorialOverlay({ open, onClose }: Props) {
           ) : null}
 
           {/* Popup card wrapper to preserve positioning transforms */}
-          <div className="fixed pointer-events-none z-50" style={placement.style}>
+          <div ref={popupRef} className="fixed pointer-events-none z-50" style={placement.style}>
             <motion.div
               key={`card-${current.id}-${placement.mode}`}
               role="dialog"

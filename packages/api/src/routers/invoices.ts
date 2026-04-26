@@ -431,7 +431,7 @@ export const invoicesRouter = router({
       // Fetch related records separately
       const { data: profile } = await ctx.supabase
         .from('profiles')
-        .select('name, phone, acra_uen, acra_verified, paynow_key, paynow_key_type, base_address')
+        .select('name, phone, acra_uen, acra_verified, gst_registered, paynow_key, paynow_key_type, base_address')
         .eq('id', ctx.user.id)
         .single();
 
@@ -512,6 +512,7 @@ export const invoicesRouter = router({
         providerAddress: profile?.base_address ?? '',
         providerAcraUen: profile?.acra_uen ?? undefined,
         providerAcraVerified: !!profile?.acra_verified,
+        providerGstRegistered: !!profile?.gst_registered,
         clientName: client?.name?.trim() || booking?.client_name?.trim() || 'Client',
         clientPhone: client?.phone ?? '',
         clientAddress: clientAddress,

@@ -58,6 +58,7 @@ interface DropdownProps {
 interface DropdownTriggerProps {
   children: React.ReactNode
   className?: string
+  'data-tutorial-target'?: string
 }
 
 interface DropdownContentProps {
@@ -123,6 +124,7 @@ export function Dropdown({ children, className = "" }: DropdownProps) {
 export function DropdownTrigger({
   children,
   className = "",
+  'data-tutorial-target': tutorialTarget,
 }: DropdownTriggerProps) {
   const { open, setOpen, triggerRef } = useDropdownContext()
 
@@ -133,6 +135,7 @@ export function DropdownTrigger({
       className={`inline-flex ${className}`}
       aria-expanded={open}
       aria-haspopup="true"
+      data-tutorial-target={tutorialTarget}
     >
       {children}
     </div>

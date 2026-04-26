@@ -1,3 +1,23 @@
+// ServiceSync Service Worker
+// Sprint 3 Task 3.6: Version-based cache-bust with skipWaiting on message.
+const SW_VERSION = '1.0.0';
+
+self.addEventListener('install', () => {
+  // Don't call skipWaiting here — let the client decide when to activate
+  // via the "New version available" banner.
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// Sprint 3 Task 3.6: Client sends SKIP_WAITING when user taps "Refresh".
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('push', (event) => {
   if (!event.data) {
     return;

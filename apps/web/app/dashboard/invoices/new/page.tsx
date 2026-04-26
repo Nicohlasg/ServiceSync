@@ -18,6 +18,7 @@ import { api, type RouterOutputs } from "@/lib/api";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { trackEvent } from "@/lib/analytics";
 import { BackButton } from "@/components/ui/back-button";
+import { useFormDraft } from "@/lib/useFormDraft";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,8 +62,8 @@ function NewInvoice() {
   // Handshake Modal
   const [showHandshake, setShowHandshake] = useState(false);
 
-  // Form State
-  const [formData, setFormData] = useState({
+  // Form State — persisted to localStorage so basement drops don't lose data
+  const [formData, setFormData, clearInvoiceDraft] = useFormDraft('draft-invoice-new', {
     clientId: "",
     clientName: "",
     serviceDescription: "",
@@ -243,6 +244,7 @@ function NewInvoice() {
         setQrCodeUrl(updatedInv.paynow_qr_url);
       }
 
+      clearInvoiceDraft();
       setStep("preview");
       trackEvent('first_invoice_issued', { invoice_id: invoice.id });
       toast.success("Invoice created!");
@@ -429,7 +431,7 @@ function NewInvoice() {
           </motion.div>
         ) : (
           <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <Card className="bg-white/70 backdrop-blur-xl border-white/40 shadow-xl rounded-3xl overflow-hidden">
+            <Card data-tutorial-target="invoice-form" className="bg-white/70 backdrop-blur-xl border-white/40 shadow-xl rounded-3xl overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <form onSubmit={generateInvoice} className="space-y-6">
                   <div className="space-y-2">

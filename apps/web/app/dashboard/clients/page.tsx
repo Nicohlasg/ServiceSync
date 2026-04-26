@@ -66,7 +66,7 @@ export default function ClientsPage() {
         className="flex items-center justify-between"
       >
         <h1 className="text-2xl font-bold text-white drop-shadow-md">My Clients</h1>
-        <Link href="/dashboard/clients/add">
+        <Link href="/dashboard/clients/add" data-tutorial-target="add-client-btn">
           <Button size="icon" className="rounded-full h-12 w-12 shadow-lg shadow-blue-500/30">
             <Plus className="h-6 w-6" />
           </Button>

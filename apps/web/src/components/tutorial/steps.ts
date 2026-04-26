@@ -4,7 +4,8 @@ import {
   Users,
   FileText,
   UserCircle,
-  Clock,
+  Copy,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -20,13 +21,17 @@ export type TutorialStepConfig = {
   translationKey:
     | 'welcome'
     | 'addService'
+    | 'addServiceBtn'
+    | 'serviceDetails'
     | 'addClient'
+    | 'addClientBtn'
+    | 'clientDetails'
     | 'collectPayment'
-    | 'setupPayment'
+    | 'invoiceDetails'
     | 'profile'
-    | 'profileButton'
     | 'editProfile'
-    | 'workingHours'
+    | 'copyLink'
+    | 'viewServicePage'
     | 'ready';
   icon: LucideIcon;
   /** CSS selector for the element to highlight. `null` = centered card. */
@@ -36,7 +41,11 @@ export type TutorialStepConfig = {
   /** Where to send the user when the target is not in the current DOM. */
   ctaRoute?: string;
   /** Label key under `tutorial.*` for the center-card CTA button. */
-  ctaLabelKey?: 'goToDashboard' | 'goToProfile';
+  ctaLabelKey?: 'goToDashboard' | 'goToProfile' | 'goToServices' | 'goToClients' | 'goToAddClient' | 'goToInvoice';
+  /** Where the popup card should appear. Default `'auto'`. */
+  popupPosition?: 'auto' | 'bottom-right';
+  /** If set, tapping the target navigates here instead of just advancing. */
+  navigateOnTap?: string;
 };
 
 export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
@@ -51,6 +60,25 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     ctaLabelKey: 'goToDashboard',
   },
   {
+    id: 'addServiceBtn',
+    translationKey: 'addServiceBtn',
+    icon: Briefcase,
+    targetSelector: '[data-tutorial-target="add-service-btn"]',
+    route: '/dashboard/services',
+    ctaRoute: '/dashboard/services',
+    ctaLabelKey: 'goToServices',
+  },
+  {
+    id: 'serviceDetails',
+    translationKey: 'serviceDetails',
+    icon: Briefcase,
+    targetSelector: '[data-tutorial-target="service-form"]',
+    route: '/dashboard/services',
+    ctaRoute: '/dashboard/services',
+    ctaLabelKey: 'goToServices',
+    popupPosition: 'bottom-right',
+  },
+  {
     id: 'addClient',
     translationKey: 'addClient',
     icon: Users,
@@ -58,6 +86,25 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     route: '/dashboard',
     ctaRoute: '/dashboard',
     ctaLabelKey: 'goToDashboard',
+  },
+  {
+    id: 'addClientBtn',
+    translationKey: 'addClientBtn',
+    icon: Users,
+    targetSelector: '[data-tutorial-target="add-client-btn"]',
+    route: '/dashboard/clients',
+    ctaRoute: '/dashboard/clients',
+    ctaLabelKey: 'goToClients',
+  },
+  {
+    id: 'clientDetails',
+    translationKey: 'clientDetails',
+    icon: Users,
+    targetSelector: '[data-tutorial-target="client-form"]',
+    route: '/dashboard/clients/add',
+    ctaRoute: '/dashboard/clients/add',
+    ctaLabelKey: 'goToAddClient',
+    popupPosition: 'bottom-right',
   },
   {
     id: 'collectPayment',
@@ -69,13 +116,14 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     ctaLabelKey: 'goToDashboard',
   },
   {
-    id: 'setupPayment',
-    translationKey: 'setupPayment',
+    id: 'invoiceDetails',
+    translationKey: 'invoiceDetails',
     icon: FileText,
-    targetSelector: null,
+    targetSelector: '[data-tutorial-target="invoice-form"]',
     route: '/dashboard/invoices/new',
-    ctaRoute: '/dashboard',
-    ctaLabelKey: 'goToDashboard',
+    ctaRoute: '/dashboard/invoices/new',
+    ctaLabelKey: 'goToInvoice',
+    popupPosition: 'bottom-right',
   },
   {
     id: 'profile',
@@ -85,15 +133,8 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     route: '/dashboard',
     ctaRoute: '/dashboard',
     ctaLabelKey: 'goToDashboard',
-  },
-  {
-    id: 'profileButton',
-    translationKey: 'profileButton',
-    icon: UserCircle,
-    targetSelector: '[data-tutorial-target="dropdown-profile-btn"]',
-    route: '/dashboard',
-    ctaRoute: '/dashboard',
-    ctaLabelKey: 'goToDashboard',
+    /** When the user taps the avatar, navigate to profile and advance. */
+    navigateOnTap: '/dashboard/profile',
   },
   {
     id: 'editProfile',
@@ -105,10 +146,19 @@ export const TUTORIAL_STEPS: ReadonlyArray<TutorialStepConfig> = [
     ctaLabelKey: 'goToProfile',
   },
   {
-    id: 'workingHours',
-    translationKey: 'workingHours',
-    icon: Clock,
-    targetSelector: '[data-tutorial-target="working-hours"]',
+    id: 'copyLink',
+    translationKey: 'copyLink',
+    icon: Copy,
+    targetSelector: '[data-tutorial-target="copy-profile-link"]',
+    route: '/dashboard/profile',
+    ctaRoute: '/dashboard/profile',
+    ctaLabelKey: 'goToProfile',
+  },
+  {
+    id: 'viewServicePage',
+    translationKey: 'viewServicePage',
+    icon: ExternalLink,
+    targetSelector: '[data-tutorial-target="view-service-page"]',
     route: '/dashboard/profile',
     ctaRoute: '/dashboard/profile',
     ctaLabelKey: 'goToProfile',

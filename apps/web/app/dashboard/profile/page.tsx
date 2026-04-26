@@ -383,10 +383,10 @@ export default function ProfilePage() {
                             <p className="text-sm text-blue-400 font-mono truncate">/p/{profile.slug}</p>
                         </div>
                         <div className="flex gap-2 shrink-0">
-                            <Button variant="ghost" size="sm" onClick={copyProfileLink} className="text-slate-400 hover:text-white h-8 w-8 p-0">
+                            <Button data-tutorial-target="copy-profile-link" variant="ghost" size="sm" onClick={copyProfileLink} className="text-slate-400 hover:text-white h-8 w-8 p-0">
                                 <Copy className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => window.open(`/p/${profile.slug}`, '_blank')} className="text-slate-400 hover:text-white h-8 w-8 p-0">
+                            <Button data-tutorial-target="view-service-page" variant="ghost" size="sm" onClick={() => window.open(`/p/${profile.slug}`, '_blank')} className="text-slate-400 hover:text-white h-8 w-8 p-0">
                                 <ExternalLink className="h-4 w-4" />
                             </Button>
                         </div>

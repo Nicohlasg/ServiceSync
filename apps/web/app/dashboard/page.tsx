@@ -241,7 +241,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <Dropdown>
-                        <DropdownTrigger className="cursor-pointer group">
+                        <DropdownTrigger data-tutorial-target="profile-dropdown-trigger" className="cursor-pointer group">
                             <div data-tutorial-target="profile-link">
                                 {userProfile?.avatar_url ? (
                                     <Image src={userProfile.avatar_url} alt="Profile" width={48} height={48} className="rounded-full object-cover border-2 border-transparent hover:border-blue-400 shadow-sm h-12 w-12 transition-colors duration-200" unoptimized />

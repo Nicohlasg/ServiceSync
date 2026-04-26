@@ -23,9 +23,25 @@ const listClientsInput = z.object({
   offset: z.number().int().min(0).default(0),
 });
 
+/**
+ * Task 1.7: Normalise Singapore phone numbers to E.164 (+65XXXXXXXX).
+ * Accepts: "91234567", "+6591234567", "6591234567", "9123 4567"
+ */
+function normaliseE164(raw: string): string {
+  const digits = raw.replace(/[\s\-()]/g, '');
+  // Already has +65 prefix
+  if (/^\+65[89]\d{7}$/.test(digits)) return digits;
+  // Has 65 prefix without +
+  if (/^65[89]\d{7}$/.test(digits)) return `+${digits}`;
+  // Bare 8-digit SG number
+  if (/^[89]\d{7}$/.test(digits)) return `+65${digits}`;
+  // Return as-is for non-SG numbers (validation below will catch invalid ones)
+  return digits;
+}
+
 const createClientInput = z.object({
   name: z.string().min(1).max(100),
-  phone: z.string().min(8),
+  phone: z.string().min(8).transform(normaliseE164),
   email: z.string().email().optional(),
   address: z.string().min(1),
   postalCode: z.string().optional(),
@@ -38,7 +54,7 @@ const createClientInput = z.object({
 const updateClientInput = z.object({
   clientId: z.string().uuid(),
   name: z.string().min(1).max(100).optional(),
-  phone: z.string().min(8).optional(),
+  phone: z.string().min(8).transform(normaliseE164).optional(),
   email: z.string().email().nullable().optional(),
   address: z.string().min(1).optional(),
   postalCode: z.string().nullable().optional(),

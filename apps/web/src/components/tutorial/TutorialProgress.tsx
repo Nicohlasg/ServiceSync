@@ -20,7 +20,7 @@ export function TutorialProgress({ currentIndex, total, dwellMs, paused }: Props
 
   return (
     <div
-      className="flex items-center justify-center gap-1.5"
+      className="flex items-center justify-center gap-1"
       role="progressbar"
       aria-label={t('progress', { current: currentIndex + 1, total })}
       aria-valuenow={currentIndex + 1}
@@ -32,7 +32,7 @@ export function TutorialProgress({ currentIndex, total, dwellMs, paused }: Props
         const isActive = i === currentIndex;
 
         // Base pill sizing: active is wider to draw the eye.
-        const base = isActive ? 'w-10' : 'w-6';
+        const base = isActive ? 'w-5' : 'w-3';
         const bg = isCompleted
           ? 'bg-white/60'
           : isActive

@@ -21,7 +21,7 @@ import { releaseEscrowDeposit } from '@/server/services/escrow';
 import { recordTillEntry } from '@/server/services/till';
 import { getAdminClient } from '@/server/services/supabase-admin';
 
-const NETS_WEBHOOK_SECRET = process.env.NETS_WEBHOOK_SECRET!;
+const NETS_WEBHOOK_SECRET = process.env.NETS_WEBHOOK_SECRET ?? '';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,6 +41,12 @@ interface NetsCallback {
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Task 1.8: Runtime guard — reject all webhooks if secret is missing
+  if (!NETS_WEBHOOK_SECRET) {
+    console.error('[PayNow Webhook] NETS_WEBHOOK_SECRET is not configured — rejecting request');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+  }
+
   const supabase = getAdminClient();
 
   // Read raw body once — we need it for both HMAC + payload hashing.
@@ -200,8 +206,13 @@ function validateHmac(body: NetsCallback): boolean {
   return diff === 0;
 }
 
+// Sprint 3 Task 3.4: SGT-aware date arithmetic. Prevents the UTC-date
+// pitfall where 11:30 PM SGT lands on the wrong calendar day.
+const SGT_OFFSET_MS = 8 * 60 * 60 * 1000;
 function addDays(isoDate: string, days: number): string {
-  const d = new Date(isoDate);
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
+  const utcMs = new Date(isoDate).getTime();
+  const sgtDate = new Date(utcMs + SGT_OFFSET_MS);
+  sgtDate.setUTCDate(sgtDate.getUTCDate() + days);
+  sgtDate.setUTCHours(0, 0, 0, 0);
+  return new Date(sgtDate.getTime() - SGT_OFFSET_MS).toISOString();
 }

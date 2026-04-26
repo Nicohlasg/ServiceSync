@@ -564,6 +564,39 @@ export const providerRouter = router({
     }),
 
   /**
+   * Task 1.5: Record PDPA consent. Idempotent — only sets if not already set.
+   */
+  acceptPdpa: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const { data } = await ctx.supabase
+        .from('profiles')
+        .select('pdpa_consent_at')
+        .eq('id', ctx.user.id)
+        .single();
+
+      if (data?.pdpa_consent_at) {
+        return { alreadyAccepted: true, consentAt: data.pdpa_consent_at };
+      }
+
+      const now = new Date().toISOString();
+      await ctx.supabase
+        .from('profiles')
+        .update({ pdpa_consent_at: now })
+        .eq('id', ctx.user.id);
+
+      void emitAuditEvent({
+        actorId: ctx.user.id,
+        actorIp: ctx.clientIp,
+        entityType: 'profile',
+        entityId: ctx.user.id,
+        action: 'pdpa_consent',
+        diff: { pdpa_consent_at: now },
+      });
+
+      return { alreadyAccepted: false, consentAt: now };
+    }),
+
+  /**
    * Lists the technician's services.
    */
   getServices: protectedProcedure

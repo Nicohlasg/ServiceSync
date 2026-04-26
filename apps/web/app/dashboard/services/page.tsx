@@ -121,6 +121,7 @@ export default function ServicesPage() {
             {!isCreating && (
                 <div className="px-1">
                     <Button
+                        data-tutorial-target="add-service-btn"
                         onClick={() => { setPulseDismissed(true); startCreating(); }}
                         className={`w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg border border-emerald-500/30 font-black text-lg relative overflow-hidden ${
                             showPulse ? 'animate-service-pulse ring-2 ring-emerald-400/60' : ''
@@ -135,7 +136,7 @@ export default function ServicesPage() {
             )}
 
             {isCreating && (
-                <Card className="rounded-3xl border-blue-500/30 shadow-lg shadow-blue-500/10">
+                <Card data-tutorial-target="service-form" className="rounded-3xl border-blue-500/30 shadow-lg shadow-blue-500/10">
                     <CardContent className="p-5 space-y-4">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest">New Service</h3>

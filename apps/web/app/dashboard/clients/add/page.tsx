@@ -13,12 +13,19 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { BackButton } from "@/components/ui/back-button";
+import { useFormDraft } from "@/lib/useFormDraft";
 
 export default function AddClientPage() {
   const [loading, setLoading] = useState(false);
+  const [pdpaChecked, setPdpaChecked] = useState(false);
   const { push } = useRouter();
 
-  const [formData, setFormData] = useState({
+  // Task 1.5: Check if user has already given PDPA consent
+  const profileQuery = api.provider.getProfile.useQuery();
+  const hasPdpaConsent = !!profileQuery.data?.pdpa_consent_at;
+  const acceptPdpaMutation = api.provider.acceptPdpa.useMutation();
+
+  const [formData, setFormData, clearClientDraft] = useFormDraft('draft-client-add', {
     name: "",
     phone: "",
     block: "",
@@ -36,6 +43,7 @@ export default function AddClientPage() {
   // SEC-H6: Use tRPC mutation instead of direct Supabase insert
   const createClientMutation = api.clients.create.useMutation({
     onSuccess: () => {
+      clearClientDraft();
       toast.success("Client added successfully");
       push("/dashboard/clients");
     },
@@ -59,6 +67,11 @@ export default function AddClientPage() {
     // Combine address fields into a single string for the tRPC schema
     const address = [formData.block, formData.street, formData.unit ? `#${formData.unit}` : '']
       .filter(Boolean).join(' ').trim();
+
+    // Task 1.5: Record PDPA consent on first client creation if not already done
+    if (!hasPdpaConsent && pdpaChecked) {
+      try { await acceptPdpaMutation.mutateAsync(); } catch { /* non-blocking */ }
+    }
 
     createClientMutation.mutate({
       name: formData.name,
@@ -86,7 +99,7 @@ export default function AddClientPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 shadow-2xl rounded-3xl overflow-hidden">
+        <Card data-tutorial-target="client-form" className="bg-slate-900/65 backdrop-blur-xl border-white/15 shadow-2xl rounded-3xl overflow-hidden">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -146,12 +159,32 @@ export default function AddClientPage() {
                 />
               </div>
 
+              {/* Task 1.5: PDPA consent gate — shown only on first client creation */}
+              {!hasPdpaConsent && !profileQuery.isLoading && (
+                <div className="flex items-start gap-3 p-4 bg-blue-950/40 border border-blue-500/20 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="pdpa-consent"
+                    checked={pdpaChecked}
+                    onChange={(e) => setPdpaChecked(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-white/20 bg-slate-800 accent-blue-500"
+                  />
+                  <label htmlFor="pdpa-consent" className="text-sm text-slate-300 leading-relaxed">
+                    I acknowledge that I will collect and store client personal data (name, phone, address) in accordance with Singapore&apos;s{' '}
+                    <a href="https://www.pdpc.gov.sg/overview-of-pdpa/the-legislation/personal-data-protection-act" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                      Personal Data Protection Act (PDPA)
+                    </a>
+                    . I will only use this data for service delivery and communication purposes.
+                  </label>
+                </div>
+              )}
+
               <div className="pt-4">
                 <Button
                   type="submit"
                   size="lg"
                   className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20 text-lg font-semibold hover:shadow-blue-500/40 transition-all active:scale-[0.98]"
-                  disabled={loading}
+                  disabled={loading || (!hasPdpaConsent && !pdpaChecked)}
                 >
                   {loading ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving...</>
