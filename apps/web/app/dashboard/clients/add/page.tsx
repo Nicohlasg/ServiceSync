@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { BackButton } from "@/components/ui/back-button";
 import { useFormDraft } from "@/lib/useFormDraft";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 export default function AddClientPage() {
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,10 @@ export default function AddClientPage() {
     unit: "",
     postal: "",
     brand: "",
-    notes: ""
+    notes: "",
+    fullAddress: "",
+    lat: null as number | null,
+    lng: null as number | null,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,8 +80,10 @@ export default function AddClientPage() {
     createClientMutation.mutate({
       name: formData.name,
       phone: formData.phone,
-      address: address || formData.street,
+      address: formData.fullAddress || address || formData.street,
       postalCode: formData.postal || undefined,
+      lat: formData.lat ?? undefined,
+      lng: formData.lng ?? undefined,
       brand: formData.brand || undefined,
       notes: formData.notes || undefined,
     });
@@ -128,9 +134,15 @@ export default function AddClientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-300 font-semibold">Address</Label>
+                <Label className="text-slate-300 font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Address</Label>
+                <AddressAutocomplete
+                  value={formData.fullAddress}
+                  onChange={(addr, lat, lng) => setFormData({ ...formData, fullAddress: addr, lat, lng })}
+                  placeholder="Search address..."
+                  className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-12 rounded-xl"
+                />
                 <div className="grid grid-cols-2 gap-3">
-                  <Input id="block" placeholder="Block" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.block} onChange={handleChange} />
+                  <Input id="block" placeholder="Block (optional)" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.block} onChange={handleChange} />
                   <Input id="street" placeholder="Street Name" className="col-span-1 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.street} onChange={handleChange} />
                   <Input id="unit" placeholder="Unit #01-01" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.unit} onChange={handleChange} />
                   <Input id="postal" placeholder="Postal Code" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.postal} onChange={handleChange} />

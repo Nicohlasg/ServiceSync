@@ -227,6 +227,75 @@ export const clientsRouter = router({
     }),
 
   /**
+   * Bulk-creates clients from contact import (Contact Picker or .vcf).
+   * Deduplicates by phone against existing clients for this provider.
+   * Max 100 contacts per call.
+   */
+  bulkCreate: protectedProcedure
+    .input(z.object({
+      contacts: z.array(z.object({
+        name: z.string().min(1).max(100),
+        phone: z.string().min(8).transform(normaliseE164),
+      })).min(1).max(100),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Fetch existing phone numbers for deduplication
+      const { data: existing } = await ctx.supabase
+        .from('clients')
+        .select('phone')
+        .eq('provider_id', ctx.user.id)
+        .eq('is_deleted', false);
+
+      const existingPhones = new Set((existing ?? []).map((c: { phone: string }) => c.phone));
+
+      const toInsert = input.contacts
+        .filter(c => !existingPhones.has(c.phone))
+        // Deduplicate within the batch itself
+        .filter((c, i, arr) => arr.findIndex(x => x.phone === c.phone) === i)
+        .map(c => ({
+          provider_id: ctx.user.id,
+          name: sanitizeHtml(c.name),
+          phone: sanitizeHtml(c.phone),
+          address: '',
+          brand: '',
+          notes: '',
+        }));
+
+      let created = 0;
+      if (toInsert.length > 0) {
+        const { data, error } = await ctx.supabase
+          .from('clients')
+          .insert(toInsert)
+          .select('id');
+
+        if (error) {
+          console.error('[Clients] bulkCreate error:', error.message);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to import contacts' });
+        }
+
+        created = data?.length ?? 0;
+      }
+
+      const skipped = input.contacts.length - created;
+
+      void emitAuditEvent({
+        actorId: ctx.user.id,
+        actorIp: ctx.clientIp,
+        entityType: 'client',
+        entityId: ctx.user.id,
+        action: 'create',
+        diff: { created, skipped, total: input.contacts.length },
+      });
+
+      // Fire-and-forget checklist mark
+      if (created > 0) {
+        void markChecklistItemServerSide(ctx.supabase, ctx.user.id, 'client');
+      }
+
+      return { created, skipped };
+    }),
+
+  /**
    * Updates a client's information.
    */
   update: protectedProcedure

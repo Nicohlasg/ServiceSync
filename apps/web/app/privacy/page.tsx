@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Privacy Policy</h1>
-        <p className="text-slate-500 mb-10 text-sm">Last updated: 1 April 2026</p>
+        <p className="text-slate-500 mb-10 text-sm">Last updated: 27 April 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed">
           <section>
@@ -56,6 +56,16 @@ export default function PrivacyPage() {
               <li>
                 <span className="text-white font-medium">Technical data:</span> IP address, browser
                 type, device information, access logs
+              </li>
+              <li>
+                <span className="text-white font-medium">Contact data:</span> If you choose to import
+                contacts, we access names and phone numbers from your device&apos;s contact list or
+                uploaded .vcf files. This data is only used to create client records in your account.
+              </li>
+              <li>
+                <span className="text-white font-medium">Location data:</span> We use your
+                device&apos;s location (with your permission) to estimate travel times and provide
+                address autocomplete via OneMap SG.
               </li>
             </ul>
           </section>
@@ -105,6 +115,11 @@ export default function PrivacyPage() {
               <li>
                 <span className="text-white font-medium">Legal authorities:</span> When required by
                 Singapore law or court order
+              </li>
+              <li>
+                <span className="text-white font-medium">OneMap SG:</span> Address lookups are
+                processed through Singapore&apos;s OneMap service (onemap.gov.sg). No personal data is
+                sent — only the search query text.
               </li>
             </ul>
           </section>

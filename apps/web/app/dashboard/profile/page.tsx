@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, User, Shield, Save, Loader2, Copy, ExternalLink, BadgeCheck, Pencil, X, Camera, Settings, Trash2 } from "lucide-react";
+import { LogOut, User, Shield, Save, Loader2, Copy, ExternalLink, BadgeCheck, Pencil, X, Camera, Settings, Trash2, MapPin } from "lucide-react";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { SkeletonLine, SkeletonCircle, SkeletonCard } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,9 @@ interface ProfileData {
     paynow_key: string | null;
     working_hours: WorkingHours | null;
     banner_url: string | null;
+    base_address: string | null;
+    base_lat: number | null;
+    base_lng: number | null;
 }
 
 export default function ProfilePage() {
@@ -66,6 +70,9 @@ export default function ProfilePage() {
         acra_uen: "",
         paynow_key: "",
         working_hours: {} as WorkingHours,
+        base_address: "",
+        base_lat: null as number | null,
+        base_lng: null as number | null,
     });
 
     const loadProfile = useCallback(async () => {
@@ -97,6 +104,9 @@ export default function ProfilePage() {
                 wed: { start: "09:00", end: "18:00" }, thu: { start: "09:00", end: "18:00" },
                 fri: { start: "09:00", end: "18:00" }, sat: null, sun: null
             },
+            base_address: data.base_address || "",
+            base_lat: data.base_lat ?? null,
+            base_lng: data.base_lng ?? null,
         });
         setLoading(false);
     }, [push]);
@@ -127,6 +137,9 @@ export default function ProfilePage() {
             acraUen: form.acra_uen.trim() || undefined,
             paynowKey: form.paynow_key.trim() || undefined,
             workingHours: form.working_hours,
+            baseAddress: form.base_address.trim() || undefined,
+            baseLat: form.base_lat ?? undefined,
+            baseLng: form.base_lng ?? undefined,
         });
     };
 
@@ -440,6 +453,20 @@ export default function ProfilePage() {
                                 <Textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="bg-slate-800/50 border-white/10 text-white resize-none" />
                             ) : (
                                 <p className="text-slate-300 text-sm">{profile.bio || "No bio set"}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-slate-400 text-xs flex items-center gap-1"><MapPin className="h-3 w-3" /> Home Address</Label>
+                            {editing ? (
+                                <AddressAutocomplete
+                                    value={form.base_address}
+                                    onChange={(addr, lat, lng) => setForm({ ...form, base_address: addr, base_lat: lat, base_lng: lng })}
+                                    placeholder="Search your home address..."
+                                    className="bg-slate-800/50 border-white/10 text-white h-10"
+                                />
+                            ) : (
+                                <p className="text-white font-medium text-sm">{profile.base_address || "Not set — used as starting point for route calculations"}</p>
                             )}
                         </div>
                     </div>

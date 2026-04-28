@@ -2,6 +2,14 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const SUPABASE_FUNCTIONS_PATH = process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_PATH ?? '';
 
+/** Build edge function base URL, avoiding double slashes when path is empty */
+function fnUrl(name: string): string {
+    const base = SUPABASE_FUNCTIONS_PATH
+        ? `${SUPABASE_URL}/functions/v1/${SUPABASE_FUNCTIONS_PATH}/${name}`
+        : `${SUPABASE_URL}/functions/v1/${name}`;
+    return base;
+}
+
 export interface RouteResult {
     durationText: string; // "22 mins"
     durationValue: number; // seconds
@@ -37,7 +45,7 @@ export async function getRouteDetails(
     const destStr = `${destination.lat},${destination.lng}`;
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/${SUPABASE_FUNCTIONS_PATH}/directions`, {
+        const response = await fetch(fnUrl('directions'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,7 +58,7 @@ export async function getRouteDetails(
             const data = await response.json();
             const durationMins = Math.ceil(data.duration / 60);
             const distanceKm = (data.distance / 1000).toFixed(1);
-            
+
             return {
                 durationText: `${durationMins} mins`,
                 durationValue: data.duration,
@@ -81,23 +89,23 @@ export function calculateLeaveTime(arrivalTimeStr: string, durationSeconds: numb
     // Parse time string "10:00 AM"
     const [time, period] = arrivalTimeStr.split(" ");
     const [hours, minutes] = time.split(":").map(Number);
-    
+
     const targetDate = new Date();
     let targetHours = hours;
     if (period === "PM" && hours !== 12) targetHours += 12;
     if (period === "AM" && hours === 12) targetHours = 0;
-    
+
     targetDate.setHours(targetHours, minutes, 0, 0);
 
     // Subtract duration
     const leaveDate = new Date(targetDate.getTime() - (durationSeconds * 1000));
-    
+
     return leaveDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 export async function geocodeAddress(address: string): Promise<{ address: string; lat: number; lng: number } | null> {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/${SUPABASE_FUNCTIONS_PATH}/geocode`, {
+        const response = await fetch(fnUrl('geocode'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

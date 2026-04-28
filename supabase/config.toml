@@ -1,0 +1,12 @@
+
+[functions.directions]
+enabled = true
+verify_jwt = true
+import_map = "./functions/directions/deno.json"
+entrypoint = "./functions/directions/index.ts"
+
+[functions.geocode]
+enabled = true
+verify_jwt = true
+import_map = "./functions/geocode/deno.json"
+entrypoint = "./functions/geocode/index.ts"

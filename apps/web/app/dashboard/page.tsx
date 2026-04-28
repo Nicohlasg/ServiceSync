@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Mail, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +41,9 @@ export default function DashboardPage() {
     const [loadingRoute, setLoadingRoute] = useState(false);
     const [clientHistory, setClientHistory] = useState<ClientHistoryItem[]>([]);
     const [openPaynowPreview, setOpenPaynowPreview] = useState(false);
+    const [originSource, setOriginSource] = useState<"previous" | "current">("previous");
+    const [originLabel, setOriginLabel] = useState<string>("Home");
+    const [noHomeAddress, setNoHomeAddress] = useState(false);
     const { push } = useRouter();
 
     useEffect(() => {
@@ -133,8 +137,83 @@ export default function DashboardPage() {
         loadDashboardData();
     }, []);
 
+    const getOriginForJob = (job: Job, source: "previous" | "current"): { origin: { lat: number; lng: number } | null; label: string; noHome: boolean } => {
+        const currentIndex = jobs.findIndex(j => j.id === job.id);
+        const hasHome = !!(userProfile?.base_lat && userProfile?.base_lng);
+
+        if (source === "current") {
+            return { origin: null, label: "Current Location", noHome: false }; // will be resolved via geolocation
+        }
+
+        // For 2nd+ jobs, use previous job location
+        if (currentIndex > 0) {
+            const prevJob = jobs[currentIndex - 1];
+            if (prevJob.lat && prevJob.lng) {
+                return { origin: { lat: prevJob.lat, lng: prevJob.lng }, label: "Previous Job", noHome: false };
+            }
+        }
+
+        // First job or previous job has no coords — use home address
+        if (hasHome) {
+            return { origin: { lat: userProfile!.base_lat!, lng: userProfile!.base_lng! }, label: "Home", noHome: false };
+        }
+
+        // No home address set
+        return { origin: null, label: "Home", noHome: true };
+    };
+
+    const fetchRoute = async (job: Job, source: "previous" | "current") => {
+        setLoadingRoute(true);
+        setRouteData(null);
+
+        const destination = { lat: job.lat || 1.3521, lng: job.lng || 103.8198 };
+        const { origin, label, noHome } = getOriginForJob(job, source);
+
+        setOriginLabel(label);
+        setNoHomeAddress(noHome);
+
+        if (noHome) {
+            setLoadingRoute(false);
+            return;
+        }
+
+        let resolvedOrigin = origin;
+
+        // Resolve current location via Geolocation API
+        if (source === "current" && !origin) {
+            try {
+                const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 })
+                );
+                resolvedOrigin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            } catch {
+                toast.error("Could not get your current location. Using default.");
+                // Fall back to previous job or home
+                const fallback = getOriginForJob(job, "previous");
+                resolvedOrigin = fallback.origin;
+                setOriginLabel(fallback.label);
+                setNoHomeAddress(fallback.noHome);
+                if (fallback.noHome) {
+                    setLoadingRoute(false);
+                    return;
+                }
+            }
+        }
+
+        if (!resolvedOrigin) {
+            setLoadingRoute(false);
+            return;
+        }
+
+        const result = await getRouteDetails(resolvedOrigin, destination);
+        const leaveBy = calculateLeaveTime(job.time, result.durationValue);
+        setRouteData({ ...result, leaveBy });
+        setLoadingRoute(false);
+    };
+
     const handleJobSelect = async (job: Job) => {
         setSelectedJob(job);
+        setOriginSource("previous");
         setLoadingRoute(true);
         setRouteData(null);
         setClientHistory([]);
@@ -161,30 +240,22 @@ export default function DashboardPage() {
             }
         }
 
-        // Determine Origin
-        const currentIndex = jobs.findIndex(j => j.id === job.id);
-        // Default to Provider's Base/Home OR Singapore Center
-        let origin = { lat: userProfile?.base_lat ?? 1.3521, lng: userProfile?.base_lng ?? 103.8198 };
+        await fetchRoute(job, "previous");
+    };
 
-        if (currentIndex > 0) {
-            const prevJob = jobs[currentIndex - 1];
-            if (prevJob.lat && prevJob.lng) {
-                origin = { lat: prevJob.lat, lng: prevJob.lng };
-            }
-        }
-
-        const destination = { lat: job.lat || 1.3521, lng: job.lng || 103.8198 };
-
-        const result = await getRouteDetails(origin, destination);
-        const leaveBy = calculateLeaveTime(job.time, result.durationValue);
-
-        setRouteData({ ...result, leaveBy });
-        setLoadingRoute(false);
+    const handleSwitchOrigin = (source: "previous" | "current") => {
+        if (!selectedJob || source === originSource) return;
+        setOriginSource(source);
+        fetchRoute(selectedJob, source);
     };
 
     const handleStartNavigation = () => {
         if (selectedJob && selectedJob.lat && selectedJob.lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedJob.lat},${selectedJob.lng}`, '_blank');
+        } else if (selectedJob?.address) {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedJob.address)}`, '_blank');
+        } else {
+            toast.error("No address available for navigation.");
         }
     };
 
@@ -193,6 +264,16 @@ export default function DashboardPage() {
         await supabase.auth.signOut();
         push('/auth/login');
     };
+
+    // Lock body scroll when job details modal is open
+    useEffect(() => {
+        if (selectedJob) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [selectedJob]);
 
     // Till Management logic
     const todayEarnings = cashInPocket + bankTransfers;
@@ -409,9 +490,9 @@ export default function DashboardPage() {
                                                     )}
                                                 </div>
                                                 <p className={`text-base line-clamp-1 font-medium ${job.status === 'completed' ? 'text-slate-500' : 'text-slate-300'}`}>{job.service}</p>
-                                                <div className="flex items-center text-sm text-slate-400 gap-1.5 mt-1">
-                                                    <MapPin className="h-4 w-4 shrink-0" />
-                                                    <span className="truncate font-bold">{job.address}</span>
+                                                <div className="flex items-start text-sm text-slate-400 gap-1.5 mt-1">
+                                                    <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                                                    <span className="line-clamp-2 font-bold">{job.address}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -449,7 +530,7 @@ export default function DashboardPage() {
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed inset-x-0 bottom-0 top-12 z-[100] bg-slate-900 shadow-2xl rounded-t-[2rem] overflow-hidden flex flex-col border-t border-white/10"
+                            className="fixed inset-x-0 bottom-0 top-0 z-[100] bg-slate-900 shadow-2xl rounded-t-[2rem] overflow-hidden flex flex-col border-t border-white/10"
                         >
                             {/* Header Image / Map */}
                             <div className="relative h-[30vh] w-full bg-slate-800 shrink-0 border-b border-white/5">
@@ -526,37 +607,79 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* Travel Time Card */}
-                                <div className="bg-slate-800/60 border border-white/10 shadow-lg p-5 rounded-3xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-blue-600/20 p-2.5 rounded-xl text-blue-400 border border-blue-500/20">
-                                            <Navigation className="h-5 w-5" />
-                                        </div>
-                                        <div className="overflow-hidden">
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Est. Travel</p>
+                                {noHomeAddress ? (
+                                    <div className="bg-amber-950/40 border border-amber-500/20 shadow-lg p-5 rounded-3xl">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="bg-amber-600/20 p-2.5 rounded-xl text-amber-400 border border-amber-500/20">
+                                                <Navigation className="h-5 w-5" />
+                                            </div>
                                             <div>
-                                                {loadingRoute ? (
-                                                    <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1" />
-                                                ) : (
-                                                    <p className="text-2xl font-black text-white flex items-center gap-2 tracking-tight truncate">
-                                                        {routeData?.durationText}
-                                                    </p>
-                                                )}
+                                                <p className="text-sm font-bold text-amber-200">Travel time unavailable</p>
+                                                <p className="text-xs text-amber-400/80">Set your home address to enable travel estimates</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full border-amber-500/30 text-amber-300 hover:bg-amber-500/10 rounded-xl font-bold"
+                                            onClick={() => { setSelectedJob(null); push("/dashboard/profile"); }}
+                                        >
+                                            <MapPin className="h-4 w-4 mr-2" /> Set Home Address
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-800/60 border border-white/10 shadow-lg rounded-3xl overflow-hidden">
+                                        <div className="p-5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-blue-600/20 p-2.5 rounded-xl text-blue-400 border border-blue-500/20">
+                                                    <Navigation className="h-5 w-5" />
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Est. Travel</p>
+                                                    <div>
+                                                        {loadingRoute ? (
+                                                            <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1" />
+                                                        ) : (
+                                                            <p className="text-2xl font-black text-white flex items-center gap-2 tracking-tight truncate">
+                                                                {routeData?.durationText}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right border-l border-white/10 pl-4 shrink-0">
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Leave By</p>
+                                                <div>
+                                                    {loadingRoute ? (
+                                                        <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1 ml-auto" />
+                                                    ) : (
+                                                        <p className="text-2xl font-black text-orange-400 tracking-tight">
+                                                            {routeData?.leaveBy}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Origin Switcher */}
+                                        <div className="px-5 pb-4 flex items-center gap-2">
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider shrink-0">From:</span>
+                                            <div className="flex gap-1.5 flex-1">
+                                                <button
+                                                    onClick={() => handleSwitchOrigin("previous")}
+                                                    className={`flex-1 text-xs font-bold py-1.5 px-3 rounded-lg transition-colors ${originSource === "previous" ? "bg-blue-600/20 text-blue-300 border border-blue-500/30" : "bg-slate-700/40 text-slate-400 border border-white/5 hover:bg-slate-700/60"}`}
+                                                >
+                                                    {originSource === "previous" ? originLabel : (jobs.findIndex(j => j.id === selectedJob?.id) > 0 ? "Previous Job" : "Home")}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSwitchOrigin("current")}
+                                                    className={`flex-1 text-xs font-bold py-1.5 px-3 rounded-lg transition-colors ${originSource === "current" ? "bg-blue-600/20 text-blue-300 border border-blue-500/30" : "bg-slate-700/40 text-slate-400 border border-white/5 hover:bg-slate-700/60"}`}
+                                                >
+                                                    Current Location
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right border-l border-white/10 pl-4 shrink-0">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Leave By</p>
-                                        <div>
-                                            {loadingRoute ? (
-                                                <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1 ml-auto" />
-                                            ) : (
-                                                <p className="text-2xl font-black text-orange-400 tracking-tight">
-                                                    {routeData?.leaveBy}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
 
                                 {/* Job Info */}
                                 <div className="grid grid-cols-2 gap-3">
@@ -592,7 +715,7 @@ export default function DashboardPage() {
                                         {selectedJob.status !== "completed" ? (
                                             <Button
                                                 variant="outline"
-                                                className="w-full h-14 rounded-2xl bg-emerald-600/10 border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-600/20 transition-colors"
+                                                className="w-full h-14 rounded-2xl bg-emerald-600 border-emerald-500 text-white font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20"
                                                 onClick={() => {
                                                     setSelectedJob(null);
                                                     push("/dashboard/invoices/new");
@@ -604,7 +727,7 @@ export default function DashboardPage() {
                                         ) : (
                                             <Button
                                                 variant="outline"
-                                                className="w-full h-14 rounded-2xl bg-white/5 border-white/10 text-slate-300 font-bold hover:bg-white/10 transition-colors"
+                                                className="w-full h-14 rounded-2xl bg-slate-800 border-slate-700 text-slate-400 font-bold"
                                                 disabled
                                             >
                                                 Job Completed

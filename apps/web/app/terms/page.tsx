@@ -17,7 +17,7 @@ export default function TermsPage() {
         </Link>
 
         <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Terms of Service</h1>
-        <p className="text-slate-500 mb-10 text-sm">Last updated: 1 April 2026</p>
+        <p className="text-slate-500 mb-10 text-sm">Last updated: 27 April 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed">
           <section>
@@ -80,7 +80,21 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">6. Prohibited Conduct</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">6. Contact Import &amp; Third-Party Data</h2>
+            <p>
+              The Platform allows you to import contact information from your device&apos;s contact list
+              or uploaded .vcf files. By using this feature, you represent and warrant that you have
+              obtained all necessary consent from the individuals whose contact information you share
+              with ServiceSync, in compliance with Singapore&apos;s Personal Data Protection Act (PDPA).
+            </p>
+            <p className="mt-3">
+              You are solely responsible for ensuring that any third-party personal data you input into
+              the Platform has been collected and shared lawfully.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-white mb-3">7. Prohibited Conduct</h2>
             <p>You agree not to:</p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
               <li>Use the Platform for any unlawful purpose</li>
@@ -92,7 +106,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">7. Intellectual Property</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">8. Intellectual Property</h2>
             <p>
               All content, trademarks, logos, and software on the Platform are the property of
               ServiceSync SG Pte Ltd or its licensors. You may not reproduce, distribute, or create
@@ -101,7 +115,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">8. Limitation of Liability</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">9. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by Singapore law, ServiceSync shall not be liable for
               any indirect, incidental, special, consequential, or punitive damages, including loss
@@ -112,7 +126,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">9. Termination</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">10. Termination</h2>
             <p>
               We may suspend or terminate your account at any time for violation of these Terms. You
               may delete your account at any time through the Profile settings. Upon termination, we
@@ -122,7 +136,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">10. Governing Law</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">11. Governing Law</h2>
             <p>
               These Terms are governed by the laws of the Republic of Singapore. Any disputes shall
               be submitted to the exclusive jurisdiction of the Singapore courts. For claims below
@@ -131,7 +145,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">11. Changes to Terms</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">12. Changes to Terms</h2>
             <p>
               We may update these Terms from time to time. Material changes will be notified via
               email or in-app notification. Continued use of the Services after changes constitutes
@@ -140,7 +154,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-white mb-3">12. Contact</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">13. Contact</h2>
             <p>
               For questions about these Terms, contact us at{" "}
               <a href="mailto:support@servicesync.sg" className="text-blue-400 hover:underline">

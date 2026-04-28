@@ -100,9 +100,10 @@ export function useTutorialGate() {
   const reset = useCallback(async () => {
     writeCache(false);
     setState('show');
-    // Invalidate the cached query so shouldShow re-evaluates immediately
-    // without needing a page refresh.
-    utils.provider.getTutorialStatus.setData(undefined, { tutorialCompletedAt: null });
+    // Invalidate so the dashboard's fresh mount refetches instead of serving
+    // stale cached data (staleTime: Infinity means setData alone doesn't
+    // survive a cross-page navigation).
+    await utils.provider.getTutorialStatus.invalidate();
     try {
       await resetMutation.mutateAsync();
     } catch (err) {

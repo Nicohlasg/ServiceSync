@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, X as XIcon } from "lucide-react";
 import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 import { DigitalHandshakeModal } from "@/components/DigitalHandshakeModal";
 import { api, type RouterOutputs } from "@/lib/api";
@@ -40,6 +40,13 @@ function NewInvoice() {
 
   // Client list from DB
   const [clients, setClients] = useState<ClientOption[]>([]);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
+
+  // Service catalog
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [serviceDropdownOpen, setServiceDropdownOpen] = useState(false);
+  const servicesQuery = api.provider.getServices.useQuery();
 
   useEffect(() => {
     async function loadClients() {
@@ -436,17 +443,46 @@ function NewInvoice() {
                 <form onSubmit={generateInvoice} className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-slate-800 font-bold text-lg">Client</Label>
-                    <Select onValueChange={handleClientSelect} value={formData.clientId}>
-                      <SelectTrigger className="h-14 bg-white border-slate-300 rounded-xl text-lg font-medium shadow-sm text-slate-800">
-                        <SelectValue placeholder="Select existing client..." />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-xl bg-white/95">
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id} className="text-lg py-3">{client.name}</SelectItem>
-                        ))}
-                        <SelectItem value="new" className="text-lg py-3 font-semibold text-blue-600">+ Enter Manually</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="relative">
+                      {formData.clientId && formData.clientId !== "new" ? (
+                        <div className="h-14 bg-white border border-slate-300 rounded-xl text-lg font-medium shadow-sm text-slate-800 flex items-center px-4 justify-between">
+                          <span>{clients.find(c => c.id === formData.clientId)?.name || formData.clientName}</span>
+                          <button type="button" onClick={() => { handleClientSelect(""); setClientSearch(""); }} className="text-slate-400 hover:text-slate-600"><XIcon className="h-5 w-5" /></button>
+                        </div>
+                      ) : formData.clientId === "new" ? (
+                        <div className="h-14 bg-white border border-slate-300 rounded-xl text-lg font-medium shadow-sm text-blue-600 flex items-center px-4 justify-between">
+                          <span>+ Enter Manually</span>
+                          <button type="button" onClick={() => { handleClientSelect(""); setClientSearch(""); }} className="text-slate-400 hover:text-slate-600"><XIcon className="h-5 w-5" /></button>
+                        </div>
+                      ) : (
+                        <>
+                          <Search className="absolute left-4 top-4 h-5 w-5 text-slate-400 z-10" />
+                          <Input
+                            value={clientSearch}
+                            onChange={(e) => { setClientSearch(e.target.value); setClientDropdownOpen(true); }}
+                            onFocus={() => setClientDropdownOpen(true)}
+                            placeholder="Search clients..."
+                            className="pl-11 h-14 bg-white border-slate-300 rounded-xl text-lg font-medium shadow-sm text-slate-800 placeholder:text-slate-400"
+                          />
+                          {clientDropdownOpen && (
+                            <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                              {clients
+                                .filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch))
+                                .map((client) => (
+                                  <button key={client.id} type="button" onClick={() => { handleClientSelect(client.id); setClientDropdownOpen(false); setClientSearch(""); }} className="w-full text-left px-4 py-3 text-base text-slate-800 hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-0">
+                                    <span className="font-medium">{client.name}</span>
+                                    {client.phone && <span className="text-sm text-slate-400 ml-2">{client.phone}</span>}
+                                  </button>
+                                ))
+                              }
+                              <button type="button" onClick={() => { handleClientSelect("new"); setClientDropdownOpen(false); setClientSearch(""); }} className="w-full text-left px-4 py-3 text-base font-semibold text-blue-600 hover:bg-blue-50 transition-colors">
+                                + Enter Manually
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {formData.clientId === "new" && (
@@ -464,7 +500,54 @@ function NewInvoice() {
 
                   <div className="space-y-2 pt-2 border-t border-slate-200/60">
                     <Label className="text-slate-800 font-bold text-lg">Service Details</Label>
-                    <Input id="serviceDescription" name="serviceDescription" placeholder="e.g. Aircon Servicing (3 Units)" className="h-14 bg-white border-slate-300 rounded-xl text-lg font-medium shadow-sm text-slate-800 placeholder:text-slate-400" value={formData.serviceDescription} onChange={handleInputChange} required />
+                    <div className="relative">
+                      <Search className="absolute left-4 top-4 h-5 w-5 text-slate-400 z-10" />
+                      <Input
+                        value={serviceSearch || formData.serviceDescription}
+                        onChange={(e) => {
+                          setServiceSearch(e.target.value);
+                          setFormData({ ...formData, serviceDescription: e.target.value });
+                          setServiceDropdownOpen(true);
+                        }}
+                        onFocus={() => setServiceDropdownOpen(true)}
+                        placeholder="e.g. Aircon Servicing (3 Units)"
+                        className="pl-11 h-14 bg-white border-slate-300 rounded-xl text-lg font-medium shadow-sm text-slate-800 placeholder:text-slate-400"
+                        required
+                      />
+                      {serviceDropdownOpen && (servicesQuery.data?.length ?? 0) > 0 && (
+                        <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                          {(servicesQuery.data ?? [])
+                            .filter((s: { name: string; is_active?: boolean }) => s.is_active !== false && s.name.toLowerCase().includes((serviceSearch || "").toLowerCase()))
+                            .map((svc: { id: string; name: string; price_cents: number }) => (
+                              <button
+                                key={svc.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    serviceDescription: svc.name,
+                                    amount: (svc.price_cents / 100).toFixed(2),
+                                  });
+                                  setServiceSearch("");
+                                  setServiceDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-base text-slate-800 hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-0 flex justify-between items-center"
+                              >
+                                <span className="font-medium">{svc.name}</span>
+                                <span className="text-sm text-slate-500 font-mono">${(svc.price_cents / 100).toFixed(2)}</span>
+                              </button>
+                            ))
+                          }
+                          <button
+                            type="button"
+                            onClick={() => setServiceDropdownOpen(false)}
+                            className="w-full text-left px-4 py-3 text-base text-slate-500 hover:bg-slate-50 transition-colors"
+                          >
+                            Custom service (type above)
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
