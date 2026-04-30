@@ -27,6 +27,8 @@ function AddEvent() {
 
     // Real DB state
     const [clients, setClients] = useState<Client[]>([]);
+    const { data: servicesData } = api.provider.getServices.useQuery();
+    const providerServices = servicesData?.filter(s => s.is_active) || [];
 
     useEffect(() => {
         async function loadClients() {
@@ -34,18 +36,17 @@ function AddEvent() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data } = await supabase
+            const { data: clientsData } = await supabase
                 .from('clients')
                 .select('id, name, phone, address, lat, lng, brand, notes')
                 .eq('provider_id', user.id);
 
-            if (data) {
-                setClients(data.map(c => ({
+            if (clientsData) {
+                setClients(clientsData.map(c => ({
                     id: c.id,
                     name: c.name,
                     phone: c.phone || '',
                     address: c.address || '',
-                    // Include coords so the job address auto-fill can geocode correctly
                     lat: c.lat ?? undefined,
                     lng: c.lng ?? undefined,
                     brand: c.brand || '',
@@ -57,6 +58,7 @@ function AddEvent() {
     }, []);
 
     // Simple Form State
+    const [isManualService, setIsManualService] = useState(false);
     const [clientId, setClientId] = useState("");
     const [service, setService] = useState("");
     const [address, setAddress] = useState("");
@@ -260,43 +262,90 @@ function AddEvent() {
                                 )}
                             </div>
 
-                            {/* Date — native OS picker */}
-                            <div className="space-y-2">
-                                <Label htmlFor="job-date" className="text-slate-600 font-semibold">Date</Label>
-                                <Input
-                                    id="job-date"
-                                    type="date"
-                                    value={dateStr}
-                                    min={todayStr}
-                                    onChange={(e) => setDateStr(e.target.value)}
-                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700"
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Date — native OS picker */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="job-date" className="text-slate-600 font-semibold">Date</Label>
+                                    <Input
+                                        id="job-date"
+                                        type="date"
+                                        value={dateStr}
+                                        min={todayStr}
+                                        onChange={(e) => setDateStr(e.target.value)}
+                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 px-3"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Time — native OS picker */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="job-time" className="text-slate-600 font-semibold">Time</Label>
+                                    <Input
+                                        id="job-time"
+                                        type="time"
+                                        value={time24}
+                                        onChange={(e) => setTime24(e.target.value)}
+                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 px-3"
+                                        required
+                                    />
+                                </div>
                             </div>
 
-                            {/* Time — native OS picker */}
                             <div className="space-y-2">
-                                <Label htmlFor="job-time" className="text-slate-600 font-semibold">Time</Label>
-                                <Input
-                                    id="job-time"
-                                    type="time"
-                                    value={time24}
-                                    onChange={(e) => setTime24(e.target.value)}
-                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700"
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="service" className="text-slate-600 font-semibold">Service Details</Label>
-                                <Input
-                                    id="service"
-                                    placeholder="e.g. Aircon Servicing (3 Units)"
-                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl"
-                                    value={service}
-                                    onChange={(e) => setService(e.target.value)}
-                                    required
-                                />
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="service" className="text-slate-600 font-semibold">Service Details</Label>
+                                    {providerServices.length > 0 && isManualService && (
+                                        <Button 
+                                            type="button" 
+                                            variant="link" 
+                                            className="h-auto p-0 text-xs text-blue-600"
+                                            onClick={() => {
+                                                setIsManualService(false);
+                                                setService("");
+                                            }}
+                                        >
+                                            Choose from list
+                                        </Button>
+                                    )}
+                                </div>
+                                
+                                {providerServices.length > 0 && !isManualService ? (
+                                    <Select 
+                                        value={service} 
+                                        onValueChange={(val) => {
+                                            if (val === "manual") {
+                                                setIsManualService(true);
+                                                setService("");
+                                            } else {
+                                                setService(val);
+                                                const svc = providerServices.find(s => s.name === val);
+                                                if (svc?.duration_minutes) {
+                                                    setDurationMinutes(svc.duration_minutes);
+                                                }
+                                            }
+                                        }}
+                                        required
+                                    >
+                                        <SelectTrigger className="h-12 bg-white/50 border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20">
+                                            <SelectValue placeholder="Select a service..." />
+                                        </SelectTrigger>
+                                        <SelectContent className="backdrop-blur-xl bg-white/90">
+                                            {providerServices.map((svc) => (
+                                                <SelectItem key={svc.id} value={svc.name}>{svc.name}</SelectItem>
+                                            ))}
+                                            <SelectItem value="manual" className="font-semibold text-blue-600">+ Enter manually</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <Input
+                                        id="service"
+                                        placeholder="e.g. Aircon Servicing (3 Units)"
+                                        className="h-12 bg-white/50 border-slate-200/60 rounded-xl"
+                                        value={service}
+                                        onChange={(e) => setService(e.target.value)}
+                                        required
+                                    />
+                                )}
                             </div>
 
                             <div className="space-y-2">

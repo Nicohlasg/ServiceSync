@@ -389,21 +389,21 @@ export default function InvoicesPage() {
                                 value={clientFilter}
                                 onChange={(e) => setClientFilter(e.target.value)}
                             />
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <div className="space-y-1 flex-1 min-w-0">
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm"
+                                        className="rounded-xl h-10 text-sm w-full min-w-0 px-3"
                                         value={dateFrom}
                                         onChange={(e) => setDateFrom(e.target.value)}
                                     />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1 flex-1 min-w-0">
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm"
+                                        className="rounded-xl h-10 text-sm w-full min-w-0 px-3"
                                         value={dateTo}
                                         onChange={(e) => setDateTo(e.target.value)}
                                     />

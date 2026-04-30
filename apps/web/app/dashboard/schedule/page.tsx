@@ -302,7 +302,7 @@ export default function SchedulePage() {
                                     <div className="text-sm font-bold text-white">{event.time}</div>
                                     <div className="h-full w-[2px] bg-white/20 my-2 rounded-full group-last:hidden"></div>
                                 </div>
-                                <Card className="flex-1 mb-2 hover:shadow-lg hover:bg-white/[0.07] transition-all cursor-pointer border-l-4 border-l-blue-500 active:scale-[0.98]">
+                                <Card className="flex-1 min-w-0 mb-2 hover:shadow-lg hover:bg-white/[0.07] transition-all cursor-pointer border-l-4 border-l-blue-500 active:scale-[0.98]">
                                     <CardContent className="p-4 py-3">
                                         <h3 className="font-bold text-white text-base">{event.clientName}</h3>
                                         <p className="text-sm text-slate-200 font-medium">{event.service}</p>

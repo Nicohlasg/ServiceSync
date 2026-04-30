@@ -214,7 +214,9 @@ function ClientDetails() {
     // Group by month
     const groups: Record<string, TransactionRow[]> = {};
     filtered.forEach(r => {
-      const monthKey = format(new Date(r.date), "MMMM yyyy");
+      let d = new Date(r.date);
+      if (isNaN(d.getTime())) d = new Date();
+      const monthKey = format(d, "MMMM yyyy");
       if (!groups[monthKey]) groups[monthKey] = [];
       groups[monthKey].push(r);
     });
@@ -404,14 +406,14 @@ function ClientDetails() {
                   onChange={(e) => setTxSearch(e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="space-y-1 flex-1 min-w-0">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
+                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 px-3" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 flex-1 min-w-0">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
+                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 px-3" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
                 </div>
               </div>
               {(txSearch || txDateFrom || txDateTo) && (

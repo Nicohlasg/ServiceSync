@@ -275,7 +275,7 @@ export default function InvoiceDetailPage() {
                   type="date"
                   value={dueDate || invoice.due_date || ""}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full sm:flex-1"
+                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full min-w-0 px-3 sm:flex-1"
                 />
                 <Button
                   size="sm"

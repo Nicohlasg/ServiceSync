@@ -498,7 +498,7 @@ export default function DashboardPage() {
                                             </div>
 
                                             {/* Job Details */}
-                                            <div className="flex-1 space-y-1.5 overflow-hidden">
+                                            <div className="flex-1 min-w-0 space-y-1.5 overflow-hidden">
                                                 <div className="flex items-center justify-between">
                                                     <h3 className={`font-black text-lg truncate pr-2 ${job.status === 'completed' ? 'text-slate-500 line-through' : 'text-white'}`}>{job.clientName}</h3>
                                                     {job.status === "completed" ? (
@@ -599,7 +599,7 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Content */}
-                            <div className="flex-1 px-5 pt-5 overflow-y-auto pb-40 space-y-5 bg-slate-900">
+                            <div className="flex-1 min-h-0 px-5 pt-5 overflow-y-auto pb-40 space-y-5 bg-slate-900">
 
                                 {/* CRM Context Card (Aha! Moment) */}
                                 <div className="bg-indigo-900/30 border border-indigo-500/20 p-4 rounded-3xl relative overflow-hidden mt-2">
