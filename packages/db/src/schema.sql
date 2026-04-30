@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS clients (
   phone             TEXT NOT NULL,
   email             TEXT,
   address           TEXT NOT NULL,
+  unit_number       TEXT,              -- e.g. '#12-345', 'Blk 123'
   postal_code       TEXT,
   lat               DOUBLE PRECISION,
   lng               DOUBLE PRECISION,

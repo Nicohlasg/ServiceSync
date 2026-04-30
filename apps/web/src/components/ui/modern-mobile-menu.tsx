@@ -49,10 +49,10 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
       if (!item.href) return false;
       return item.href === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(item.href);
     });
-    if (matchedIndex !== -1 && matchedIndex !== activeIndex) {
+    if (matchedIndex !== -1) {
       setActiveIndex(matchedIndex);
     }
-  }, [pathname, finalItems, activeIndex]);
+  }, [pathname, finalItems]);
 
   const textRefs = useRef<(HTMLElement | null)[]>([]);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);

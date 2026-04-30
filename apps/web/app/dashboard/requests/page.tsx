@@ -114,14 +114,33 @@ export default function RequestsPage() {
         return (
             <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between">
-                    <SkeletonLine width="45%" className="h-7" />
+                    <div className="flex items-center gap-3">
+                        <SkeletonLine width="40px" className="h-10 rounded-full" />
+                        <SkeletonLine width="140px" className="h-7" />
+                    </div>
                     <SkeletonLine width="70px" className="h-6 rounded-full" />
                 </div>
-                <div className="space-y-4">
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                </div>
+                {/* Request card skeletons — match actual card shape */}
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="glass-card glass-inner-light rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <SkeletonLine width="45%" className="h-5" />
+                            <SkeletonLine width="60px" className="h-5 rounded-full" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <SkeletonLine width="16px" className="h-4 rounded" />
+                            <SkeletonLine width="65%" className="h-3" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <SkeletonLine width="16px" className="h-4 rounded" />
+                            <SkeletonLine width="40%" className="h-3" />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <SkeletonLine width="48%" className="h-11 rounded-xl" />
+                            <SkeletonLine width="48%" className="h-11 rounded-xl" />
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }

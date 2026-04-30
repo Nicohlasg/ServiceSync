@@ -16,7 +16,7 @@ import { usePwa } from "@/components/PwaInstallPrompt";
 import { useTutorialGate } from "@/components/tutorial/useTutorialGate";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { SkeletonCard } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCircle } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
 
 interface ProfileData {
@@ -211,8 +211,42 @@ export default function SettingsPage() {
     if (loading) {
         return (
             <div className="space-y-6 pt-4 min-h-[60vh] px-4">
-                <SkeletonCard />
-                <SkeletonCard />
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                    <SkeletonLine width="40px" className="h-10 rounded-full" />
+                    <SkeletonLine width="120px" className="h-7" />
+                </div>
+                {/* Account section */}
+                <div className="glass-card glass-inner-light rounded-2xl p-5 space-y-4">
+                    <SkeletonLine width="30%" className="h-4" />
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3 py-3">
+                            <SkeletonCircle size={36} />
+                            <div className="flex-1 space-y-1">
+                                <SkeletonLine width="50%" className="h-4" />
+                                <SkeletonLine width="70%" className="h-3" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 py-3">
+                            <SkeletonCircle size={36} />
+                            <SkeletonLine width="45%" className="h-4" />
+                        </div>
+                    </div>
+                </div>
+                {/* Preferences section */}
+                <div className="glass-card glass-inner-light rounded-2xl p-5 space-y-4">
+                    <SkeletonLine width="35%" className="h-4" />
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3 py-3">
+                            <SkeletonCircle size={36} />
+                            <SkeletonLine width="40%" className="h-4" />
+                        </div>
+                        <div className="flex items-center gap-3 py-3">
+                            <SkeletonCircle size={36} />
+                            <SkeletonLine width="55%" className="h-4" />
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

@@ -198,7 +198,7 @@ export default function SchedulePage() {
                     {formattedDate}
                     {hasEvents && !isSelected && (
                         <div
-                            className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full ring-2 ring-white"
+                            className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full"
                         />
                     )}
                 </motion.div>
@@ -340,22 +340,22 @@ export default function SchedulePage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl"
+                            className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
                         >
-                            <div className="flex justify-between items-center p-4 border-b border-slate-100">
-                                <span className="text-lg font-bold text-slate-800">Select Month</span>
-                                <Button variant="ghost" size="icon" onClick={() => setIsMonthPickerOpen(false)} className="rounded-full">
-                                    <Check className="h-6 w-6 text-blue-600" />
+                            <div className="flex justify-between items-center p-4 border-b border-white/10">
+                                <span className="text-lg font-bold text-white">Select Month</span>
+                                <Button variant="ghost" size="icon" onClick={() => setIsMonthPickerOpen(false)} className="rounded-full text-blue-400 hover:bg-white/10">
+                                    <Check className="h-6 w-6" />
                                 </Button>
                             </div>
-                            <div className="p-6 bg-slate-50/50">
+                            <div className="p-6 bg-slate-950/50">
                                 <MonthWheelPicker
                                     value={currentMonth}
                                     onChange={setCurrentMonth}
                                     minYear={new Date().getFullYear() - 5}
                                     maxYear={new Date().getFullYear() + 5}
-                                    variant="light"
-                                    fadeColor="#f9fafb"
+                                    variant="dark"
+                                    fadeColor="#0a0f1a"
                                 />
                             </div>
                         </motion.div>

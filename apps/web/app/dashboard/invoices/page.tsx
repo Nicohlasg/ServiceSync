@@ -199,11 +199,28 @@ export default function InvoicesPage() {
                     <SkeletonStat />
                     <SkeletonStat />
                 </div>
-                <div className="space-y-3">
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
+                {/* Filter pills */}
+                <div className="flex gap-2">
+                    <SkeletonLine width="50px" className="h-9 rounded-full" />
+                    <SkeletonLine width="70px" className="h-9 rounded-full" />
+                    <SkeletonLine width="50px" className="h-9 rounded-full" />
                 </div>
+                {/* Invoice row skeletons */}
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="glass-card glass-inner-light rounded-2xl p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <SkeletonLine width="48px" className="h-12 rounded-xl" />
+                            <div className="space-y-1.5">
+                                <SkeletonLine width="110px" className="h-4" />
+                                <SkeletonLine width="80px" className="h-3" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5 text-right">
+                            <SkeletonLine width="70px" className="h-5" />
+                            <SkeletonLine width="50px" className="h-4 rounded-full" />
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }
@@ -430,7 +447,7 @@ export default function InvoicesPage() {
                             className={`
                         px-4 py-2 rounded-full text-sm font-bold capitalize whitespace-nowrap transition-all
                         ${filter === f
-                                    ? "bg-white text-slate-900 shadow-lg scale-105"
+                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
                                     : "bg-slate-900/40 text-slate-300 border border-white/10 hover:bg-slate-900/60"}
                     `}
                         >

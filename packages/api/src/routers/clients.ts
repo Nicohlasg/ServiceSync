@@ -44,6 +44,7 @@ const createClientInput = z.object({
   phone: z.string().min(8).transform(normaliseE164),
   email: z.string().email().optional(),
   address: z.string().min(1),
+  unitNumber: z.string().max(20).optional(),
   postalCode: z.string().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
@@ -57,6 +58,7 @@ const updateClientInput = z.object({
   phone: z.string().min(8).transform(normaliseE164).optional(),
   email: z.string().email().nullable().optional(),
   address: z.string().min(1).optional(),
+  unitNumber: z.string().max(20).nullable().optional(),
   postalCode: z.string().nullable().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
@@ -199,6 +201,7 @@ export const clientsRouter = router({
           phone: sanitizeHtml(input.phone),
           email: sanitizeHtml(input.email),
           address: sanitizeHtml(input.address),
+          unit_number: sanitizeHtml(input.unitNumber) ?? null,
           postal_code: sanitizeHtml(input.postalCode),
           lat: input.lat,
           lng: input.lng,
@@ -310,6 +313,7 @@ export const clientsRouter = router({
       if (fields.phone !== undefined) updateData.phone = sanitizeHtml(fields.phone);
       if (fields.email !== undefined) updateData.email = sanitizeHtml(fields.email);
       if (fields.address !== undefined) updateData.address = sanitizeHtml(fields.address);
+      if (fields.unitNumber !== undefined) updateData.unit_number = sanitizeHtml(fields.unitNumber);
       if (fields.postalCode !== undefined) updateData.postal_code = sanitizeHtml(fields.postalCode);
       if (fields.lat !== undefined) updateData.lat = fields.lat;
       if (fields.lng !== undefined) updateData.lng = fields.lng;
@@ -366,6 +370,50 @@ export const clientsRouter = router({
       });
 
       return { success: true };
+    }),
+
+  /**
+   * Smart client matching: finds an existing client by phone (primary)
+   * or address + unit_number (fallback). Used during job creation to
+   * auto-link bookings from public forms or contact imports.
+   */
+  findMatch: protectedProcedure
+    .input(z.object({
+      phone: z.string().min(8).transform(normaliseE164).optional(),
+      address: z.string().optional(),
+      unitNumber: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      // Primary: match by normalised phone number
+      if (input.phone) {
+        const { data } = await ctx.supabase
+          .from('clients')
+          .select('id, name, phone, address, unit_number')
+          .eq('provider_id', ctx.user.id)
+          .eq('is_deleted', false)
+          .eq('phone', input.phone)
+          .limit(1)
+          .maybeSingle();
+
+        if (data) return { match: data, matchedBy: 'phone' as const };
+      }
+
+      // Fallback: match by address + unit_number (both must be present)
+      if (input.address && input.unitNumber) {
+        const { data } = await ctx.supabase
+          .from('clients')
+          .select('id, name, phone, address, unit_number')
+          .eq('provider_id', ctx.user.id)
+          .eq('is_deleted', false)
+          .ilike('address', `%${input.address.replace(/%/g, '')}%`)
+          .eq('unit_number', input.unitNumber)
+          .limit(1)
+          .maybeSingle();
+
+        if (data) return { match: data, matchedBy: 'address_unit' as const };
+      }
+
+      return { match: null, matchedBy: null };
     }),
 
   /**

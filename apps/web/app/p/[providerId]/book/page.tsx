@@ -277,13 +277,13 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                                             if (e.target.value) setBookingData(prev => ({...prev, dateObj: new Date(e.target.value + "T00:00:00")}));
                                         }}
                                         min={format(new Date(), "yyyy-MM-dd")}
-                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl"
+                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl min-w-0 max-w-full appearance-none px-3"
                                     />
                                     <Input
                                         type="time"
                                         value={timeStr}
                                         onChange={(e) => setTimeStr(e.target.value)}
-                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl"
+                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl min-w-0 max-w-full appearance-none px-3"
                                     />
                                 </div>
                             </div>

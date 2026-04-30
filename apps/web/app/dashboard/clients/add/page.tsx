@@ -69,7 +69,7 @@ export default function AddClientPage() {
     }
 
     // Combine address fields into a single string for the tRPC schema
-    const address = [formData.block, formData.street, formData.unit ? `#${formData.unit}` : '']
+    const address = [formData.block, formData.street]
       .filter(Boolean).join(' ').trim();
 
     // Task 1.5: Record PDPA consent on first client creation if not already done
@@ -81,6 +81,7 @@ export default function AddClientPage() {
       name: formData.name,
       phone: formData.phone,
       address: formData.fullAddress || address || formData.street,
+      unitNumber: formData.unit || undefined,
       postalCode: formData.postal || undefined,
       lat: formData.lat ?? undefined,
       lng: formData.lng ?? undefined,
@@ -144,7 +145,7 @@ export default function AddClientPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <Input id="block" placeholder="Block (optional)" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.block} onChange={handleChange} />
                   <Input id="street" placeholder="Street Name" className="col-span-1 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.street} onChange={handleChange} />
-                  <Input id="unit" placeholder="Unit #01-01" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.unit} onChange={handleChange} />
+                  <Input id="unit" placeholder="Unit # e.g. #01-345" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.unit} onChange={handleChange} />
                   <Input id="postal" placeholder="Postal Code" className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 h-11 rounded-xl" value={formData.postal} onChange={handleChange} />
                 </div>
               </div>

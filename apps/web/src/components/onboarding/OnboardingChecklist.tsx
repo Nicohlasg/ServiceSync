@@ -93,12 +93,43 @@ export function OnboardingChecklist({ onPreviewPaynow }: Props) {
   });
 
   const markItem = api.provider.markChecklistItem.useMutation({
-    onSuccess: () => {
+    onMutate: async (vars) => {
+      await utils.provider.getOnboardingChecklist.cancel();
+      const prev = utils.provider.getOnboardingChecklist.getData();
+      if (prev) {
+        const key = vars.item === 'service' ? 'serviceAddedAt'
+          : vars.item === 'client' ? 'clientAddedAt'
+          : 'paynowPreviewedAt';
+        utils.provider.getOnboardingChecklist.setData(undefined, {
+          ...prev,
+          [key]: prev[key] ?? new Date().toISOString(),
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) utils.provider.getOnboardingChecklist.setData(undefined, ctx.prev);
+    },
+    onSettled: () => {
       void utils.provider.getOnboardingChecklist.invalidate();
     },
   });
   const setHidden = api.provider.setChecklistHidden.useMutation({
-    onSuccess: () => {
+    onMutate: async (vars) => {
+      await utils.provider.getOnboardingChecklist.cancel();
+      const prev = utils.provider.getOnboardingChecklist.getData();
+      if (prev) {
+        utils.provider.getOnboardingChecklist.setData(undefined, {
+          ...prev,
+          hiddenAt: vars.hidden ? (prev.hiddenAt ?? new Date().toISOString()) : null,
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) utils.provider.getOnboardingChecklist.setData(undefined, ctx.prev);
+    },
+    onSettled: () => {
       void utils.provider.getOnboardingChecklist.invalidate();
     },
   });

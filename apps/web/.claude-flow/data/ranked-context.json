@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "computedAt": 1776879578660,
+  "computedAt": 1777538729701,
   "entries": [
     {
       "id": "mem-MEMORY-db-tables-added--schema-sql-",
       "content": "- cash_payments — one cash payment per invoice\r\n- till_entries — daily cash float ledger\r\n- escrow_releases — audit trail for deposit releases\r\n- till_daily_summary — convenience view for dashboard",
       "summary": "DB Tables Added (schema.sql)",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.2058898181247621,
       "accessCount": 0,
       "words": [
@@ -47,7 +47,7 @@
       "content": "- NEXT_PUBLIC_SUPABASE_URL\r\n- NEXT_PUBLIC_SUPABASE_ANON_KEY\r\n- SUPABASE_SERVICE_ROLE_KEY\r\n- WHATSAPP_PHONE_NUMBER_ID\r\n- WHATSAPP_ACCESS_TOKEN\r\n- NETS_API_BASE_URL\r\n- NETS_API_KEY\r\n- NETS_MERCHANT_ID\r\n- NETS_WEBHOOK_SECRET\r\n- PLATFORM_TRANSACTION_FEE_BPS (default: 50 = 0.5%)\r\n- NEXT_PUBLIC_APP_URL",
       "summary": "Required Environment Variables",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.18874636750028423,
       "accessCount": 0,
       "words": [
@@ -101,7 +101,7 @@
       "content": "- Signature threshold: $500 (50,000 cents) — src/lib/types/payment.ts\r\n- All monetary values stored in cents (integers)\r\n- Cash stepper step: $1 (100 cents)\r\n- Max tip/discount via stepper: $50 (5,000 cents)",
       "summary": "Key Constants",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.16857742939656423,
       "accessCount": 0,
       "words": [
@@ -140,7 +140,7 @@
       "content": "1. **One-tap cash reconciliation** — PaymentScreen with QR vs Cash buttons\r\n2. **Auto-calculated balance** — \"Collect exactly $85. Deposit of $15 already paid\"\r\n3. **Cash adjust stepper** — ±$1 steps for tips/discounts (max ±$50)\r\n4. **Digital handshake** — WhatsApp confirmation sent instantly on cash collection\r\n5. **Glass-screen signature** — TouchCanvas for jobs ≥ $500, embedded in PDF\r\n6. **Escrow release** — Deposit transferred to technician bank on confirmation\r\n7. **Till management** — Da",
       "summary": "Cash Payment Features Implemented",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.14484927892683164,
       "accessCount": 0,
       "words": [
@@ -199,7 +199,7 @@
       "content": "```\r\n/mnt/c/Users/User/ServiceSyncSG/\r\n├── docs/                          # Workflow documentation\r\n│   └── servicecync-workflows.md  # Main workflow spec (v1.0)\r\n├── onlook/                        # Onlook visual editor (design tool only)\r\n└── src/                           # ServiceSync application code\r\n    ├── lib/types/payment.ts       # Payment domain types\r\n    ├── server/\r\n    │   ├── db/schema.sql          # Extended DB schema (cash payments)\r\n    │   ├── trpc.ts                # tRPC i",
       "summary": "Project Structure",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.11693391579734488,
       "accessCount": 0,
       "words": [
@@ -248,7 +248,7 @@
       "content": "- **Frontend**: Next.js 14+ App Router + TailwindCSS (designed with Onlook visual editor)\r\n- **API**: tRPC + Zod (type-safe endpoints)\r\n- **Database/Auth**: Supabase (PostgreSQL + RLS)\r\n- **Messaging**: WhatsApp Business Cloud API (Meta Graph API v18.0)\r\n- **Payments**: PayNow via NETS/DBS open-banking APIs\r\n- **PDF**: Puppeteer (serverless) / React-PDF",
       "summary": "Tech Stack",
       "category": "core",
-      "confidence": 0.445,
+      "confidence": 0.5,
       "pageRank": 0.08409241648487831,
       "accessCount": 0,
       "words": [
@@ -296,11 +296,34 @@
       ]
     },
     {
+      "id": "mem-MEMORY-project-overview",
+      "content": "Singapore Vertical SaaS for independent home service professionals (aircon, plumbing, electrical).",
+      "summary": "Project Overview",
+      "category": "core",
+      "confidence": 0.5,
+      "pageRank": 0.045455386884667395,
+      "accessCount": 0,
+      "words": [
+        "singapore",
+        "vertical",
+        "saas",
+        "independent",
+        "home",
+        "service",
+        "professionals",
+        "aircon",
+        "plumbing",
+        "electrical",
+        "project",
+        "overview"
+      ]
+    },
+    {
       "id": "insight-1775944020047-f4ue",
       "content": "File unknown was edited 55 times this session — likely a hot path worth monitoring.",
       "summary": "Frequently edited: unknown (55x)",
       "category": "insights",
-      "confidence": 0.45,
+      "confidence": 0.5,
       "pageRank": 0.045455386884667395,
       "accessCount": 0,
       "words": [
@@ -318,29 +341,6 @@
         "edited",
         "unknown",
         "55x"
-      ]
-    },
-    {
-      "id": "mem-MEMORY-project-overview",
-      "content": "Singapore Vertical SaaS for independent home service professionals (aircon, plumbing, electrical).",
-      "summary": "Project Overview",
-      "category": "core",
-      "confidence": 0.445,
-      "pageRank": 0.045455386884667395,
-      "accessCount": 0,
-      "words": [
-        "singapore",
-        "vertical",
-        "saas",
-        "independent",
-        "home",
-        "service",
-        "professionals",
-        "aircon",
-        "plumbing",
-        "electrical",
-        "project",
-        "overview"
       ]
     }
   ]

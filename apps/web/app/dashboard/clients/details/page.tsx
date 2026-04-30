@@ -62,7 +62,7 @@ function ClientDetails() {
   // ── Edit state ──
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: "", phone: "", address: "",
+    name: "", phone: "", address: "", unitNumber: "",
     lat: null as number | null, lng: null as number | null,
     notes: "",
   });
@@ -111,6 +111,7 @@ function ClientDetails() {
       name: client.name ?? "",
       phone: client.phone ?? "",
       address: client.address ?? "",
+      unitNumber: (client as any).unit_number ?? "",
       lat: (client as any).lat ?? null,
       lng: (client as any).lng ?? null,
       notes: client.notes ?? "",
@@ -124,6 +125,7 @@ function ClientDetails() {
       name: editForm.name || undefined,
       phone: editForm.phone || undefined,
       address: editForm.address || undefined,
+      unitNumber: editForm.unitNumber || null,
       lat: editForm.lat ?? undefined,
       lng: editForm.lng ?? undefined,
       notes: editForm.notes,
@@ -157,7 +159,8 @@ function ClientDetails() {
   }
 
   // ── Computed data ──
-  const fullAddress = client.address || "No address provided";
+  const unitNum = (client as any).unit_number;
+  const fullAddress = [client.address, unitNum].filter(Boolean).join(', ') || "No address provided";
   const bookings = (client.bookings ?? []) as BookingRow[];
   const invoices = (client.invoices ?? []) as InvoiceRow[];
 
@@ -286,6 +289,10 @@ function ClientDetails() {
                     placeholder="Search address..."
                     className="mt-1"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Unit Number</label>
+                  <Input value={editForm.unitNumber} onChange={(e) => setEditForm(prev => ({ ...prev, unitNumber: e.target.value }))} placeholder="e.g. #01-345" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Notes</label>

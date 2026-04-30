@@ -18,6 +18,8 @@ import { api } from "@/lib/api";
 import { BackButton } from "@/components/ui/back-button";
 import { Client } from "@/lib/types";
 
+type ClientWithUnit = Client & { unit_number?: string };
+
 function AddEvent() {
     const [loading, setLoading] = useState(false);
     const { push } = useRouter();
@@ -26,7 +28,7 @@ function AddEvent() {
     const isEditMode = !!bookingId;
 
     // Real DB state
-    const [clients, setClients] = useState<Client[]>([]);
+    const [clients, setClients] = useState<ClientWithUnit[]>([]);
     const { data: servicesData } = api.provider.getServices.useQuery();
     const providerServices = servicesData?.filter(s => s.is_active) || [];
 
@@ -38,7 +40,7 @@ function AddEvent() {
 
             const { data: clientsData } = await supabase
                 .from('clients')
-                .select('id, name, phone, address, lat, lng, brand, notes')
+                .select('id, name, phone, address, unit_number, lat, lng, brand, notes')
                 .eq('provider_id', user.id);
 
             if (clientsData) {
@@ -47,6 +49,7 @@ function AddEvent() {
                     name: c.name,
                     phone: c.phone || '',
                     address: c.address || '',
+                    unit_number: c.unit_number || '',
                     lat: c.lat ?? undefined,
                     lng: c.lng ?? undefined,
                     brand: c.brand || '',
@@ -237,7 +240,7 @@ function AddEvent() {
                                         {clients.map(client => (
                                             <SelectItem key={client.id} value={client.id}>
                                                 <span className="font-medium">{client.name}</span>
-                                                <span className="text-xs text-slate-400 block truncate max-w-[200px]">{client.address || "No address"}</span>
+                                                <span className="text-xs text-slate-400 block truncate max-w-[200px]">{[client.address, client.unit_number].filter(Boolean).join(', ') || "No address"}</span>
                                             </SelectItem>
                                         ))}
                                         <SelectItem value="new" className="text-blue-600 font-semibold">+ Create New Client</SelectItem>

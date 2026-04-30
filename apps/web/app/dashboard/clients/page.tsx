@@ -33,8 +33,11 @@ export default function ClientsPage() {
 
         if (data) {
           const mappedClients: Client[] = data.map(c => {
-            const addressArgs = [c.address_block, c.address_street, c.address_unit, c.address_postal].filter(Boolean);
-            const fullAddress = addressArgs.length > 0 ? addressArgs.join(', ') : 'No Address provided';
+            // Prefer the canonical `address` + `unit_number` columns (Phase 1).
+            // Fall back to legacy `address_block/street/unit/postal` for old rows.
+            const canonical = [c.address, c.unit_number].filter(Boolean).join(', ');
+            const legacy = [c.address_block, c.address_street, c.address_unit, c.address_postal].filter(Boolean).join(', ');
+            const fullAddress = canonical || legacy || 'No Address provided';
 
             return {
               id: c.id,
