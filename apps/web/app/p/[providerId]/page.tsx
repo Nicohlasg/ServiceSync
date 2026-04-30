@@ -82,7 +82,7 @@ export default function ProviderProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background pb-24">
+            <div className="min-h-screen pb-24">
                 <SkeletonBlockLight aspect="auto" className="h-64 rounded-none" />
                 <div className="px-4 relative -mt-20 z-10 space-y-6 max-w-2xl mx-auto">
                     <div className="bg-card rounded-3xl border border-border shadow-xl p-6 space-y-4">
@@ -107,7 +107,7 @@ export default function ProviderProfilePage() {
 
     if (notFound || !profile) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center px-4">
+            <div className="min-h-screen flex items-center justify-center px-4">
                 <Card className="max-w-md w-full bg-card border-border text-center p-8">
                     <CardContent className="space-y-4 pt-4">
                         <div className="text-6xl">🔍</div>
@@ -157,7 +157,7 @@ export default function ProviderProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-24">
+        <div className="min-h-screen pb-24">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}

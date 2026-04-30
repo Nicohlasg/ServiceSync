@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon, Smartphone, Download } from "lucide-react";
+import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon, Smartphone, Download, Palette, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { SkeletonLine, SkeletonCircle } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
+import { useBackground, BG_META, type BgKey } from "@/components/BackgroundProvider";
 
 interface ProfileData {
     id: string;
@@ -41,6 +42,7 @@ export default function SettingsPage() {
     const t = useTranslations("profile");
     const { push } = useRouter();
     const { reset: resetTutorial } = useTutorialGate();
+    const { bg, setBg } = useBackground();
     
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -374,6 +376,51 @@ export default function SettingsPage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Appearance — Background Picker */}
+            <Card className="rounded-3xl overflow-hidden">
+                <CardContent className="p-5 space-y-4">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <Palette className="h-3.5 w-3.5" /> Appearance
+                    </h3>
+                    <p className="text-sm text-slate-400">Choose a background for your app experience.</p>
+                    <div className="grid grid-cols-2 gap-3">
+                        {(Object.keys(BG_META) as BgKey[]).map((key) => {
+                            const meta = BG_META[key];
+                            const isActive = bg === key;
+                            return (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => setBg(key)}
+                                    className={[
+                                        "relative rounded-2xl overflow-hidden aspect-[3/4] border-2 transition-all duration-200",
+                                        isActive
+                                            ? "border-blue-500 shadow-lg shadow-blue-500/30 scale-[1.02]"
+                                            : "border-white/10 hover:border-white/30",
+                                    ].join(" ")}
+                                >
+                                    <img
+                                        src={meta.src}
+                                        alt={meta.label}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
+                                        <p className="text-xs font-semibold text-white leading-tight">{meta.label}</p>
+                                        <p className="text-[10px] text-slate-300 mt-0.5">{meta.credit}</p>
+                                    </div>
+                                    {isActive && (
+                                        <div className="absolute top-2 right-2 bg-blue-500 rounded-full p-0.5">
+                                            <Check className="h-3 w-3 text-white" />
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </CardContent>
             </Card>

@@ -152,7 +152,7 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
 
     if (pageLoading) {
         return (
-            <div className="min-h-screen bg-background flex flex-col pt-4">
+            <div className="min-h-screen flex flex-col pt-4">
                 <div className="px-4 flex items-center gap-3 mb-6">
                     <SkeletonLineLight width={40} className="h-10 rounded-full" />
                     <div className="flex-1 space-y-2">
@@ -169,7 +169,7 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col pt-4 overflow-hidden">
+        <div className="min-h-screen flex flex-col pt-4 overflow-hidden">
             {/* Header */}
             <div className="px-4 flex items-center gap-3 mb-6 relative z-10 text-foreground">
                 <Button variant="ghost" size="icon" onClick={() => step === 1 ? push(`/p/${providerId}`) : handleBack()} className="rounded-full bg-muted/80 backdrop-blur shadow-sm hover:bg-muted text-foreground">

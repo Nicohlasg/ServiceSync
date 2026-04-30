@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+import { BackgroundProvider } from '@/components/BackgroundProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -59,11 +60,9 @@ export default async function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Singapore">
           <Providers>
-            {/* Dark gradient background with blue glow regions for glassmorphism */}
-            <div className="fixed inset-0 -z-10 glass-bg-primary" />
-            {/* Subtle noise texture for premium feel — CSS only, no external request */}
-            <div className="fixed inset-0 -z-10 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E")' }} />
-            {children}
+            <BackgroundProvider>
+              {children}
+            </BackgroundProvider>
           </Providers>
 
         </NextIntlClientProvider>

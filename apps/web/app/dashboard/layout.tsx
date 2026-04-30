@@ -9,7 +9,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col glass-bg-dashboard pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+    <div className="flex min-h-screen flex-col pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0">
       <PushNotificationRegistrar />
       <TutorialOverlay />
       <main className="flex-1 container mx-auto p-4 max-w-lg md:max-w-4xl">
