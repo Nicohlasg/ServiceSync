@@ -3,7 +3,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin, Loader2, Navigation } from "lucide-react";
-import { searchOneMap, type OneMapResult } from "@/lib/onemap";
+
+interface OneMapResult {
+  address: string;
+  blkNo: string;
+  roadName: string;
+  building: string;
+  postalCode: string;
+  lat: number;
+  lng: number;
+}
 
 interface AddressAutocompleteProps {
   value: string;
@@ -58,11 +67,23 @@ export function AddressAutocomplete({
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      const hits = await searchOneMap(text);
-      setResults(hits);
-      setOpen(hits.length > 0);
+      try {
+        // Call our server-side proxy — avoids CSP block on direct onemap.gov.sg calls
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(text)}`);
+        if (res.ok) {
+          const data = await res.json() as { results: OneMapResult[] };
+          setResults(data.results ?? []);
+          setOpen((data.results ?? []).length > 0);
+        } else {
+          setResults([]);
+          setOpen(false);
+        }
+      } catch {
+        setResults([]);
+        setOpen(false);
+      }
       setLoading(false);
-    }, 300);
+    }, 150);
   }, []);
 
   const handleSelect = (result: OneMapResult) => {
@@ -78,21 +99,19 @@ export function AddressAutocomplete({
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Reverse geocode via OneMap
+        // Reverse geocode via our server-side proxy (avoids CSP block on direct onemap.gov.sg calls)
         try {
-          const res = await fetch(
-            `https://www.onemap.gov.sg/api/public/revgeocode?location=${latitude},${longitude}&buffer=50&addressType=All`
-          );
+          const res = await fetch(`/api/geocode/reverse?lat=${latitude}&lng=${longitude}`);
           if (res.ok) {
-            const data = await res.json();
-            const first = data.GeocodeInfo?.[0];
-            if (first?.ROAD) {
-              const addr = [first.BLOCK, first.ROAD, first.POSTALCODE].filter(Boolean).join(" ");
-              setQuery(addr);
-              onChange(addr, latitude, longitude);
+            const data = await res.json() as { address: string | null };
+            if (data.address) {
+              setQuery(data.address);
+              onChange(data.address, latitude, longitude);
             } else {
               onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, latitude, longitude);
             }
+          } else {
+            onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, latitude, longitude);
           }
         } catch {
           onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, latitude, longitude);
@@ -121,12 +140,12 @@ export function AddressAutocomplete({
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/10 bg-slate-900 shadow-xl max-h-64 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-popover shadow-xl max-h-64 overflow-y-auto">
           <button
             type="button"
             onClick={handleUseCurrentLocation}
             disabled={locating}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-blue-400 hover:bg-slate-800/60 transition-colors border-b border-white/5"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-blue-500 hover:bg-accent transition-colors border-b border-border"
           >
             {locating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -140,14 +159,14 @@ export function AddressAutocomplete({
               key={i}
               type="button"
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-slate-800/60 transition-colors border-b border-white/5 last:border-0"
+              className="w-full text-left px-4 py-3 text-sm text-popover-foreground hover:bg-accent transition-colors border-b border-border last:border-0"
             >
               <p className="font-medium truncate">{r.address}</p>
               {r.building && r.building !== "NIL" && (
-                <p className="text-xs text-slate-400 truncate">{r.building}</p>
+                <p className="text-xs text-muted-foreground truncate">{r.building}</p>
               )}
               {r.postalCode && r.postalCode !== "NIL" && (
-                <p className="text-xs text-slate-500">S({r.postalCode})</p>
+                <p className="text-xs text-muted-foreground/70">S({r.postalCode})</p>
               )}
             </button>
           ))}

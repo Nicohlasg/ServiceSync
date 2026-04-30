@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X, Clock, MapPin, Calendar, AlertCircle } from "lucide-react";
@@ -15,6 +16,7 @@ import { BackButton } from "@/components/ui/back-button";
 export default function RequestsPage() {
     const [processing, setProcessing] = useState<string | null>(null);
     const utils = api.useUtils();
+    const { push } = useRouter();
 
     // Query key for the pending-bookings list — shared by query + optimistic updates
     const pendingInput = { status: "pending" as const, limit: 50 };
@@ -52,6 +54,9 @@ export default function RequestsPage() {
         onMutate: ({ bookingId }) => removeOptimistically(bookingId),
         onSuccess: () => {
             toast.success("Request accepted and scheduled!");
+            // Navigate to schedule — the page's useEffect re-runs on mount,
+            // so the newly accepted job loads automatically. No manual refresh needed.
+            push("/dashboard/schedule");
         },
         onError: (err, _vars, ctx) => {
             if (ctx?.previous) {

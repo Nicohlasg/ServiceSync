@@ -268,6 +268,7 @@ function buildInvoiceHtml(input: InvoicePdfInput): string {
     dueDate,
     providerName,
     providerPhone,
+    providerAddress,
     providerAcraUen,
     providerAcraVerified,
     clientName,
@@ -300,6 +301,7 @@ function buildInvoiceHtml(input: InvoicePdfInput): string {
 
   // Escape all user-controlled strings to prevent XSS (CRIT-01)
   const eProvider = escapeHtml(providerName);
+  const eProviderAddr = escapeHtml(providerAddress || '');
   const eClient = escapeHtml(clientName);
   const eClientAddr = escapeHtml(clientAddress || '');
   const eService = escapeHtml(serviceType);
@@ -372,6 +374,7 @@ function buildInvoiceHtml(input: InvoicePdfInput): string {
       <div class="provider-name">${eProvider}</div>
       <div class="acra-info">${acraLine}</div>
       <div class="acra-info">${providerPhone}</div>
+      ${eProviderAddr ? `<div class="acra-info">${eProviderAddr}</div>` : ''}
     </div>
     <div class="meta-section">
       <div class="invoice-label">${providerAcraVerified && input.providerGstRegistered ? 'Tax Invoice' : 'Invoice'}</div>
@@ -386,6 +389,7 @@ function buildInvoiceHtml(input: InvoicePdfInput): string {
       <div class="info-content">
         <p class="client-name">${eClient}</p>
         <p>${clientPhone || ''}</p>
+        ${eClientAddr ? `<p>${eClientAddr}</p>` : ''}
       </div>
     </div>
     <div class="info-box">

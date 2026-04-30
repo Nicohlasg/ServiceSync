@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 interface ProviderInfo { id: string; name: string; }
 interface ServiceOption { id: string; name: string; price_cents: number; duration_minutes: number; }
@@ -38,6 +39,8 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
         durationMinutes: 60,
         dateObj: new Date(),
         address: "",
+        lat: null as number | null,
+        lng: null as number | null,
         notes: "",
         clientName: "",
         phone: "",
@@ -134,6 +137,8 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
             arrivalWindowEnd: endDate.toISOString(),
             estimatedDurationMinutes: bookingData.durationMinutes,
             address: bookingData.address,
+            lat: bookingData.lat ?? undefined,
+            lng: bookingData.lng ?? undefined,
             amount: bookingData.priceCents,
             depositAmount: depositAmountCents,
             clientName: bookingData.clientName,
@@ -287,7 +292,12 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                                 <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
                                     <MapPin className="h-5 w-5 text-emerald-500" /> Location Details
                                 </h3>
-                                <Input placeholder="Full Address (e.g. Blk 123 Hougang Ave)" name="address" value={bookingData.address} onChange={(e) => setBookingData(p => ({...p, address: e.target.value}))} className="h-12 bg-muted border-border rounded-xl text-foreground placeholder:text-muted-foreground" />
+                                <AddressAutocomplete
+                                    value={bookingData.address}
+                                    onChange={(addr, lat, lng) => setBookingData(p => ({...p, address: addr, lat, lng}))}
+                                    placeholder="Search your address (e.g. Blk 123 Hougang)"
+                                    className="h-12 bg-muted border-border rounded-xl text-foreground placeholder:text-muted-foreground"
+                                />
                             </div>
 
                             <div className="space-y-4">

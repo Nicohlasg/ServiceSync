@@ -86,8 +86,10 @@ export async function getRouteDetails(
 }
 
 export function calculateLeaveTime(arrivalTimeStr: string, durationSeconds: number): string {
-    // Parse time string "10:00 AM"
-    const [time, period] = arrivalTimeStr.split(" ");
+    // BUG-14 fix: normalise to uppercase — some browsers (Android Chrome) return
+    // 'am'/'pm' from toLocaleTimeString, which breaks the period comparisons below.
+    const [time, rawPeriod] = arrivalTimeStr.split(" ");
+    const period = rawPeriod?.toUpperCase();
     const [hours, minutes] = time.split(":").map(Number);
 
     const targetDate = new Date();

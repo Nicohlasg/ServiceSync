@@ -45,6 +45,10 @@ const createJobInput = z.object({
   arrivalWindowStart: z.string().datetime(),
   serviceType: z.string().min(1).max(200),
   address: z.string().min(1).max(500),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  // Duration is required so availability checks and invoicing work correctly
+  estimatedDurationMinutes: z.number().int().min(15).max(480).default(60),
 });
 
 const updateJobInput = z.object({
@@ -54,6 +58,9 @@ const updateJobInput = z.object({
   arrivalWindowStart: z.string().datetime(),
   serviceType: z.string().min(1).max(200),
   address: z.string().min(1).max(500),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  estimatedDurationMinutes: z.number().int().min(15).max(480).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -281,10 +288,10 @@ export const scheduleRouter = router({
   createJob: protectedProcedure
     .input(createJobInput)
     .mutation(async ({ ctx, input }) => {
-      // Verify client belongs to this provider
+      // Verify client belongs to this provider and fetch name for denormalisation
       const { data: client } = await ctx.supabase
         .from('clients')
-        .select('id')
+        .select('id, name')
         .eq('id', input.clientId)
         .eq('provider_id', ctx.user.id)
         .single();
@@ -293,16 +300,35 @@ export const scheduleRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid client' });
       }
 
+      // BUG-01 fix: Provider-created jobs are auto-accepted — inserting as 'pending'
+      // caused them to be filtered out of the schedule and Today's Route view which
+      // both use .neq('status', 'pending').
+      //
+      // BUG-07 fix: estimated_duration_minutes is now stored so availability
+      // checks and invoice duration tracking work correctly.
+      const estimatedCompletion = new Date(
+        new Date(input.arrivalWindowStart).getTime() +
+          input.estimatedDurationMinutes * 60_000,
+      ).toISOString();
+
       const { data, error } = await ctx.supabase
         .from('bookings')
         .insert({
           provider_id: ctx.user.id,
           client_id: input.clientId,
-          status: 'pending',
+          // BUG-03 fix: denormalise client_name so the schedule/dashboard
+          // display doesn't fall back to 'Unknown Client'.
+          client_name: client.name,
+          // BUG-01/02 fix: 'accepted' not 'pending'
+          status: 'accepted',
           scheduled_date: input.scheduledDate,
           arrival_window_start: input.arrivalWindowStart,
           service_type: input.serviceType,
           address: input.address,
+          lat: input.lat ?? null,
+          lng: input.lng ?? null,
+          estimated_duration_minutes: input.estimatedDurationMinutes,
+          estimated_completion: estimatedCompletion,
         })
         .select()
         .single();
@@ -321,16 +347,42 @@ export const scheduleRouter = router({
   updateJob: protectedProcedure
     .input(updateJobInput)
     .mutation(async ({ ctx, input }) => {
+      // BUG-08 fix: fetch updated client's name so it's written to client_name.
+      // Without this, reassigning a job leaves the old name displayed.
+      const { data: client } = await ctx.supabase
+        .from('clients')
+        .select('id, name')
+        .eq('id', input.clientId)
+        .eq('provider_id', ctx.user.id)
+        .single();
+
+      if (!client) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid client' });
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        client_id: input.clientId,
+        client_name: client.name,
+        scheduled_date: input.scheduledDate,
+        arrival_window_start: input.arrivalWindowStart,
+        service_type: input.serviceType,
+        address: input.address,
+        lat: input.lat ?? null,
+        lng: input.lng ?? null,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (input.estimatedDurationMinutes !== undefined) {
+        updatePayload.estimated_duration_minutes = input.estimatedDurationMinutes;
+        updatePayload.estimated_completion = new Date(
+          new Date(input.arrivalWindowStart).getTime() +
+            input.estimatedDurationMinutes * 60_000,
+        ).toISOString();
+      }
+
       const { data, error } = await ctx.supabase
         .from('bookings')
-        .update({
-          client_id: input.clientId,
-          scheduled_date: input.scheduledDate,
-          arrival_window_start: input.arrivalWindowStart,
-          service_type: input.serviceType,
-          address: input.address,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', input.bookingId)
         .eq('provider_id', ctx.user.id)
         .select()

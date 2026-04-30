@@ -20,6 +20,7 @@ import { createHash, createHmac } from 'crypto';
 import { releaseEscrowDeposit } from '@/server/services/escrow';
 import { recordTillEntry } from '@/server/services/till';
 import { getAdminClient } from '@/server/services/supabase-admin';
+import { checkHttpRateLimit } from '@servicesync/api';
 
 const NETS_WEBHOOK_SECRET = process.env.NETS_WEBHOOK_SECRET ?? '';
 
@@ -41,6 +42,12 @@ interface NetsCallback {
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Rate limit: 20 webhook calls/min per IP (see SCALING NOTE in rateLimit.ts).
+  // Generous limit because legitimate NETS retries are expected on network failures.
+  // Must run before body.read() to avoid consuming the stream on a rejected request.
+  const limited = await checkHttpRateLimit(req, 'webhook');
+  if (limited) return limited;
+
   // Task 1.8: Runtime guard — reject all webhooks if secret is missing
   if (!NETS_WEBHOOK_SECRET) {
     console.error('[PayNow Webhook] NETS_WEBHOOK_SECRET is not configured — rejecting request');

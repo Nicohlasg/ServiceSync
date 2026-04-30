@@ -27,6 +27,8 @@ export type AuditAction =
     | 'update'
     | 'delete'
     | 'status_change'
+    | 'bulk_status_change'
+    | 'bulk_delete'
     | 'payment_confirm'
     | 'payment_confirm_qr'
     | 'signature_capture'

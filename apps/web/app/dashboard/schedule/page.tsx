@@ -42,11 +42,22 @@ export default function SchedulePage() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
+                // BUG-12 fix: scope to ±6 months so this doesn't scan the entire
+                // bookings table as history grows. The calendar only shows ±5 years
+                // via the month picker, but loading all history on every visit is
+                // wasteful. Widen this window when the user base grows significantly.
+                const windowStart = new Date();
+                windowStart.setMonth(windowStart.getMonth() - 6);
+                const windowEnd = new Date();
+                windowEnd.setMonth(windowEnd.getMonth() + 6);
+
                 const { data: bookings } = await supabase
                     .from('bookings')
-                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, clients(name)')
+                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name)')
                     .eq('provider_id', user.id)
                     .neq('status', 'pending')
+                    .gte('scheduled_date', windowStart.toISOString().slice(0, 10))
+                    .lte('scheduled_date', windowEnd.toISOString().slice(0, 10))
                     .order('arrival_window_start', { ascending: true });
 
                 if (bookings) {
@@ -55,18 +66,26 @@ export default function SchedulePage() {
                         const timeStr = dateObj.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: true });
                         const isCompleted = b.status === 'completed';
 
+                        // BUG-16 fix: Supabase returns the joined row as an object, not an array.
+                        // The generated type says array — cast via unknown to override.
+                        const joinedClient = b.clients as unknown as { name: string } | null;
+
                         return {
                             id: b.id,
                             clientId: b.client_id ?? '',
-                            clientName: b.client_name || b.clients?.[0]?.name || 'Unknown Client',
+                            clientName: b.client_name || joinedClient?.name || 'Unknown Client',
                             time: timeStr,
                             service: b.service_type,
                             status: isCompleted ? "completed" : "upcoming",
                             lat: b.lat ?? undefined,
                             lng: b.lng ?? undefined,
                             address: b.address ?? '',
-                            date: new Date(b.scheduled_date),
-                            amount: 0,
+                            // BUG-04 fix: append T00:00:00 to force local-time parse;
+                            // new Date("YYYY-MM-DD") parses as UTC midnight which is the
+                            // previous calendar day in SGT (UTC+8).
+                            date: new Date(b.scheduled_date + 'T00:00:00'),
+                            // BUG-11 fix: read actual amount from row
+                            amount: (b.amount ?? 0) / 100,
                         };
                     });
                     setJobs(mappedJobs);
@@ -90,6 +109,39 @@ export default function SchedulePage() {
     });
 
     const deleteJob = (id: string) => {
+        deleteJobMutation.mutate({ bookingId: id });
+    };
+
+    // BUG-10 fix: consolidated delete handler — previously there were two delete
+    // functions (deleteJob + handleDelete) causing a race condition where the modal
+    // closed before the async mutation settled. Now one path with proper awaiting.
+    const handleDelete = async (id: string) => {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { count, error: countErr } = await supabase
+            .from('invoices')
+            .select('*', { count: 'exact', head: true })
+            .eq('booking_id', id)
+            .eq('provider_id', user.id);
+
+        if (countErr) {
+            console.error('Invoice lookup failed', countErr);
+            toast.error("Could not verify invoices for this job. Try again.");
+            return;
+        }
+
+        const hasInvoice = (count ?? 0) > 0;
+        const message = hasInvoice
+            ? "This job has an invoice — delete anyway?"
+            : "Are you sure you want to delete this job?";
+
+        if (!confirm(message)) return;
+
+        // Close modal immediately so the UI feels responsive;
+        // the mutation handles its own success/error toasts.
+        setEditingJob(null);
         deleteJobMutation.mutate({ bookingId: id });
     };
 
@@ -164,34 +216,6 @@ export default function SchedulePage() {
     // Filter events for selected day
     const selectedEvents = jobs.filter(e => isSameDay(new Date(e.date), selectedDate));
 
-
-    const handleDelete = async (id: string) => {
-        const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { count, error: countErr } = await supabase
-            .from('invoices')
-            .select('*', { count: 'exact', head: true })
-            .eq('booking_id', id)
-            .eq('provider_id', user.id);
-
-        if (countErr) {
-            console.error('Invoice lookup failed', countErr);
-            toast.error("Could not verify invoices for this job. Try again.");
-            return;
-        }
-
-        const hasInvoice = (count ?? 0) > 0;
-        const message = hasInvoice
-            ? "This job has an invoice — delete anyway?"
-            : "Are you sure you want to delete this job?";
-
-        if (!confirm(message)) return;
-
-        await deleteJob(id);
-        setEditingJob(null);
-    };
 
     const handleEdit = () => {
         if (!editingJob) return;
@@ -273,7 +297,9 @@ export default function SchedulePage() {
                                 onClick={() => setEditingJob(event)}
                             >
                                 <div className="flex flex-col items-center pt-1 min-w-[45px]">
-                                    <div className="text-sm font-bold text-white">{event.time.split(':')[0]}:{event.time.split(':')[1].substring(0, 2)}</div>
+                                    {/* BUG-06 fix: show full time string including AM/PM;
+                                        the previous split(':')[1].substring(0,2) dropped it */}
+                                    <div className="text-sm font-bold text-white">{event.time}</div>
                                     <div className="h-full w-[2px] bg-white/20 my-2 rounded-full group-last:hidden"></div>
                                 </div>
                                 <Card className="flex-1 mb-2 hover:shadow-lg hover:bg-white/[0.07] transition-all cursor-pointer border-l-4 border-l-blue-500 active:scale-[0.98]">

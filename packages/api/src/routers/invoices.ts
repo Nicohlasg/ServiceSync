@@ -57,6 +57,17 @@ const downloadBulkInput = z.object({
   year: z.number().int().min(2020).max(2100),
 });
 
+// NOTE: Max 50 per call — increase when user base exceeds 5,000/month.
+const bulkUpdateStatusInput = z.object({
+  invoiceIds: z.array(z.string().uuid()).min(1).max(50),
+  status: z.enum(['draft', 'pending', 'awaiting_qr_confirmation', 'paid_cash', 'paid_qr', 'disputed', 'void']),
+});
+
+// NOTE: Max 50 per call — increase when user base exceeds 5,000/month.
+const bulkDeleteInput = z.object({
+  invoiceIds: z.array(z.string().uuid()).min(1).max(50),
+});
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -437,7 +448,7 @@ export const invoicesRouter = router({
 
       let client: any = null;
       if (invoice.client_id) {
-        const { data } = await ctx.supabase.from('clients').select('name, phone').eq('id', invoice.client_id).single();
+        const { data } = await ctx.supabase.from('clients').select('name, phone, address').eq('id', invoice.client_id).single();
         client = data;
       }
 
@@ -449,7 +460,7 @@ export const invoicesRouter = router({
 
       const depositCents = booking?.deposit_paid ? (booking.deposit_amount ?? 0) : 0;
       const balanceDueCents = Math.max(0, invoice.total_cents - depositCents);
-      const clientAddress = booking?.address ?? '';
+      const clientAddress = client?.address || booking?.address || '';
       const normalizedLineItems = Array.isArray(invoice.line_items)
         ? (invoice.line_items as Array<{
             description?: unknown;
@@ -711,5 +722,94 @@ export const invoicesRouter = router({
           invoiceCount: data.count,
         }))
         .sort((a, b) => b.year - a.year);
+    }),
+
+  /**
+   * Bulk-updates the status of multiple invoices at once.
+   * Capped at 50 per call — increase when user base exceeds 5,000/month.
+   */
+  bulkUpdateStatus: protectedProcedure
+    .input(bulkUpdateStatusInput)
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString();
+      const isPaidStatus = input.status === 'paid_cash' || input.status === 'paid_qr';
+
+      let paymentMethod: string | undefined;
+      if (input.status === 'paid_cash') paymentMethod = 'cash';
+      if (input.status === 'paid_qr') paymentMethod = 'paynow_qr';
+
+      const { data, error } = await ctx.supabase
+        .from('invoices')
+        .update({
+          status: input.status,
+          paid_at: isPaidStatus ? now : null,
+          ...(paymentMethod ? { payment_method: paymentMethod } : {}),
+        })
+        .in('id', input.invoiceIds)
+        .eq('provider_id', ctx.user.id)
+        .select('id, status');
+
+      if (error) {
+        console.error('[Invoices] Bulk status error:', error.message);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update invoices' });
+      }
+
+      void emitAuditEvent({
+        actorId: ctx.user.id,
+        actorIp: ctx.clientIp,
+        entityType: 'invoice',
+        entityId: input.invoiceIds.join(','),
+        action: 'bulk_status_change',
+        diff: { status: input.status, count: data?.length ?? 0 },
+      });
+
+      return { updated: data?.length ?? 0 };
+    }),
+
+  /**
+   * Bulk-deletes invoices (only draft, pending, or void).
+   * Capped at 50 per call — increase when user base exceeds 5,000/month.
+   */
+  bulkDelete: protectedProcedure
+    .input(bulkDeleteInput)
+    .mutation(async ({ ctx, input }) => {
+      // Only allow deleting draft/pending/void invoices
+      const { data: invoices, error: fetchError } = await ctx.supabase
+        .from('invoices')
+        .select('id, status')
+        .in('id', input.invoiceIds)
+        .eq('provider_id', ctx.user.id);
+
+      if (fetchError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to verify invoices' });
+      }
+
+      const deletableStatuses = ['draft', 'pending', 'void'];
+      const deletableIds = (invoices ?? []).filter(inv => deletableStatuses.includes(inv.status)).map(inv => inv.id);
+
+      if (deletableIds.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'No deletable invoices found (only draft, pending, or void can be deleted)' });
+      }
+
+      const { error: deleteError } = await ctx.supabase
+        .from('invoices')
+        .delete()
+        .in('id', deletableIds)
+        .eq('provider_id', ctx.user.id);
+
+      if (deleteError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to delete invoices' });
+      }
+
+      void emitAuditEvent({
+        actorId: ctx.user.id,
+        actorIp: ctx.clientIp,
+        entityType: 'invoice',
+        entityId: deletableIds.join(','),
+        action: 'bulk_delete',
+        diff: { count: deletableIds.length, skipped: input.invoiceIds.length - deletableIds.length },
+      });
+
+      return { deleted: deletableIds.length, skipped: input.invoiceIds.length - deletableIds.length };
     }),
 });

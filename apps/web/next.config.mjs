@@ -96,6 +96,8 @@ const nextConfig = {
 
 export default withSentryConfig(withNextIntl(nextConfig), {
   silent: true,
+  tunnelRoute: '/monitoring',
+  widenClientFileUpload: true,
   sourcemaps: {
     // Enable upload in CI: SENTRY_UPLOAD_SOURCEMAPS=true + SENTRY_AUTH_TOKEN + org/project
     disable: process.env.SENTRY_UPLOAD_SOURCEMAPS !== 'true',

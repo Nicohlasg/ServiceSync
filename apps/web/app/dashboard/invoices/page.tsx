@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, CheckCircle2, Clock, Download, Loader2, ChevronDown } from "lucide-react";
+import { Plus, Search, FileText, CheckCircle2, Clock, Download, Loader2, ChevronDown, Trash2, CheckSquare, Square } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/lib/types";
@@ -36,9 +36,65 @@ export default function InvoicesPage() {
     const today = new Date();
     const [filter, setFilter] = useState<"all" | "paid" | "pending">("all");
     const [searchTerm, setSearchTerm] = useState("");
+    const [clientFilter, setClientFilter] = useState("");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+    const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+    const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
     const [archiveMonth, setArchiveMonth] = useState(String(today.getMonth() + 1));
     const [archiveYear, setArchiveYear] = useState(String(today.getFullYear()));
     const [archivesOpen, setArchivesOpen] = useState(false);
+
+    // ── Multi-select state ──
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const selectMode = selectedIds.size > 0;
+    const utils = api.useUtils();
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = (ids: string[]) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            const allSelected = ids.every(id => next.has(id));
+            if (allSelected) { ids.forEach(id => next.delete(id)); }
+            else { ids.forEach(id => next.add(id)); }
+            return next;
+        });
+    };
+
+    const bulkUpdateStatus = api.invoices.bulkUpdateStatus.useMutation({
+        onSuccess: async (result) => {
+            toast.success(`${result.updated} invoice${result.updated !== 1 ? 's' : ''} updated`);
+            setSelectedIds(new Set());
+            await utils.invoices.list.invalidate();
+        },
+        onError: (err) => toast.error(err.message || 'Bulk update failed'),
+    });
+
+    const bulkDelete = api.invoices.bulkDelete.useMutation({
+        onSuccess: async (result) => {
+            toast.success(`${result.deleted} invoice${result.deleted !== 1 ? 's' : ''} deleted${result.skipped > 0 ? ` (${result.skipped} skipped — only draft/pending/void can be deleted)` : ''}`);
+            setSelectedIds(new Set());
+            await utils.invoices.list.invalidate();
+        },
+        onError: (err) => toast.error(err.message || 'Bulk delete failed'),
+    });
+
+    const isBulkBusy = bulkUpdateStatus.isPending || bulkDelete.isPending;
+
+    const toggleMonth = (month: string) => {
+        setCollapsedMonths(prev => {
+            const next = new Set(prev);
+            if (next.has(month)) next.delete(month); else next.add(month);
+            return next;
+        });
+    };
 
     const { data: invoicesData, isLoading, isError, refetch } = api.invoices.list.useQuery({ limit: 100 });
     const downloadMonthly = api.invoices.downloadMonthly.useMutation();
@@ -63,8 +119,13 @@ export default function InvoicesPage() {
     const filteredInvoices = invoices.filter(inv => {
         const matchesSearch = inv.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             inv.id.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filter === "all" ? true : inv.status === filter;
-        return matchesSearch && matchesFilter;
+        const matchesStatus = filter === "all" ? true : inv.status === filter;
+        // Advanced filters
+        const matchesClient = clientFilter.trim() === "" ||
+            inv.clientName.toLowerCase().includes(clientFilter.toLowerCase());
+        const matchesFrom = dateFrom === "" || new Date(inv.date) >= new Date(dateFrom + "T00:00:00");
+        const matchesTo = dateTo === "" || new Date(inv.date) <= new Date(dateTo + "T23:59:59");
+        return matchesSearch && matchesStatus && matchesClient && matchesFrom && matchesTo;
     });
 
     // Sort by date desc
@@ -295,12 +356,71 @@ export default function InvoicesPage() {
                 <div className="relative group">
                     <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-300 z-10" />
                     <Input
-                        placeholder="Search invoice..."
-                        className="pl-12 rounded-2xl"
+                        placeholder="Search by name or invoice ID..."
+                        className="pl-12 rounded-2xl pr-12"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowAdvancedFilter(v => !v)}
+                        className={`absolute right-3 top-2.5 h-7 px-2 rounded-lg text-xs font-bold transition-colors ${
+                            showAdvancedFilter || clientFilter || dateFrom || dateTo
+                                ? 'bg-blue-500/30 text-blue-300'
+                                : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                    >
+                        Filters
+                    </button>
                 </div>
+
+                <AnimatePresence initial={false}>
+                    {showAdvancedFilter && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="overflow-hidden space-y-2"
+                        >
+                            <Input
+                                placeholder="Filter by client name..."
+                                className="rounded-xl h-10 text-sm"
+                                value={clientFilter}
+                                onChange={(e) => setClientFilter(e.target.value)}
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
+                                    <Input
+                                        type="date"
+                                        className="rounded-xl h-10 text-sm"
+                                        value={dateFrom}
+                                        onChange={(e) => setDateFrom(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
+                                    <Input
+                                        type="date"
+                                        className="rounded-xl h-10 text-sm"
+                                        value={dateTo}
+                                        onChange={(e) => setDateTo(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            {(clientFilter || dateFrom || dateTo) && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setClientFilter(''); setDateFrom(''); setDateTo(''); }}
+                                    className="text-xs text-red-400 font-semibold"
+                                >
+                                    Clear advanced filters
+                                </button>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     {["all", "pending", "paid"].map((f) => (
@@ -321,60 +441,102 @@ export default function InvoicesPage() {
             </div>
 
             {/* Invoice List */}
-            <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar pb-20">
+            <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pb-20">
                 <AnimatePresence mode="popLayout">
                     {Object.keys(groupedInvoices).length > 0 ? (
-                        Object.entries(groupedInvoices).map(([month, monthInvoices], groupIndex) => (
-                            <motion.div
-                                key={month}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + groupIndex * 0.1 }}
-                            >
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">{month}</h3>
-                                <div className="space-y-3">
-                                    {monthInvoices.map((invoice) => (
-                                        <Card
-                                            key={invoice.id}
-                                            className="active:scale-[0.98] transition-all cursor-pointer hover:bg-white/[0.07] rounded-2xl group border-l-4 border-l-transparent hover:border-l-blue-500"
-                                            onClick={() => push(`/dashboard/invoices/${invoice.id}`)}
+                        Object.entries(groupedInvoices).map(([month, monthInvoices], groupIndex) => {
+                            const isCollapsed = collapsedMonths.has(month);
+                            const monthTotal = monthInvoices.reduce((s, i) => s + i.amount, 0);
+                            return (
+                                <motion.div
+                                    key={month}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.05 + groupIndex * 0.05 }}
+                                >
+                                    {/* Collapsible month header */}
+                                    <div className="flex items-center gap-2 px-2 mb-2">
+                                        {selectMode && (
+                                            <button type="button" onClick={() => toggleSelectAll(monthInvoices.map(i => i.id))} className="text-slate-400 hover:text-blue-400 transition-colors">
+                                                {monthInvoices.every(i => selectedIds.has(i.id)) ? <CheckSquare className="h-4 w-4 text-blue-400" /> : <Square className="h-4 w-4" />}
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleMonth(month)}
+                                            className="flex-1 flex items-center justify-between group"
                                         >
-                                            <CardContent className="p-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`
-                                            h-12 w-12 rounded-xl flex items-center justify-center shadow-inner border backdrop-blur-sm
-                                            ${invoice.status === "paid"
-                                                                ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-300"
-                                                                : invoice.status === "void"
-                                                                    ? "bg-red-500/15 border-red-400/25 text-red-300"
-                                                                    : "bg-amber-500/15 border-amber-400/25 text-amber-300"}
-                                        `}>
-                                                        {invoice.status === "paid" ? <CheckCircle2 className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-white text-base">{invoice.clientName}</h3>
-                                                        <div className="flex items-center text-xs text-slate-300 gap-2 font-medium">
-                                                            <span>#{invoice.id.slice(0, 6).toUpperCase()}</span>
-                                                            <span>•</span>
-                                                            <span>{format(new Date(invoice.date), "d MMM")}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="font-bold text-white text-lg">{formatCurrency(invoice.amount)}</p>
-                                                    <Badge
-                                                        variant={invoice.status === "paid" ? "success" : invoice.status === "void" ? "destructive" : "warning"}
-                                                        className="mt-1 text-[10px] uppercase tracking-wide"
+                                            <div className="flex items-center gap-2">
+                                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+                                                    isCollapsed ? '-rotate-90' : ''
+                                                }`} />
+                                                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">{month}</h3>
+                                            </div>
+                                            <span className="text-xs text-slate-400 font-semibold">
+                                                {monthInvoices.length} invoice{monthInvoices.length !== 1 ? 's' : ''} · {formatCurrency(monthTotal)}
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <AnimatePresence initial={false}>
+                                        {!isCollapsed && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden space-y-3"
+                                            >
+                                                {monthInvoices.map((invoice) => {
+                                                    const isSelected = selectedIds.has(invoice.id);
+                                                    return (
+                                                    <Card
+                                                        key={invoice.id}
+                                                        className={`active:scale-[0.98] transition-all cursor-pointer hover:bg-white/[0.07] rounded-2xl group border-l-4 ${
+                                                            isSelected ? 'border-l-blue-500 bg-blue-500/10' : 'border-l-transparent hover:border-l-blue-500'
+                                                        }`}
+                                                        onClick={() => selectMode ? toggleSelect(invoice.id) : push(`/dashboard/invoices/${invoice.id}`)}
+                                                        onContextMenu={(e) => { e.preventDefault(); toggleSelect(invoice.id); }}
                                                     >
-                                                        {invoice.status}
-                                                    </Badge>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        ))
+                                                        <CardContent className="p-4 flex items-center justify-between">
+                                                            <div className="flex items-center gap-4">
+                                                                {selectMode ? (
+                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleSelect(invoice.id); }} className="h-12 w-12 rounded-xl flex items-center justify-center border border-white/15 text-slate-300 hover:text-white transition-colors">
+                                                                        {isSelected ? <CheckSquare className="h-6 w-6 text-blue-400" /> : <Square className="h-6 w-6" />}
+                                                                    </button>
+                                                                ) : (
+                                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-inner border backdrop-blur-sm ${invoice.status === "paid" ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-300" : invoice.status === "void" ? "bg-red-500/15 border-red-400/25 text-red-300" : "bg-amber-500/15 border-amber-400/25 text-amber-300"}`}>
+                                                                    {invoice.status === "paid" ? <CheckCircle2 className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
+                                                                </div>
+                                                                )}
+                                                                <div>
+                                                                    <h3 className="font-bold text-white text-base">{invoice.clientName}</h3>
+                                                                    <div className="flex items-center text-xs text-slate-300 gap-2 font-medium">
+                                                                        <span>#{invoice.id.slice(0, 6).toUpperCase()}</span>
+                                                                        <span>•</span>
+                                                                        <span>{format(new Date(invoice.date), "d MMM")}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="font-bold text-white text-lg">{formatCurrency(invoice.amount)}</p>
+                                                                <Badge
+                                                                    variant={invoice.status === "paid" ? "success" : invoice.status === "void" ? "danger" : "warning"}
+                                                                    className="mt-1 text-[10px] uppercase tracking-wide"
+                                                                >
+                                                                    {invoice.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                    );
+                                                })}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })
                     ) : (
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -395,6 +557,51 @@ export default function InvoicesPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Floating Bulk Action Bar */}
+            <AnimatePresence>
+                {selectMode && (
+                    <motion.div
+                        initial={{ y: 80, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 80, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md"
+                    >
+                        <div className="bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-bold text-white">
+                                    {selectedIds.size} selected
+                                </p>
+                                <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs text-slate-400 hover:text-white font-semibold">
+                                    Clear
+                                </button>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    disabled={isBulkBusy}
+                                    onClick={() => bulkUpdateStatus.mutate({ invoiceIds: Array.from(selectedIds), status: 'paid_cash' })}
+                                >
+                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+                                    Mark Paid
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/15"
+                                    disabled={isBulkBusy}
+                                    onClick={() => bulkDelete.mutate({ invoiceIds: Array.from(selectedIds) })}
+                                >
+                                    {bulkDelete.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,7 +63,9 @@ export default function InvoiceDetailPage() {
   const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | "">("");
   const [dueDate, setDueDate] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [activeAction, setActiveAction] = useState<"download" | "resend" | null>(null);
+  const [activeAction, setActiveAction] = useState<"download" | "resend" | "preview" | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const updateStatus = api.invoices.updateStatus.useMutation({
     onSuccess: async () => {
@@ -119,6 +120,9 @@ export default function InvoiceDetailPage() {
   const canSaveStatus = !!invoice && effectiveStatus !== currentStatus && !updateStatus.isPending;
   const isDeletable = ['draft', 'pending', 'void'].includes(currentStatus);
 
+  // Check if a PDF already exists (generated previously)
+  const existingPdfUrl = invoice?.pdf_url || invoice?.draft_pdf_url || null;
+
   if (isLoading || !invoice) {
     if (isError) {
       return (
@@ -153,6 +157,35 @@ export default function InvoiceDetailPage() {
     clients?: { name?: string | null } | null;
   };
   const pdfFileName = `${invoiceNumber}.pdf`;
+
+  async function handlePreviewPdf() {
+    // If we already have a URL, just toggle the preview
+    if (existingPdfUrl) {
+      setPreviewUrl(existingPdfUrl);
+      setShowPreview(true);
+      return;
+    }
+
+    // Otherwise generate a PDF first
+    setActiveAction("preview");
+    try {
+      const result = await generatePdf.mutateAsync({ invoiceId });
+      if (!result.pdfUrl) throw new Error("PDF generation completed without a URL");
+
+      await Promise.all([
+        utils.invoices.getById.invalidate({ invoiceId }),
+        utils.invoices.list.invalidate(),
+      ]);
+
+      setPreviewUrl(result.pdfUrl);
+      setShowPreview(true);
+      toast.success("Invoice PDF ready");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate preview");
+    } finally {
+      setActiveAction(null);
+    }
+  }
 
   async function handleDownloadPdf() {
     setActiveAction("download");
@@ -289,6 +322,80 @@ export default function InvoiceDetailPage() {
               <span className="font-bold text-white">{formatCurrency(totalCents / 100)}</span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* PDF Preview Section */}
+      <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 rounded-3xl">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white">Invoice Preview</h2>
+            <div className="flex items-center gap-2">
+              {showPreview && previewUrl && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-400 hover:text-white h-8 px-2"
+                  onClick={() => window.open(previewUrl, '_blank', 'noopener,noreferrer')}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-white/15 text-slate-300 hover:bg-white/10 hover:text-white h-8"
+                onClick={() => {
+                  if (showPreview) {
+                    setShowPreview(false);
+                  } else {
+                    handlePreviewPdf();
+                  }
+                }}
+                disabled={activeAction === "preview"}
+              >
+                {activeAction === "preview" ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : showPreview ? (
+                  <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                {showPreview ? "Hide" : existingPdfUrl ? "Preview" : "Generate & Preview"}
+              </Button>
+            </div>
+          </div>
+
+          <AnimatePresence initial={false}>
+            {showPreview && previewUrl ? (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="rounded-2xl overflow-hidden border border-white/10 bg-white">
+                  <iframe
+                    src={previewUrl}
+                    title={`Preview of invoice ${invoiceNumber}`}
+                    className="w-full border-0"
+                    style={{ height: "70vh", minHeight: 400 }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 text-center mt-2">
+                  If the preview doesn&apos;t load, your browser may be blocking embedded PDFs. Use the external link icon or download the file.
+                </p>
+              </motion.div>
+            ) : !showPreview ? (
+              <div className="text-center py-6 rounded-2xl border border-dashed border-white/10">
+                <Eye className="h-8 w-8 mx-auto text-slate-600 mb-2" />
+                <p className="text-sm text-slate-500">
+                  {existingPdfUrl ? "Tap Preview to see the invoice" : "Generate a PDF to see a preview here"}
+                </p>
+              </div>
+            ) : null}
+          </AnimatePresence>
         </CardContent>
       </Card>
 

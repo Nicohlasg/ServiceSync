@@ -13,7 +13,17 @@ if (dsn) {
   Sentry.init({
     dsn,
     release,
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
+    integrations: [
+      // send console.log, console.warn, and console.error calls as logs to Sentry
+      Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+    ],
+    // Enable logs to be sent to Sentry
+    // @ts-ignore
+    enableLogs: true,
   });
 }

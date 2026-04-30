@@ -10,6 +10,7 @@ import { type AppRouter } from './routers/_app';
 export { appRouter, type AppRouter } from './routers/_app';
 export { createContext, type Context } from './trpc';
 export * from './payment';
+export { checkHttpRateLimit, assertHttpRateLimit, type RateLimitBucketName } from './rateLimit';
 
 // Re-export tRPC utilities
 export { trpc } from './client';

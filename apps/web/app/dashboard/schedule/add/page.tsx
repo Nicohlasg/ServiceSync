@@ -6,14 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { DateWheelPicker, TimeWheelPicker } from "@/components/ui/date-wheel-picker";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
@@ -38,7 +36,7 @@ function AddEvent() {
 
             const { data } = await supabase
                 .from('clients')
-                .select('*')
+                .select('id, name, phone, address, lat, lng, brand, notes')
                 .eq('provider_id', user.id);
 
             if (data) {
@@ -47,7 +45,10 @@ function AddEvent() {
                     name: c.name,
                     phone: c.phone || '',
                     address: c.address || '',
-                    brand: '',
+                    // Include coords so the job address auto-fill can geocode correctly
+                    lat: c.lat ?? undefined,
+                    lng: c.lng ?? undefined,
+                    brand: c.brand || '',
                     notes: c.notes || ''
                 })));
             }
@@ -59,10 +60,14 @@ function AddEvent() {
     const [clientId, setClientId] = useState("");
     const [service, setService] = useState("");
     const [address, setAddress] = useState("");
+    const [addressLat, setAddressLat] = useState<number | null>(null);
+    const [addressLng, setAddressLng] = useState<number | null>(null);
+    // BUG-07 fix: capture job duration so availability and invoicing work correctly
+    const [durationMinutes, setDurationMinutes] = useState(60);
 
-    // Custom Date/Time State
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    // Native date/time inputs — stored as strings ("YYYY-MM-DD" and "HH:MM")
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const [dateStr, setDateStr] = useState(todayStr);
     const [time24, setTime24] = useState("09:00");
 
     useEffect(() => {
@@ -75,7 +80,7 @@ function AddEvent() {
 
             const { data: booking, error } = await supabase
                 .from("bookings")
-                .select("id, client_id, service_type, arrival_window_start, address")
+                .select("id, client_id, service_type, arrival_window_start, address, lat, lng")
                 .eq("id", bookingId)
                 .eq("provider_id", user.id)
                 .single();
@@ -89,10 +94,16 @@ function AddEvent() {
             setClientId(booking.client_id ?? "");
             setService(booking.service_type ?? "");
             setAddress(booking.address ?? "");
+            setAddressLat(booking.lat ?? null);
+            setAddressLng(booking.lng ?? null);
 
             if (booking.arrival_window_start) {
                 const start = new Date(booking.arrival_window_start);
-                setSelectedDate(start);
+                // Format as YYYY-MM-DD for native date input
+                const y = start.getFullYear();
+                const mo = String(start.getMonth() + 1).padStart(2, '0');
+                const d = String(start.getDate()).padStart(2, '0');
+                setDateStr(`${y}-${mo}-${d}`);
 
                 const hour = start.getHours();
                 const minute = start.getMinutes();
@@ -146,15 +157,13 @@ function AddEvent() {
             return;
         }
 
-        // Parse time to Date
+        // Parse native date/time inputs into a combined local Date
         const [h, m] = time24.split(":").map(Number);
+        const [y, mo, d] = dateStr.split("-").map(Number);
+        const combinedDate = new Date(y, mo - 1, d, h, m, 0, 0);
 
-        const combinedDate = new Date(selectedDate);
-        combinedDate.setHours(h, m, 0, 0);
-
-        // Calculate ISO date string in local timezone (YYYY-MM-DD)
-        const tzOffset = combinedDate.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(combinedDate.getTime() - tzOffset)).toISOString().slice(0, 10);
+        // YYYY-MM-DD in local time for scheduled_date
+        const localISOTime = dateStr;
 
         if (isEditMode && bookingId) {
             updateJobMutation.mutate({
@@ -164,6 +173,9 @@ function AddEvent() {
                 arrivalWindowStart: combinedDate.toISOString(),
                 serviceType: service,
                 address: address.trim(),
+                lat: addressLat ?? undefined,
+                lng: addressLng ?? undefined,
+                estimatedDurationMinutes: durationMinutes,
             });
         } else {
             createJobMutation.mutate({
@@ -172,6 +184,9 @@ function AddEvent() {
                 arrivalWindowStart: combinedDate.toISOString(),
                 serviceType: service,
                 address: address.trim(),
+                lat: addressLat ?? undefined,
+                lng: addressLng ?? undefined,
+                estimatedDurationMinutes: durationMinutes,
             });
         }
     };
@@ -202,7 +217,15 @@ function AddEvent() {
                                     setClientId(val);
                                     if (val !== "new") {
                                         const c = clients.find(cl => cl.id === val);
-                                        if (c) setAddress(c.address || '');
+                                        if (c?.address) {
+                                            setAddress(c.address);
+                                            setAddressLat(c.lat ?? null);
+                                            setAddressLng(c.lng ?? null);
+                                        } else {
+                                            setAddress('');
+                                            setAddressLat(null);
+                                            setAddressLng(null);
+                                        }
                                     }
                                 }} value={clientId}>
                                     <SelectTrigger className="h-12 bg-white/50 border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20">
@@ -221,75 +244,47 @@ function AddEvent() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="address" className="text-slate-600 font-semibold">Job Address</Label>
-                                <Input
-                                    id="address"
-                                    placeholder="e.g. Blk 123 Ang Mo Kio Ave 6 #04-567"
-                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl"
+                                <Label className="text-slate-600 font-semibold">Job Address</Label>
+                                <AddressAutocomplete
                                     value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    required
+                                    onChange={(addr, lat, lng) => {
+                                        setAddress(addr);
+                                        setAddressLat(lat);
+                                        setAddressLng(lng);
+                                    }}
+                                    placeholder="Search job address..."
+                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl"
                                 />
                                 {clientId && !address && (
-                                    <p className="text-xs text-amber-600">No address on file for this client. Please enter the job address.</p>
+                                    <p className="text-xs text-amber-600">No address on file for this client. Please search the job address above.</p>
                                 )}
                             </div>
 
-                            {/* Date Picker Accordion */}
+                            {/* Date — native OS picker */}
                             <div className="space-y-2">
-                                <Label className="text-slate-600 font-semibold">Date</Label>
-                                <div className="border border-slate-200/60 bg-white/50 rounded-xl overflow-hidden transition-all duration-300">
-                                    <div
-                                        className="flex items-center justify-between p-3 cursor-pointer active:bg-slate-100"
-                                        onClick={() => setShowDatePicker(!showDatePicker)}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                                                <CalendarIcon className="h-5 w-5" />
-                                            </div>
-                                            <span className="font-medium text-slate-700">{format(selectedDate, "dd MMM yyyy")}</span>
-                                        </div>
-                                        <ChevronDown className={cn("h-5 w-5 text-slate-400 transition-transform", showDatePicker && "rotate-180")} />
-                                    </div>
-
-                                    <AnimatePresence>
-                                        {showDatePicker && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="border-t border-slate-200/60 overflow-hidden"
-                                            >
-                                                <div className="p-4 bg-slate-50/50">
-                                                    <DateWheelPicker
-                                                        value={selectedDate}
-                                                        onChange={setSelectedDate}
-                                                        minYear={new Date().getFullYear()}
-                                                        maxYear={new Date().getFullYear() + 5}
-                                                        size="sm"
-                                                        variant="light"
-                                                        fadeColor="#f9fafb"
-                                                    />
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                <Label htmlFor="job-date" className="text-slate-600 font-semibold">Date</Label>
+                                <Input
+                                    id="job-date"
+                                    type="date"
+                                    value={dateStr}
+                                    min={todayStr}
+                                    onChange={(e) => setDateStr(e.target.value)}
+                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700"
+                                    required
+                                />
                             </div>
 
-                            {/* Time Picker */}
+                            {/* Time — native OS picker */}
                             <div className="space-y-2">
-                                <Label className="text-slate-600 font-semibold">Time</Label>
-                                <div className="border border-slate-200/60 bg-white/50 rounded-xl p-4">
-                                    <TimeWheelPicker
-                                        value={time24}
-                                        onChange={setTime24}
-                                        size="sm"
-                                        minuteStep={15}
-                                        variant="light"
-                                        fadeColor="#ffffff"
-                                    />
-                                </div>
+                                <Label htmlFor="job-time" className="text-slate-600 font-semibold">Time</Label>
+                                <Input
+                                    id="job-time"
+                                    type="time"
+                                    value={time24}
+                                    onChange={(e) => setTime24(e.target.value)}
+                                    className="h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700"
+                                    required
+                                />
                             </div>
 
                             <div className="space-y-2">
@@ -302,6 +297,25 @@ function AddEvent() {
                                     onChange={(e) => setService(e.target.value)}
                                     required
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="duration" className="text-slate-600 font-semibold">Estimated Duration (minutes)</Label>
+                                <Select
+                                    value={String(durationMinutes)}
+                                    onValueChange={(v) => setDurationMinutes(Number(v))}
+                                >
+                                    <SelectTrigger id="duration" className="h-12 bg-white/50 border-slate-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="backdrop-blur-xl bg-white/90">
+                                        {[30, 45, 60, 90, 120, 150, 180, 240, 300, 360, 480].map(m => (
+                                            <SelectItem key={m} value={String(m)}>
+                                                {m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="pt-4">

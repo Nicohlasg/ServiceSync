@@ -68,7 +68,7 @@ export default function DashboardPage() {
                 // 2. Fetch Today's Bookings (Exclude pending)
                 const { data: bookings } = await supabase
                     .from('bookings')
-                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, clients(name)')
+                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name)')
                     .eq('provider_id', user.id)
                     .eq('scheduled_date', todayStr)
                     .neq('status', 'pending')
@@ -80,18 +80,27 @@ export default function DashboardPage() {
                         const timeStr = dateObj.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: true });
                         const isCompleted = b.status === 'completed';
 
+                        // BUG-16 fix: Supabase returns the joined row as an object {name},
+                        // not an array. b.clients?.[0]?.name is always undefined.
+                        // The generated type says array — cast via unknown to override.
+                        const joinedClient = b.clients as unknown as { name: string } | null;
+
                         return {
                             id: b.id,
                             clientId: b.client_id ?? '',
-                            clientName: b.client_name || b.clients?.[0]?.name || 'Unknown Client',
+                            clientName: b.client_name || joinedClient?.name || 'Unknown Client',
                             time: timeStr,
                             service: b.service_type,
                             status: isCompleted ? "completed" : "upcoming",
                             lat: b.lat ?? undefined,
                             lng: b.lng ?? undefined,
                             address: b.address ?? '',
-                            date: new Date(b.scheduled_date),
-                            amount: 0,
+                            // BUG-04 fix: 'YYYY-MM-DD' parses as UTC midnight in V8;
+                            // append T00:00:00 to force local-time parse so the date
+                            // isn't shifted back one day in SGT.
+                            date: new Date(b.scheduled_date + 'T00:00:00'),
+                            // BUG-11 fix: read actual amount from the row (stored in cents)
+                            amount: (b.amount ?? 0) / 100,
                         };
                     });
                     setJobs(mappedJobs);
@@ -166,7 +175,14 @@ export default function DashboardPage() {
         setLoadingRoute(true);
         setRouteData(null);
 
+        // BUG-09 fix: if the job has no geocoded coordinates, the destination falls
+        // back to Singapore centre (Marina Bay area) silently. We now surface this
+        // to the user via a toast so they know the travel time is approximate.
+        const hasCoords = !!(job.lat && job.lng);
         const destination = { lat: job.lat || 1.3521, lng: job.lng || 103.8198 };
+        if (!hasCoords) {
+            toast.warning("The destination for this job lacks map coordinates. Travel time is estimated to central Singapore.", { id: `no-coords-${job.id}` });
+        }
         const { origin, label, noHome } = getOriginForJob(job, source);
 
         setOriginLabel(label);
@@ -350,7 +366,13 @@ export default function DashboardPage() {
                         </DropdownContent>
                     </Dropdown>
                     <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-400">Good morning!</span>
+                        <span className="text-sm font-medium text-slate-400">
+                            {/* BUG-13 fix: dynamic greeting based on time of day */}
+                            {(() => {
+                                const h = new Date().getHours();
+                                return h < 12 ? 'Good morning!' : h < 17 ? 'Good afternoon!' : 'Good evening!';
+                            })()}
+                        </span>
                         <span className="text-lg font-black text-white leading-tight">{userProfile?.name ?? 'Technician'}</span>
                     </div>
                 </div>
@@ -608,20 +630,20 @@ export default function DashboardPage() {
 
                                 {/* Travel Time Card */}
                                 {noHomeAddress ? (
-                                    <div className="bg-amber-950/40 border border-amber-500/20 shadow-lg p-5 rounded-3xl">
+                                    <div className="bg-amber-500/15 border border-amber-400/40 shadow-lg p-5 rounded-3xl">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="bg-amber-600/20 p-2.5 rounded-xl text-amber-400 border border-amber-500/20">
+                                            <div className="bg-amber-400/25 p-2.5 rounded-xl text-amber-300 border border-amber-400/30">
                                                 <Navigation className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-amber-200">Travel time unavailable</p>
-                                                <p className="text-xs text-amber-400/80">Set your home address to enable travel estimates</p>
+                                                <p className="text-sm font-bold text-amber-100">Travel time unavailable</p>
+                                                <p className="text-xs text-amber-300">Set your home address to enable travel estimates</p>
                                             </div>
                                         </div>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full border-amber-500/30 text-amber-300 hover:bg-amber-500/10 rounded-xl font-bold"
+                                            className="w-full border-amber-400/50 text-amber-200 hover:bg-amber-400/20 rounded-xl font-bold"
                                             onClick={() => { setSelectedJob(null); push("/dashboard/profile"); }}
                                         >
                                             <MapPin className="h-4 w-4 mr-2" /> Set Home Address

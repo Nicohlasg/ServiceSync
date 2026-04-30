@@ -22,13 +22,13 @@
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
     "@react-pdf/types": "^2.11.1",
-    "@turbo/gen": "^1.13.0",
+    "@turbo/gen": "^1.13.4",
     "@types/node": "^25.6.0",
     "eslint": "^9.39.4",
-    "prettier": "^3.2.5",
-    "turbo": "^2.9.5",
-    "typescript": "^5.4.0",
-    "typescript-eslint": "^8.58.2"
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.1"
   },
   "workspaces": [
     "apps/*",
@@ -37,7 +37,8 @@
   ],
   "packageManager": "npm@10.2.4",
   "dependencies": {
-    "@claude-flow/guidance": "^3.0.0-alpha.1"
+    "@claude-flow/guidance": "^3.0.0-alpha.2",
+    "@sentry/nextjs": "^10.51.0"
   },
   "overrides": {
     "scheduler": "0.23.2"

@@ -163,7 +163,9 @@ export const clientsRouter = router({
         .eq('provider_id', ctx.user.id);
 
       // Calculate totals from both bookings and invoices
-      const completedBookings = (bookings ?? []).filter(b => b.status === 'completed');
+      const allBookings = (bookings ?? []);
+      const nonCancelledBookings = allBookings.filter(b => b.status !== 'cancelled');
+      const completedBookings = allBookings.filter(b => b.status === 'completed');
       const paidInvoices = (invoices ?? []).filter(i => ['paid_cash', 'paid_qr'].includes(i.status));
       // Prefer invoice revenue (more accurate), fall back to booking amounts
       const totalRevenueCents = paidInvoices.length > 0
@@ -176,7 +178,7 @@ export const clientsRouter = router({
         invoices: invoices ?? [],
         assets: assets ?? [],
         stats: {
-          totalJobs: completedBookings.length,
+          totalJobs: nonCancelledBookings.length,
           totalRevenueCents,
           lastServiceDate: completedBookings[0]?.completed_at ?? null,
         },

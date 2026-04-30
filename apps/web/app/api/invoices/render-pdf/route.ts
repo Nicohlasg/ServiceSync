@@ -3,6 +3,7 @@ import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import { NextRequest, NextResponse } from 'next/server';
 import { createElement, type ReactElement } from 'react';
 import { z } from 'zod';
+import { checkHttpRateLimit } from '@servicesync/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -117,6 +118,10 @@ const invoiceRenderSchema = z.object({
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Rate limit: 2 PDF renders/min per IP (CPU-intensive — see SCALING NOTE in rateLimit.ts)
+  const limited = await checkHttpRateLimit(req, 'pdf');
+  if (limited) return limited;
+
   const rawBody = await req.text();
   const signature = req.headers.get('x-servicesync-render-signature');
 
