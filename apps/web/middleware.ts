@@ -26,7 +26,7 @@ function buildCsp(nonce: string): string {
         `img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://ui-avatars.com https://maps.google.com`,
         `font-src 'self'`,
         `connect-src 'self' ${SUPABASE_ORIGIN} wss://*.supabase.co https://maps.googleapis.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io`,
-        `frame-src 'self' https://maps.google.com https://www.google.com`,
+        `frame-src 'self' https://maps.google.com https://www.google.com https://*.supabase.co`,
         `object-src 'none'`,
         `base-uri 'self'`,
         `form-action 'self'`,
