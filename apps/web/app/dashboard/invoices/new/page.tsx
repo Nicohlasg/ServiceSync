@@ -351,11 +351,11 @@ function NewInvoice() {
               </div>
               <CardContent className="p-8 space-y-8">
                 {/* Primary Actions: QR vs Cash */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   {showQrConfirm ? (
                     <div className="col-span-2 space-y-4">
                       <p className="text-center text-sm font-medium text-slate-700">Confirm that you received the PayNow payment?</p>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
                         <Button
                           className="h-16 flex flex-col items-center justify-center gap-1 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-sm"
                           onClick={() => confirmQrPayment.mutate({ invoiceId: invoiceId! })}
@@ -550,7 +550,7 @@ function NewInvoice() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <div className="space-y-2">
                       <Label className="text-slate-800 font-bold text-lg">Total Cost (SGD)</Label>
                       <div className="relative">

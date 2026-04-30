@@ -54,7 +54,7 @@ function ClientDetails() {
   const { push } = useRouter();
   const utils = api.useUtils();
 
-  const { data: client, isLoading, isError, refetch } = api.clients.getById.useQuery(
+  const { data: client, isLoading, isFetching, isError, refetch } = api.clients.getById.useQuery(
     { clientId },
     { enabled: !!clientId },
   );
@@ -130,9 +130,8 @@ function ClientDetails() {
     });
   };
 
-  // ── Loading / Error states ──
   if (isLoading || !client) {
-    if (isError) {
+    if (isError && !isFetching) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
           <p className="text-red-400 font-medium">Failed to load client details.</p>
@@ -407,13 +406,13 @@ function ClientDetails() {
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="space-y-1 flex-1 min-w-0">
+                <div className="space-y-1 flex-1 min-w-0 max-w-full">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 px-3" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
+                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
                 </div>
-                <div className="space-y-1 flex-1 min-w-0">
+                <div className="space-y-1 flex-1 min-w-0 max-w-full">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 px-3" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
+                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
                 </div>
               </div>
               {(txSearch || txDateFrom || txDateTo) && (

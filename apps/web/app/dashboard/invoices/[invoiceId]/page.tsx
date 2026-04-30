@@ -275,7 +275,7 @@ export default function InvoiceDetailPage() {
                   type="date"
                   value={dueDate || invoice.due_date || ""}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full min-w-0 px-3 sm:flex-1"
+                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full min-w-0 max-w-full appearance-none px-3 sm:flex-1"
                 />
                 <Button
                   size="sm"
@@ -376,12 +376,19 @@ export default function InvoiceDetailPage() {
                 className="overflow-hidden"
               >
                 <div className="rounded-2xl overflow-hidden border border-white/10 bg-white">
-                  <iframe
-                    src={previewUrl}
-                    title={`Preview of invoice ${invoiceNumber}`}
+                  <object
+                    data={`${previewUrl}#view=FitH`}
+                    type="application/pdf"
                     className="w-full border-0"
                     style={{ height: "70vh", minHeight: 400 }}
-                  />
+                  >
+                    <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                      <p className="text-slate-500 mb-4">Your browser does not support inline PDFs.</p>
+                      <Button asChild variant="outline">
+                        <a href={previewUrl} target="_blank" rel="noopener noreferrer">Download PDF</a>
+                      </Button>
+                    </div>
+                  </object>
                 </div>
                 <p className="text-[10px] text-slate-500 text-center mt-2">
                   If the preview doesn&apos;t load, your browser may be blocking embedded PDFs. Use the external link icon or download the file.

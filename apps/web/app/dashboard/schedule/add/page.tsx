@@ -262,7 +262,7 @@ function AddEvent() {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 {/* Date — native OS picker */}
                                 <div className="space-y-2">
                                     <Label htmlFor="job-date" className="text-slate-600 font-semibold">Date</Label>
@@ -272,7 +272,7 @@ function AddEvent() {
                                         value={dateStr}
                                         min={todayStr}
                                         onChange={(e) => setDateStr(e.target.value)}
-                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 px-3"
+                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 min-w-0 max-w-full appearance-none px-3"
                                         required
                                     />
                                 </div>
@@ -285,7 +285,7 @@ function AddEvent() {
                                         type="time"
                                         value={time24}
                                         onChange={(e) => setTime24(e.target.value)}
-                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 px-3"
+                                        className="w-full h-12 bg-white/50 border-slate-200/60 rounded-xl text-slate-700 min-w-0 max-w-full appearance-none px-3"
                                         required
                                     />
                                 </div>

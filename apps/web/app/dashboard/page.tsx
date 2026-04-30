@@ -551,8 +551,8 @@ export default function DashboardPage() {
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed inset-x-0 bottom-0 top-0 z-[100] bg-slate-900 shadow-2xl rounded-t-[2rem] overflow-hidden flex flex-col border-t border-white/10"
+                            transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                            className="fixed inset-x-0 bottom-0 top-12 z-[100] bg-slate-900 shadow-2xl rounded-t-[2rem] overflow-hidden flex flex-col border-t border-white/10 will-change-transform"
                         >
                             {/* Header Image / Map */}
                             <div className="relative h-[30vh] w-full bg-slate-800 shrink-0 border-b border-white/5">
@@ -565,7 +565,7 @@ export default function DashboardPage() {
                                         marginHeight={0}
                                         marginWidth={0}
                                         src={`https://maps.google.com/maps?q=${selectedJob.lat},${selectedJob.lng}&z=17&output=embed&iwloc=near`}
-                                        className="w-full h-full opacity-90"
+                                        className="w-full h-full opacity-90 pointer-events-none"
                                     ></iframe>
                                 ) : (
                                     <Image
@@ -660,7 +660,7 @@ export default function DashboardPage() {
                                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Est. Travel</p>
                                                     <div>
                                                         {loadingRoute ? (
-                                                            <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1" />
+                                                            <div className="relative overflow-hidden isolate h-7 w-20 bg-white/5 rounded mt-1 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_linear_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                                                         ) : (
                                                             <p className="text-2xl font-black text-white flex items-center gap-2 tracking-tight truncate">
                                                                 {routeData?.durationText}
@@ -673,7 +673,7 @@ export default function DashboardPage() {
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Leave By</p>
                                                 <div>
                                                     {loadingRoute ? (
-                                                        <div className="h-7 w-20 bg-white/5 animate-pulse rounded mt-1 ml-auto" />
+                                                        <div className="relative overflow-hidden isolate h-7 w-20 bg-white/5 rounded mt-1 ml-auto before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_linear_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                                                     ) : (
                                                         <p className="text-2xl font-black text-orange-400 tracking-tight">
                                                             {routeData?.leaveBy}

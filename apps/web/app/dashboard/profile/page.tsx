@@ -520,14 +520,14 @@ export default function ProfilePage() {
                                                             type="time"
                                                             value={schedule.start}
                                                             onChange={(e) => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { ...schedule, start: e.target.value } } }))}
-                                                            className="bg-slate-800/50 border-white/10 text-white h-9"
+                                                            className="bg-slate-800/50 border-white/10 text-white h-9 min-w-0 max-w-full appearance-none px-2"
                                                         />
                                                         <span className="text-slate-500">to</span>
                                                         <Input
                                                             type="time"
                                                             value={schedule.end}
                                                             onChange={(e) => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { ...schedule, end: e.target.value } } }))}
-                                                            className="bg-slate-800/50 border-white/10 text-white h-9"
+                                                            className="bg-slate-800/50 border-white/10 text-white h-9 min-w-0 max-w-full appearance-none px-2"
                                                         />
                                                         <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: null } }))} className="text-red-400 hover:text-red-300 h-9 px-2">Off</Button>
                                                     </>

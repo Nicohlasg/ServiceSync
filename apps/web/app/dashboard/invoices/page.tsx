@@ -394,7 +394,7 @@ export default function InvoicesPage() {
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm w-full min-w-0 px-3"
+                                        className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3"
                                         value={dateFrom}
                                         onChange={(e) => setDateFrom(e.target.value)}
                                     />
@@ -403,7 +403,7 @@ export default function InvoicesPage() {
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm w-full min-w-0 px-3"
+                                        className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3"
                                         value={dateTo}
                                         onChange={(e) => setDateTo(e.target.value)}
                                     />
