@@ -13,6 +13,8 @@ import {
 import { LocalePicker } from "@/components/onboarding/LocalePicker";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { trackOnboardingEvent } from "@/lib/analytics-events";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * LR-4.1 landing copy.
@@ -182,32 +184,32 @@ export default function HeroSection({
           </div>
 
           <div className="lg:col-span-5 space-y-6 lg:mt-12">
-            <div className="animate-fade-in delay-500 relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl shadow-2xl">
-              <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-
-              <div className="relative z-10 space-y-6">
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  {t("valueHeading")}
-                </h2>
-                <ul className="space-y-5">
-                  {valueProps.map(({ icon: Icon, title, body }) => (
-                    <li key={title} className="flex gap-4">
-                      <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          {title}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, duration: 0.8 }}>
+              <Card variant="premium" className="p-2 border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
+                <CardContent className="p-6 space-y-6 relative z-10">
+                  <h2 className="text-2xl font-black text-white tracking-tight leading-none mb-4">
+                    {t("valueHeading")}
+                  </h2>
+                  <ul className="space-y-6">
+                    {valueProps.map(({ icon: Icon, title, body }) => (
+                      <li key={title} className="flex gap-4 group">
+                        <div className="flex-shrink-0 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-inner group-hover:scale-110 transition-transform group-hover:bg-blue-600/20 group-hover:border-blue-500/30">
+                          <Icon className="h-6 w-6 text-white group-hover:text-blue-400 transition-colors" />
                         </div>
-                        <p className="mt-1 text-sm text-zinc-400 leading-relaxed">
-                          {body}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+                        <div className="overflow-hidden">
+                          <div className="text-base font-black text-white tracking-tight">
+                            {title}
+                          </div>
+                          <p className="mt-1 text-sm text-zinc-400 font-medium leading-relaxed line-clamp-2 group-hover:text-zinc-300 transition-colors">
+                            {body}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>

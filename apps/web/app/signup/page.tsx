@@ -150,7 +150,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative">
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden font-sans">
             <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
                 <LocalePicker variant="chip" stage="signup" />
             </div>
@@ -162,26 +162,26 @@ export default function SignupPage() {
                 }}
             />
 
-            <div className="relative z-10 w-full max-w-md">
+            <div className="relative z-10 w-full max-w-md my-12">
                 <div className="mb-8 text-center flex flex-col items-center">
                     <img src="/brand.png" alt="ServiceSync" className="h-20 w-auto mb-3 drop-shadow-lg" />
-                    <p className="text-zinc-400">{t("brandSubtitle")}</p>
+                    <p className="text-zinc-400 font-medium">{t("brandSubtitle")}</p>
                 </div>
 
-                <Card className="w-full bg-slate-900/65 backdrop-blur-xl border-white/15 shadow-2xl">
-                    <CardHeader className="space-y-1 flex flex-col items-center text-center pb-2">
-                        <div className="bg-blue-500/20 p-3 rounded-full mb-2 border border-blue-500/30 shadow-lg shadow-blue-500/10">
+                <Card variant="premium" className="w-full bg-zinc-900/40 border-white/10 shadow-2xl backdrop-blur-2xl">
+                    <CardHeader className="space-y-1 flex flex-col items-center text-center pb-2 relative z-10">
+                        <div className="bg-blue-500/10 p-3 rounded-2xl mb-2 border border-blue-500/20 shadow-lg shadow-blue-500/10">
                             <ShieldCheck className="h-8 w-8 text-blue-400" />
                         </div>
-                        <CardTitle className="text-2xl font-bold text-white">{t("title")}</CardTitle>
-                        <CardDescription className="text-slate-400">
+                        <CardTitle className="text-2xl font-black text-white tracking-tight">{t("title")}</CardTitle>
+                        <CardDescription className="text-zinc-400 font-medium">
                             {t("subtitle")}
                         </CardDescription>
                     </CardHeader>
-                    <form onSubmit={handleSignup}>
+                    <form onSubmit={handleSignup} className="relative z-10">
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="fullName" className="text-slate-300">{t("fullName")}</Label>
+                                <Label htmlFor="fullName" className="text-zinc-300 font-bold">{t("fullName")}</Label>
                                 <Input
                                     id="fullName"
                                     value={formData.fullName}
@@ -190,15 +190,15 @@ export default function SignupPage() {
                                     required
                                     aria-invalid={!!fieldErrors.fullName}
                                     aria-describedby={fieldErrors.fullName ? 'fullName-err' : undefined}
-                                    className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500/50 h-12"
+                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 h-12 rounded-xl backdrop-blur-md"
                                 />
                                 {fieldErrors.fullName && (
-                                    <p id="fullName-err" className="text-xs text-rose-400">{fieldErrors.fullName}</p>
+                                    <p id="fullName-err" className="text-xs text-rose-400 font-bold">{fieldErrors.fullName}</p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-slate-300">{t("email")}</Label>
+                                <Label htmlFor="email" className="text-zinc-300 font-bold">{t("email")}</Label>
                                 <Input
                                     id="email"
                                     value={formData.email}
@@ -209,22 +209,22 @@ export default function SignupPage() {
                                     required
                                     aria-invalid={!!fieldErrors.email}
                                     aria-describedby={fieldErrors.email ? 'email-err' : undefined}
-                                    className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500/50 h-12"
+                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 h-12 rounded-xl backdrop-blur-md"
                                 />
                                 {fieldErrors.email && (
-                                    <p id="email-err" className="text-xs text-rose-400">{fieldErrors.email}</p>
+                                    <p id="email-err" className="text-xs text-rose-400 font-bold">{fieldErrors.email}</p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-slate-300 flex items-center gap-2">
+                                <Label className="text-zinc-300 flex items-center gap-2 font-bold">
                                     <Wrench className="h-4 w-4" /> {t("tradeLabel")}
                                 </Label>
                                 <Select value={formData.trade} onValueChange={(val) => setFormData({ ...formData, trade: val })}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md">
                                         <SelectValue placeholder={t("tradePlaceholder")} />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-zinc-900 border-white/10">
                                         <SelectItem value="aircon">{t("trade.aircon")}</SelectItem>
                                         <SelectItem value="plumbing">{t("trade.plumbing")}</SelectItem>
                                         <SelectItem value="electrical">{t("trade.electrical")}</SelectItem>
@@ -235,7 +235,7 @@ export default function SignupPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-slate-300">{t("password")}</Label>
+                                <Label htmlFor="password" className="text-zinc-300 font-bold">{t("password")}</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -247,39 +247,39 @@ export default function SignupPage() {
                                     autoComplete="new-password"
                                     aria-invalid={!!fieldErrors.password}
                                     aria-describedby={fieldErrors.password ? 'password-err' : undefined}
-                                    className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500/50 h-12"
+                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 h-12 rounded-xl backdrop-blur-md"
                                 />
                                 {fieldErrors.password && (
-                                    <p id="password-err" className="text-xs text-rose-400">{fieldErrors.password}</p>
+                                    <p id="password-err" className="text-xs text-rose-400 font-bold">{fieldErrors.password}</p>
                                 )}
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-col gap-4">
-                            <p className="text-xs text-slate-500 text-center">
+                            <p className="text-[10px] text-zinc-500 text-center font-bold uppercase tracking-wider leading-relaxed">
                                 {t("legalIntro")}{" "}
-                                <Link href="/terms" className="text-blue-400 hover:underline" target="_blank">{t("terms")}</Link>
+                                <Link href="/terms" className="text-blue-400 hover:text-blue-300" target="_blank">{t("terms")}</Link>
                                 {" "}{t("legalJoiner")}{" "}
-                                <Link href="/privacy" className="text-blue-400 hover:underline" target="_blank">{t("privacy")}</Link>.
+                                <Link href="/privacy" className="text-blue-400 hover:text-blue-300" target="_blank">{t("privacy")}</Link>.
                             </p>
                             <Button
                                 type="submit"
-                                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25"
+                                className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all"
                                 size="lg"
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("loading")}</>
+                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loading")}</>
                                 ) : (
                                     t("submit")
                                 )}
                             </Button>
-                            <div className="text-center text-sm text-slate-500">
+                            <div className="text-center text-sm text-zinc-500 font-medium">
                                 {t("haveAccount")}{" "}
-                                <Link href="/login" className="text-blue-400 font-semibold hover:text-blue-300 hover:underline transition-colors">
+                                <Link href="/login" className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition-colors">
                                     {t("login")}
                                 </Link>
                             </div>
-                            <Link href="/" className="text-xs text-slate-600 hover:text-slate-400 transition-colors text-center">
+                            <Link href="/" className="text-xs text-zinc-600 font-bold hover:text-zinc-400 transition-colors text-center uppercase tracking-widest">
                                 {t("backHome")}
                             </Link>
                         </CardFooter>

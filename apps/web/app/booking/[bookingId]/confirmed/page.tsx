@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle2, MapPin, ShieldCheck } from "lucide-react";
+import { CheckCircle2, MapPin, ShieldCheck, ArrowLeft, Home } from "lucide-react";
 import { SkeletonLineLight, SkeletonCircleLight } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
-// formatCurrency removed — SEC-H1: deposit amount no longer exposed publicly
 import { toast } from "sonner";
+import Link from "next/link";
 
 function formatTimeSg(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -34,27 +34,27 @@ export default function BookingConfirmedPage() {
 
   if (!bookingId) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <p className="text-slate-600">Invalid booking link.</p>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6 text-white">
+        <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Invalid booking link.</p>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col pt-4">
+      <div className="min-h-screen bg-zinc-950 flex flex-col pt-4">
         <div className="px-4 mb-6 space-y-2">
           <SkeletonLineLight width="55%" className="h-5" />
           <SkeletonLineLight width="30%" className="h-3" />
         </div>
-        <div className="flex-1 rounded-t-[2.5rem] bg-white shadow-sm px-5 pt-8">
+        <div className="flex-1 rounded-t-[2.5rem] bg-white/5 border-t border-white/10 backdrop-blur-xl px-5 pt-8">
           <div className="text-center space-y-6 pt-8">
             <SkeletonCircleLight size={96} className="mx-auto rounded-[2rem]" />
             <div className="space-y-3 flex flex-col items-center">
               <SkeletonLineLight width="65%" className="h-7" />
               <SkeletonLineLight width="80%" className="h-4" />
             </div>
-            <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3 mt-8">
+            <div className="bg-white/5 rounded-2xl border border-white/5 p-4 space-y-3 mt-8">
               <SkeletonLineLight width="75%" />
               <SkeletonLineLight width="60%" />
               <SkeletonLineLight width="40%" className="h-3" />
@@ -68,16 +68,18 @@ export default function BookingConfirmedPage() {
 
   if (isError || !data) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 gap-4">
-        <p className="text-slate-700 text-center max-w-sm">
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 gap-4 text-white">
+        <p className="text-zinc-400 text-center max-w-sm font-medium">
           We couldn&apos;t load this booking confirmation. The link may be invalid or expired.
         </p>
-        <Button onClick={() => refetch()} variant="outline" className="rounded-2xl">
+        <Button onClick={() => refetch()} variant="outline" className="rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold uppercase tracking-widest text-xs h-12">
           Try again
         </Button>
-        <Button onClick={() => router.push("/")} className="rounded-2xl bg-blue-600">
-          Home
-        </Button>
+        <Link href="/">
+            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-widest text-xs h-12 px-8">
+                Home
+            </Button>
+        </Link>
       </div>
     );
   }
@@ -85,13 +87,18 @@ export default function BookingConfirmedPage() {
   const timeStr = formatTimeSg(data.arrivalWindowStart);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-4 overflow-hidden">
-      <div className="px-4 mb-6 relative z-10">
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Booking confirmed</h1>
-        <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mt-0.5">{data.providerName}</p>
+    <div className="min-h-screen bg-zinc-950 flex flex-col pt-4 overflow-hidden text-white">
+      <div className="px-4 mb-6 relative z-10 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => router.push(profileHref)} className="rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white">
+            <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+            <h1 className="text-xl font-black text-white tracking-tight">Booking confirmed</h1>
+            <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest mt-0.5">{data.providerName}</p>
+        </div>
       </div>
 
-      <div className="flex-1 rounded-t-[2.5rem] bg-white shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] relative px-5 pt-8 pb-24 overflow-y-auto">
+      <div className="flex-1 rounded-t-[2.5rem] bg-zinc-950/40 border-t border-white/10 backdrop-blur-2xl shadow-2xl relative px-5 pt-8 pb-24 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -107,18 +114,18 @@ export default function BookingConfirmedPage() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Booking Confirmed!</h2>
-            <p className="text-slate-500 font-medium">
+            <h2 className="text-3xl font-black text-white tracking-tight">Booking Confirmed!</h2>
+            <p className="text-zinc-400 font-medium">
               {data.providerName} has received your request
               {data.scheduledDate ? (
                 <>
                   {" "}
                   for{" "}
-                  <span className="text-slate-900 font-bold">{data.scheduledDate}</span>
+                  <span className="text-white font-black">{data.scheduledDate}</span>
                   {timeStr ? (
                     <>
                       {" "}
-                      at <span className="text-slate-900 font-bold">{timeStr}</span>
+                      at <span className="text-white font-black">{timeStr}</span>
                     </>
                   ) : null}
                   .
@@ -129,45 +136,60 @@ export default function BookingConfirmedPage() {
             </p>
           </div>
 
-          <Card className="bg-slate-50 border-slate-100 shadow-sm rounded-2xl text-left mt-8">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex gap-3">
-                <MapPin className="h-5 w-5 text-slate-400 mt-0.5 shrink-0" />
-                <p className="text-sm font-medium text-slate-700 leading-tight">{data.addressArea}</p>
+          <Card variant="premium" className="bg-white/5 border-white/10 shadow-xl rounded-[2rem] text-left mt-8 backdrop-blur-xl">
+            <CardContent className="p-6 space-y-4 relative z-10">
+              <div className="flex gap-4">
+                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0 h-fit">
+                    <MapPin className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-bold text-zinc-200 leading-snug">{data.addressArea}</p>
               </div>
               {data.depositSecured && (
-                <div className="flex gap-3">
-                  <ShieldCheck className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
-                  <p className="text-sm font-medium text-slate-700 leading-tight">
+                <div className="flex gap-4">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 h-fit">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-bold text-zinc-200 leading-snug">
                     Deposit held securely in ServiceSync escrow.
                   </p>
                 </div>
               )}
-              <p className="text-xs text-slate-400 pt-2">Reference: {data.id}</p>
+              <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Reference</span>
+                <span className="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">{data.id}</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => {
-              const url = `${window.location.origin}/booking/${bookingId}/confirmed`;
-              void navigator.clipboard.writeText(url);
-              toast.success("Confirmation link copied to clipboard!");
-            }}
-            className="w-full h-12 rounded-2xl font-bold bg-white text-slate-700 border-slate-200 mt-6"
-          >
-            Copy confirmation link
-          </Button>
+          <div className="space-y-3 pt-4 max-w-sm mx-auto">
+            <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                const url = `${window.location.origin}/booking/${bookingId}/confirmed`;
+                void navigator.clipboard.writeText(url);
+                toast.success("Confirmation link copied!");
+                }}
+                className="w-full h-14 rounded-2xl font-black bg-white/5 text-white border-white/10 backdrop-blur-md active:scale-95 transition-all uppercase tracking-widest text-xs"
+            >
+                Copy confirmation link
+            </Button>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => router.push(profileHref)}
-            className="w-full h-14 rounded-2xl font-bold bg-white text-slate-700 border-slate-200 mt-2"
-          >
-            Back to profile
-          </Button>
+            <Button
+                variant="outline"
+                size="lg"
+                onClick={() => router.push(profileHref)}
+                className="w-full h-14 rounded-2xl font-black bg-blue-600 hover:bg-blue-700 text-white border-none shadow-xl shadow-blue-600/20 active:scale-95 transition-all uppercase tracking-widest text-xs"
+            >
+                Back to profile
+            </Button>
+
+            <Link href="/" className="block pt-2">
+                <Button variant="ghost" className="text-zinc-500 hover:text-zinc-300 font-black uppercase tracking-widest text-[10px]">
+                    <Home className="h-3 w-3 mr-2" /> Home
+                </Button>
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>

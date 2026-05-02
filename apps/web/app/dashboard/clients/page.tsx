@@ -64,17 +64,17 @@ export default function ClientsPage() {
   );
 
   return (
-    <div className="space-y-6 pt-4">
+    <div className="space-y-6 pt-4 text-white px-1">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between px-1"
       >
-        <h1 className="text-2xl font-bold text-white drop-shadow-md">My Clients</h1>
+        <h1 className="text-2xl font-black text-white tracking-tight leading-none">My Clients</h1>
         <div className="flex items-center gap-2">
           <ContactImportButton onImportComplete={() => setRefreshKey(k => k + 1)} />
           <Link href="/dashboard/clients/add" data-tutorial-target="add-client-btn">
-            <Button size="icon" className="rounded-full h-12 w-12 shadow-lg shadow-blue-500/30">
+            <Button size="icon" className="rounded-full h-11 w-11 shadow-xl shadow-blue-600/30 bg-blue-600 hover:bg-blue-700 active:scale-90 transition-transform">
               <Plus className="h-6 w-6" />
             </Button>
           </Link>
@@ -86,20 +86,20 @@ export default function ClientsPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="relative group"
+        className="relative group px-1"
       >
-        <div className="absolute inset-0 bg-blue-100/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-300 z-10" />
+        <div className="absolute inset-x-1 -inset-y-2 bg-blue-600/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 group-focus-within:text-blue-400 transition-colors z-10" />
         <Input
           placeholder="Search name, phone, or address..."
-          className="pl-12 rounded-2xl"
+          className="pl-12 h-14 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 font-bold"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </motion.div>
 
       {/* Client List */}
-      <div className="space-y-3">
+      <div className="space-y-4 px-1">
         {filteredClients.length > 0 ? (
           filteredClients.map((client, index) => (
             <motion.div
@@ -109,36 +109,39 @@ export default function ClientsPage() {
               transition={{ delay: 0.1 + index * 0.05 }}
             >
               <Card
-                className="active:scale-[0.98] transition-all cursor-pointer hover:bg-white/[0.07] rounded-2xl group"
+                variant="premium"
+                className="active:scale-[0.98] transition-all cursor-pointer hover:border-blue-500/40 rounded-2xl group shadow-lg backdrop-blur-xl"
                 onClick={() => push(`/dashboard/clients/details?id=${client.id}`)}
               >
-                <CardContent className="p-4 flex items-center justify-between">
+                <CardContent className="p-4 flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center text-blue-300 font-bold text-xl shadow-inner border border-white/10 backdrop-blur-sm">
-                      {client.name.charAt(0)}
+                    <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center text-blue-400 font-black text-xl shadow-inner border border-white/10 backdrop-blur-sm group-hover:scale-105 transition-transform group-hover:text-white group-hover:bg-blue-600/20 group-hover:border-blue-500/30">
+                      {client.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-white text-lg">{client.name}</h3>
-                      <div className="flex items-center text-sm text-slate-300 gap-2 font-medium">
-                        <Phone className="h-3.5 w-3.5" />
+                    <div className="overflow-hidden">
+                      <h3 className="font-black text-white text-lg tracking-tight group-hover:text-blue-400 transition-colors truncate">{client.name}</h3>
+                      <div className="flex items-center text-xs text-zinc-400 gap-2 font-bold uppercase tracking-wider mt-0.5">
+                        <Phone className="h-3.5 w-3.5 text-blue-500" />
                         <span>{client.phone}</span>
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-white/50 group-hover:text-white transition-colors" />
+                  <ChevronRight className="h-5 w-5 text-zinc-700 group-hover:text-white transition-all group-hover:translate-x-0.5" />
                 </CardContent>
               </Card>
             </motion.div>
           ))
         ) : (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12 text-slate-400 glass-card glass-inner-light rounded-3xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 text-zinc-500 bg-white/5 rounded-[2rem] border border-white/5 border-dashed backdrop-blur-md"
           >
-            <User className="h-16 w-16 mx-auto mb-4 opacity-30" />
-            <p className="font-medium text-lg text-slate-200">No clients found.</p>
-            <p className="text-sm opacity-70">Try a different search or add a new one.</p>
+            <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-inner">
+                <User className="h-10 w-10 text-zinc-700" />
+            </div>
+            <p className="text-xl font-black text-white tracking-tight uppercase">No clients found</p>
+            <p className="text-sm text-zinc-500 font-bold mt-1 uppercase tracking-wider">Try a different search or add a new one.</p>
           </motion.div>
         )}
       </div>

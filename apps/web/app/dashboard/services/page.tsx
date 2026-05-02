@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Pencil, X, Briefcase, DollarSign, Clock } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ServicesPage() {
     const utils = api.useUtils();
@@ -110,12 +111,12 @@ export default function ServicesPage() {
     };
 
     return (
-        <div className="space-y-6 pt-4 pb-24">
+        <div className="space-y-6 pt-4 pb-24 text-white">
             <div className="px-2">
                 <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
                     <Briefcase className="h-8 w-8 text-blue-400" /> Services
                 </h1>
-                <p className="text-slate-400 mt-1 text-sm font-medium">Manage your service offerings and prices.</p>
+                <p className="text-zinc-400 mt-1 text-sm font-bold uppercase tracking-wider">Manage your service offerings and prices.</p>
             </div>
 
             {!isCreating && (
@@ -123,146 +124,157 @@ export default function ServicesPage() {
                     <Button
                         data-tutorial-target="add-service-btn"
                         onClick={() => { setPulseDismissed(true); startCreating(); }}
-                        className={`w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg border border-emerald-500/30 font-black text-lg relative overflow-hidden ${
-                            showPulse ? 'animate-service-pulse ring-2 ring-emerald-400/60' : ''
+                        className={`w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-500/30 font-black text-lg relative overflow-hidden active:scale-95 transition-all ${
+                            showPulse ? 'animate-service-pulse ring-2 ring-blue-400/60' : ''
                         }`}
                     >
                         {showPulse && (
-                            <span className="absolute inset-0 rounded-2xl animate-ping-slow bg-emerald-400/20 pointer-events-none" />
+                            <span className="absolute inset-0 rounded-2xl animate-ping-slow bg-white/20 pointer-events-none" />
                         )}
-                        <Plus className="h-5 w-5 mr-2" /> Add New Service
+                        <Plus className="h-6 w-6 mr-2 stroke-[3px]" /> Add New Service
                     </Button>
                 </div>
             )}
 
-            {isCreating && (
-                <Card data-tutorial-target="service-form" className="rounded-3xl border-blue-500/30 shadow-lg shadow-blue-500/10">
-                    <CardContent className="p-5 space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest">New Service</h3>
-                            <Button variant="ghost" size="sm" onClick={() => setIsCreating(false)} className="h-8 w-8 p-0 text-slate-400 hover:text-white">
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="space-y-1.5">
-                                <Label className="text-slate-400 text-xs font-bold uppercase">Name</Label>
-                                <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="bg-slate-800/50 border-white/10 text-white" placeholder="e.g. Change Aircon Filter" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-slate-400 text-xs font-bold uppercase">Description</Label>
-                                <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="bg-slate-800/50 border-white/10 resize-none text-white" rows={2} placeholder="Brief description (optional)" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><DollarSign className="h-3 w-3" /> Price (SGD)</Label>
-                                    <Input type="number" min="0" step="1" value={form.priceSGD} onChange={e => setForm({...form, priceSGD: parseFloat(e.target.value) || 0})} className="bg-slate-800/50 border-white/10 text-white text-xl font-bold" />
+            <AnimatePresence>
+                {isCreating && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    >
+                        <Card data-tutorial-target="service-form" variant="premium" className="rounded-3xl border-white/10 shadow-2xl backdrop-blur-2xl">
+                            <CardContent className="p-6 space-y-5">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest relative z-10">New Service</h3>
+                                    <button onClick={() => setIsCreating(false)} className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors relative z-10">
+                                        <X className="h-4 w-4" />
+                                    </button>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label className="text-slate-400 text-xs font-bold uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Duration (min)</Label>
-                                    <Input type="number" min="15" step="15" value={form.durationMinutes} onChange={e => setForm({...form, durationMinutes: parseInt(e.target.value, 10) || 0})} className="bg-slate-800/50 border-white/10 text-white text-xl font-bold" />
+                                <div className="space-y-4 relative z-10">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Service Name</Label>
+                                        <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md font-bold" placeholder="e.g. Change Aircon Filter" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Description</Label>
+                                        <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="bg-white/5 border-white/10 text-white resize-none rounded-xl focus:border-blue-500/50 backdrop-blur-md font-medium" rows={2} placeholder="What does this service include?" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><DollarSign className="h-3 w-3" /> Price (SGD)</Label>
+                                            <Input type="number" min="0" step="1" value={form.priceSGD} onChange={e => setForm({...form, priceSGD: parseFloat(e.target.value) || 0})} className="bg-white/5 border-white/10 text-white text-xl font-black h-14 rounded-xl focus:border-blue-500/50 backdrop-blur-md" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><Clock className="h-3 w-3" /> Duration (min)</Label>
+                                            <Input type="number" min="15" step="15" value={form.durationMinutes} onChange={e => setForm({...form, durationMinutes: parseInt(e.target.value, 10) || 0})} className="bg-white/5 border-white/10 text-white text-xl font-black h-14 rounded-xl focus:border-blue-500/50 backdrop-blur-md" />
+                                        </div>
+                                    </div>
+                                    <Button onClick={handleSaveNew} disabled={addMutation.isPending} className="w-full mt-4 h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-xl shadow-blue-600/20 active:scale-95 transition-all">
+                                        {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <><Plus className="h-5 w-5 mr-2 stroke-[3px]" /> CREATE SERVICE</>}
+                                    </Button>
                                 </div>
-                            </div>
-                            <Button onClick={handleSaveNew} disabled={addMutation.isPending} className="w-full mt-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
-                                {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Service"}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            <div className="space-y-4">
+            <div className="space-y-5 px-1">
                 {isLoading ? (
                     <>
                         <SkeletonCard />
                         <SkeletonCard />
                     </>
                 ) : services?.length === 0 ? (
-                    <div className="text-center py-12 bg-slate-800/50 rounded-3xl border border-white/5 mx-1">
-                        <Briefcase className="h-10 w-10 text-slate-500 mx-auto mb-3" />
-                        <p className="text-slate-400 font-medium">You have no services configured.</p>
+                    <div className="text-center py-20 bg-white/5 rounded-[2rem] border border-white/5 border-dashed backdrop-blur-md mx-1">
+                        <Briefcase className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
+                        <p className="text-zinc-500 font-black uppercase tracking-widest text-xs">You have no services configured.</p>
                     </div>
                 ) : (
-                    services?.map(service => (
-                        <Card key={service.id} className={`rounded-3xl transition-all ${!service.is_active ? 'opacity-50 grayscale' : ''}`}>
-                            <CardContent className="p-5">
-                                {editingId === service.id ? (
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest">Edit Service</h3>
-                                            <Button variant="ghost" size="sm" onClick={() => setEditingId(null)} className="h-8 w-8 p-0 text-slate-400 hover:text-white">
-                                                <X className="h-5 w-5" />
-                                            </Button>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-slate-400 text-xs font-bold uppercase">Name</Label>
-                                                <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="bg-slate-800/50 border-white/10 text-white" />
+                    services?.map((service, idx) => (
+                        <motion.div
+                            key={service.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                        >
+                            <Card variant="premium" className={`rounded-3xl transition-all backdrop-blur-xl ${!service.is_active ? 'opacity-40 grayscale blur-[1px]' : 'shadow-xl'}`}>
+                                <CardContent className="p-6">
+                                    {editingId === service.id ? (
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest relative z-10">Edit Service</h3>
+                                                <button onClick={() => setEditingId(null)} className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors relative z-10">
+                                                    <X className="h-4 w-4" />
+                                                </button>
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-slate-400 text-xs font-bold uppercase">Description</Label>
-                                                <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="bg-slate-800/50 border-white/10 resize-none text-white" rows={2} />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-4 relative z-10">
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-slate-400 text-xs font-bold uppercase">Price (SGD)</Label>
-                                                    <Input type="number" min="0" step="1" value={form.priceSGD} onChange={e => setForm({...form, priceSGD: parseFloat(e.target.value) || 0})} className="bg-slate-800/50 border-white/10 text-white text-xl font-bold" />
+                                                    <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Name</Label>
+                                                    <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 font-bold" />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-slate-400 text-xs font-bold uppercase">Duration (min)</Label>
-                                                    <Input type="number" min="15" step="15" value={form.durationMinutes} onChange={e => setForm({...form, durationMinutes: parseInt(e.target.value, 10) || 0})} className="bg-slate-800/50 border-white/10 text-white text-xl font-bold" />
+                                                    <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Description</Label>
+                                                    <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="bg-white/5 border-white/10 text-white resize-none rounded-xl focus:border-blue-500/50 font-medium" rows={2} />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Price (SGD)</Label>
+                                                        <Input type="number" min="0" step="1" value={form.priceSGD} onChange={e => setForm({...form, priceSGD: parseFloat(e.target.value) || 0})} className="bg-white/5 border-white/10 text-white text-xl font-black h-14 rounded-xl" />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Duration (min)</Label>
+                                                        <Input type="number" min="15" step="15" value={form.durationMinutes} onChange={e => setForm({...form, durationMinutes: parseInt(e.target.value, 10) || 0})} className="bg-white/5 border-white/10 text-white text-xl font-black h-14 rounded-xl" />
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleSaveUpdate(service.id, !!service.is_active)} disabled={updateMutation.isPending} className="w-full mt-4 h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-xl shadow-blue-600/20">
+                                                    {updateMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "SAVE CHANGES"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-5 relative z-10">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="min-w-0">
+                                                    <h3 className="font-black text-2xl text-white tracking-tight leading-tight group-hover:text-blue-400 transition-colors truncate">{service.name}</h3>
+                                                    {service.description && (
+                                                        <p className="text-sm text-zinc-400 font-medium line-clamp-2 leading-snug mt-1.5">{service.description}</p>
+                                                    )}
+                                                </div>
+                                                <Button variant="ghost" size="sm" onClick={() => startEditing(service)} className="h-10 w-10 p-0 text-zinc-500 hover:text-white shrink-0 bg-white/5 rounded-xl border border-white/10 shadow-sm active:scale-90 transition-transform">
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 shadow-inner">
+                                                    <DollarSign className="h-4 w-4 text-emerald-400" />
+                                                    <span className="font-black text-white text-xl tracking-tighter tabular-nums leading-none">{service.price_cents / 100}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 shadow-inner">
+                                                    <Clock className="h-4 w-4 text-blue-400" />
+                                                    <span className="font-black text-white text-xl tracking-tighter tabular-nums leading-none">{service.duration_minutes}m</span>
                                                 </div>
                                             </div>
-                                            <Button onClick={() => handleSaveUpdate(service.id, !!service.is_active)} disabled={updateMutation.isPending} className="w-full mt-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
-                                                {updateMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Changes"}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-3">
-                                        <div className="flex justify-between items-start gap-3">
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-black text-xl text-white truncate">{service.name}</h3>
-                                                </div>
-                                                {service.description && (
-                                                    <p className="text-sm text-slate-400 line-clamp-2 leading-snug">{service.description}</p>
-                                                )}
-                                            </div>
-                                            <Button variant="ghost" size="sm" onClick={() => startEditing(service)} className="h-8 w-8 p-0 text-slate-400 hover:text-white shrink-0 bg-white/5 rounded-full">
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        <div className="flex items-center gap-4 mt-2">
-                                            <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-white/5">
-                                                <DollarSign className="h-4 w-4 text-emerald-400" />
-                                                <span className="font-black text-emerald-400 text-lg tabular-nums leading-none mb-0.5">{service.price_cents / 100}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-white/5">
-                                                <Clock className="h-4 w-4 text-indigo-400" />
-                                                <span className="font-black text-indigo-400 text-lg tabular-nums leading-none mb-0.5">{service.duration_minutes}m</span>
+                                            
+                                            <div className="pt-2 flex items-center justify-between">
+                                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-2 py-1 rounded-md border ${service.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-500 bg-white/5 border-white/5'}`}>
+                                                    {service.is_active ? 'Active' : 'Hidden'}
+                                                </span>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    onClick={() => toggleActive(service.id, !!service.is_active)}
+                                                    className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 ${service.is_active ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-white' : 'bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-lg shadow-emerald-600/20'}`}
+                                                >
+                                                    {service.is_active ? 'Hide Service' : 'Enable Service'}
+                                                </Button>
                                             </div>
                                         </div>
-                                        
-                                        <div className="border-t border-white/10 my-1" />
-                                        
-                                        <div className="flex items-center justify-between">
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${service.is_active ? 'text-emerald-500' : 'text-slate-500'}`}>
-                                                {service.is_active ? 'Active on Public Profile' : 'Hidden from Profile'}
-                                            </span>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                onClick={() => toggleActive(service.id, !!service.is_active)}
-                                                className={`h-8 px-3 rounded-lg text-xs font-bold border ${service.is_active ? 'bg-slate-800/50 border-white/10 text-slate-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}
-                                            >
-                                                {service.is_active ? 'Hide Service' : 'Enable Service'}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     ))
                 )}
             </div>

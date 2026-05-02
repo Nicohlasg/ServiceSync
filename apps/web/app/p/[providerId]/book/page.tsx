@@ -160,9 +160,9 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                         <SkeletonLineLight width="30%" className="h-3" />
                     </div>
                 </div>
-                <div className="flex-1 rounded-t-[2.5rem] bg-card border border-border shadow-sm px-5 pt-8 space-y-4">
+                <div className="flex-1 rounded-t-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-sm px-5 pt-8 space-y-4">
                     <SkeletonLineLight width="70%" className="h-7 mb-6" />
-                    <SkeletonCardLight />
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 animate-pulse h-32" />
                 </div>
             </div>
         );
@@ -171,13 +171,13 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
     return (
         <div className="min-h-screen flex flex-col pt-4 overflow-hidden">
             {/* Header */}
-            <div className="px-4 flex items-center gap-3 mb-6 relative z-10 text-foreground">
-                <Button variant="ghost" size="icon" onClick={() => step === 1 ? push(`/p/${providerId}`) : handleBack()} className="rounded-full bg-muted/80 backdrop-blur shadow-sm hover:bg-muted text-foreground">
+            <div className="px-4 flex items-center gap-3 mb-6 relative z-10 text-white">
+                <Button variant="ghost" size="icon" onClick={() => step === 1 ? push(`/p/${providerId}`) : handleBack()} className="rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div className="flex-1">
                     <h1 className="text-xl font-bold tracking-tight">Book Appointment</h1>
-                    <p className="text-xs text-blue-500 font-bold uppercase tracking-widest mt-0.5">
+                    <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mt-0.5">
                         {provider?.name}
                     </p>
                 </div>
@@ -185,14 +185,14 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
 
             {/* Progress Bar */}
             <div className="px-6 mb-8 relative z-10">
-                <div className="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 px-1">
-                    <span className={step >= 1 ? "text-blue-500" : ""}>Service</span>
-                    <span className={step >= 2 ? "text-blue-500" : ""}>Details</span>
-                    <span className={step >= 3 ? "text-blue-500" : ""}>Request</span>
+                <div className="flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">
+                    <span className={step >= 1 ? "text-blue-400" : ""}>Service</span>
+                    <span className={step >= 2 ? "text-blue-400" : ""}>Details</span>
+                    <span className={step >= 3 ? "text-blue-400" : ""}>Request</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-blue-600 rounded-full"
+                        className="h-full bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]"
                         initial={{ width: "33%" }}
                         animate={{ width: `${(step / 3) * 100}%` }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -201,37 +201,37 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 rounded-t-[2.5rem] bg-card border-t border-border shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] relative px-5 pt-8 pb-24 overflow-y-auto">
+            <div className="flex-1 rounded-t-[2.5rem] bg-zinc-950/40 border-t border-white/10 backdrop-blur-2xl shadow-2xl relative px-5 pt-8 pb-24 overflow-y-auto min-h-0">
                 <AnimatePresence mode="wait">
 
                     {/* ── STEP 1: SELECT SERVICE ── */}
                     {step === 1 && (
                         <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                            <h2 className="text-2xl font-black text-foreground tracking-tight mb-6">What do you need help with?</h2>
+                            <h2 className="text-2xl font-black text-white tracking-tight mb-6">What do you need help with?</h2>
                             {services.length > 0 ? (
                                 <div className="space-y-3">
                                     {services.map((svc, idx) => (
-                                        <Card key={svc.id} className={`border-2 transition-all cursor-pointer overflow-hidden ${bookingData.serviceId === svc.id ? 'border-blue-600 bg-blue-500/10 shadow-md shadow-blue-500/10' : 'border-border bg-card shadow-sm hover:border-blue-500/50'}`} onClick={() => handleServiceSelect(svc)}>
+                                        <Card variant="premium" key={svc.id} className={`border-2 transition-all cursor-pointer overflow-hidden ${bookingData.serviceId === svc.id ? 'border-blue-600 bg-blue-500/10 shadow-md shadow-blue-500/10' : 'border-white/5 bg-white/5 shadow-sm hover:border-blue-500/50'}`} onClick={() => handleServiceSelect(svc)}>
                                             <CardContent className="p-4 flex items-center justify-between relative">
                                                 {idx === 0 && services.length > 1 && (
-                                                    <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-xl tracking-wider">POPULAR</div>
+                                                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-xl tracking-wider">POPULAR</div>
                                                 )}
-                                                <div className="pr-4">
-                                                    <h3 className="font-bold text-foreground text-lg leading-tight mb-1">{svc.name}</h3>
-                                                    <div className="flex items-center text-xs text-muted-foreground font-medium gap-1">
+                                                <div className="pr-4 relative z-10">
+                                                    <h3 className="font-bold text-white text-lg leading-tight mb-1">{svc.name}</h3>
+                                                    <div className="flex items-center text-xs text-zinc-400 font-medium gap-1">
                                                         <Clock className="h-3.5 w-3.5" />
                                                         Est. {svc.duration_minutes >= 60 ? `${Math.floor(svc.duration_minutes / 60)} hr${svc.duration_minutes >= 120 ? 's' : ''}` : `${svc.duration_minutes} mins`}
                                                     </div>
                                                 </div>
-                                                <div className="text-right shrink-0">
-                                                    <p className="text-2xl font-black text-foreground tracking-tight">{formatCurrency(svc.price_cents / 100)}</p>
+                                                <div className="text-right shrink-0 relative z-10">
+                                                    <p className="text-2xl font-black text-white tracking-tight">{formatCurrency(svc.price_cents / 100)}</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-12 text-muted-foreground">
+                                <div className="text-center py-12 text-zinc-400">
                                     <p className="text-lg font-medium">No services listed yet</p>
                                     <p className="text-sm mt-1">This provider hasn&apos;t added services to their profile.</p>
                                 </div>
@@ -244,29 +244,29 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                         <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                             
                             <div className="space-y-4">
-                                <h3 className="font-bold text-lg text-foreground flex items-center gap-2">Request Type</h3>
+                                <h3 className="font-bold text-lg text-white flex items-center gap-2">Request Type</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div 
                                         onClick={() => setBookingMode("standard")} 
-                                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${bookingMode === "standard" ? "border-blue-600 bg-blue-500/10 shadow-md" : "border-border bg-card hover:border-blue-500/50"}`}
+                                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all backdrop-blur-md ${bookingMode === "standard" ? "border-blue-600 bg-blue-500/10 shadow-md" : "border-white/5 bg-white/5 hover:border-blue-500/50"}`}
                                     >
                                         <div className="text-blue-500 mb-2"><CalendarIcon className="h-6 w-6" /></div>
-                                        <div className="font-bold text-foreground mb-0.5">Standard</div>
-                                        <div className="text-xs text-muted-foreground font-medium">Free booking on available slots.</div>
+                                        <div className="font-bold text-white mb-0.5">Standard</div>
+                                        <div className="text-xs text-zinc-400 font-medium">Free booking on available slots.</div>
                                     </div>
                                     <div 
                                         onClick={() => setBookingMode("priority")} 
-                                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${bookingMode === "priority" ? "border-purple-500 bg-purple-500/10 shadow-md" : "border-border bg-card hover:border-purple-500/50"}`}
+                                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all backdrop-blur-md ${bookingMode === "priority" ? "border-purple-500 bg-purple-500/10 shadow-md" : "border-white/5 bg-white/5 hover:border-purple-500/50"}`}
                                     >
                                         <div className="text-purple-500 mb-2"><Zap className="h-6 w-6" /></div>
-                                        <div className="font-bold text-foreground mb-0.5">Priority ($15)</div>
-                                        <div className="text-xs text-muted-foreground font-medium">Request any specific bypassed time.</div>
+                                        <div className="font-bold text-white mb-0.5">Priority ($15)</div>
+                                        <div className="text-xs text-zinc-400 font-medium">Request any specific bypassed time.</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                                <h3 className="font-bold text-lg text-white flex items-center gap-2">
                                     <CalendarIcon className="h-5 w-5 text-blue-500" /> Date & Time
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3">
@@ -277,35 +277,35 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                                             if (e.target.value) setBookingData(prev => ({...prev, dateObj: new Date(e.target.value + "T00:00:00")}));
                                         }}
                                         min={format(new Date(), "yyyy-MM-dd")}
-                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl min-w-0 max-w-full appearance-none px-3"
+                                        className="h-12 font-bold text-white border-white/10 bg-white/5 backdrop-blur-md rounded-xl min-w-0 max-w-full appearance-none px-3 focus:border-blue-500/50"
                                     />
                                     <Input
                                         type="time"
                                         value={timeStr}
                                         onChange={(e) => setTimeStr(e.target.value)}
-                                        className="h-12 font-bold text-foreground border-border bg-card rounded-xl min-w-0 max-w-full appearance-none px-3"
+                                        className="h-12 font-bold text-white border-white/10 bg-white/5 backdrop-blur-md rounded-xl min-w-0 max-w-full appearance-none px-3 focus:border-blue-500/50"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                                <h3 className="font-bold text-lg text-white flex items-center gap-2">
                                     <MapPin className="h-5 w-5 text-emerald-500" /> Location Details
                                 </h3>
                                 <AddressAutocomplete
                                     value={bookingData.address}
                                     onChange={(addr, lat, lng) => setBookingData(p => ({...p, address: addr, lat, lng}))}
                                     placeholder="Search your address (e.g. Blk 123 Hougang)"
-                                    className="h-12 bg-muted border-border rounded-xl text-foreground placeholder:text-muted-foreground"
+                                    className="h-12 bg-white/5 border-white/10 backdrop-blur-md rounded-xl text-white placeholder:text-zinc-500"
                                 />
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="font-bold text-lg text-foreground flex items-center gap-2">Client Info</h3>
+                                <h3 className="font-bold text-lg text-white flex items-center gap-2">Client Info</h3>
                                 <div className="space-y-3">
-                                    <Input placeholder="Your Name" name="clientName" value={bookingData.clientName} onChange={(e) => setBookingData(p => ({...p, clientName: e.target.value}))} className="h-12 bg-muted border-border rounded-xl text-foreground placeholder:text-muted-foreground" />
-                                    <Input type="tel" placeholder="Phone Number" name="phone" value={bookingData.phone} onChange={(e) => setBookingData(p => ({...p, phone: e.target.value}))} className="h-12 bg-muted border-border rounded-xl text-foreground placeholder:text-muted-foreground" />
-                                    <Textarea placeholder="Any specific issues or symptoms? (Optional)" name="notes" value={bookingData.notes} onChange={(e) => setBookingData(p => ({...p, notes: e.target.value}))} className="bg-muted border-border rounded-xl min-h-[100px] text-foreground placeholder:text-muted-foreground" />
+                                    <Input placeholder="Your Name" name="clientName" value={bookingData.clientName} onChange={(e) => setBookingData(p => ({...p, clientName: e.target.value}))} className="h-12 bg-white/5 border-white/10 backdrop-blur-md rounded-xl text-white placeholder:text-zinc-500" />
+                                    <Input type="tel" placeholder="Phone Number" name="phone" value={bookingData.phone} onChange={(e) => setBookingData(p => ({...p, phone: e.target.value}))} className="h-12 bg-white/5 border-white/10 backdrop-blur-md rounded-xl text-white placeholder:text-zinc-500" />
+                                    <Textarea placeholder="Any specific issues or symptoms? (Optional)" name="notes" value={bookingData.notes} onChange={(e) => setBookingData(p => ({...p, notes: e.target.value}))} className="bg-white/5 border-white/10 backdrop-blur-md rounded-xl min-h-[100px] text-white placeholder:text-zinc-500" />
                                 </div>
                             </div>
 
@@ -326,50 +326,50 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                             
                             {bookingMode === "priority" ? (
                                 <div className="text-center space-y-2 mb-8">
-                                    <div className="mx-auto w-16 h-16 bg-purple-500/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 border-4 border-card shadow-lg rotate-12">
+                                    <div className="mx-auto w-16 h-16 bg-purple-500/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 border-4 border-white/10 shadow-lg rotate-12 backdrop-blur-md">
                                         <Zap className="h-8 w-8" />
                                     </div>
-                                    <h2 className="text-2xl font-black text-foreground tracking-tight">Priority Request</h2>
-                                    <p className="text-sm text-muted-foreground font-medium px-4">Pay a $15 deposit to secure your expedited slot. The technician will prioritize this time heavily.</p>
+                                    <h2 className="text-2xl font-black text-white tracking-tight">Priority Request</h2>
+                                    <p className="text-sm text-zinc-400 font-medium px-4">Pay a $15 deposit to secure your expedited slot. The technician will prioritize this time heavily.</p>
                                     
-                                    <div className="mt-4 mx-2 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-start gap-3 text-left">
+                                    <div className="mt-4 mx-2 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-start gap-3 text-left backdrop-blur-sm">
                                         <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-foreground font-semibold leading-relaxed">
+                                        <p className="text-xs text-white font-semibold leading-relaxed">
                                             100% Refund Guarantee: A full refund will be instantly provided if the technician declines this priority request, or if they accept but fail to arrive.
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="text-center space-y-2 mb-8">
-                                    <div className="mx-auto w-16 h-16 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-4 border-4 border-card shadow-lg rotate-12">
+                                    <div className="mx-auto w-16 h-16 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-4 border-4 border-white/10 shadow-lg rotate-12 backdrop-blur-md">
                                         <CalendarIcon className="h-8 w-8" />
                                     </div>
-                                    <h2 className="text-2xl font-black text-foreground tracking-tight">Standard Request</h2>
-                                    <p className="text-sm text-muted-foreground font-medium px-4">Your requested slot will be pending the technician&apos;s manual approval. No upfront fees required today.</p>
+                                    <h2 className="text-2xl font-black text-white tracking-tight">Standard Request</h2>
+                                    <p className="text-sm text-zinc-400 font-medium px-4">Your requested slot will be pending the technician&apos;s manual approval. No upfront fees required today.</p>
                                 </div>
                             )}
 
-                            <Card className="border-2 border-border bg-card shadow-md rounded-3xl overflow-hidden mb-6">
-                                <div className="bg-muted p-4 border-b border-border flex justify-between items-center text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                            <Card variant="premium" className="border-2 border-white/10 bg-white/5 shadow-md rounded-3xl overflow-hidden mb-6">
+                                <div className="bg-white/5 p-4 border-b border-white/10 flex justify-between items-center text-sm font-bold uppercase tracking-widest text-zinc-400">
                                     <span>Booking Summary</span>
-                                    <span className="text-blue-500 cursor-pointer" onClick={() => setStep(2)}>Edit</span>
+                                    <span className="text-blue-400 cursor-pointer" onClick={() => setStep(2)}>Edit</span>
                                 </div>
                                 <CardContent className="p-5 space-y-4">
-                                    <div className="flex justify-between items-start text-sm">
-                                        <span className="text-muted-foreground font-medium pr-8">{bookingData.serviceName}</span>
-                                        <span className="font-bold text-foreground">{formatCurrency(bookingData.priceCents / 100)}</span>
+                                    <div className="flex justify-between items-start text-sm relative z-10">
+                                        <span className="text-zinc-300 font-medium pr-8">{bookingData.serviceName}</span>
+                                        <span className="font-bold text-white">{formatCurrency(bookingData.priceCents / 100)}</span>
                                     </div>
                                     
-                                    <div className="flex justify-between items-center pt-2 border-t border-border mt-2">
+                                    <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2 relative z-10">
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">Due Now</span>
-                                            <span className="text-3xl font-black text-foreground tracking-tight">
+                                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-1">Due Now</span>
+                                            <span className="text-3xl font-black text-white tracking-tight">
                                                 {bookingMode === "priority" ? formatCurrency(depositAmountCents / 100) : "$0.00"}
                                             </span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">Estimated Total</span>
-                                            <span className="text-xl font-bold text-muted-foreground">{formatCurrency(bookingData.priceCents / 100)}</span>
+                                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-1">Estimated Total</span>
+                                            <span className="text-xl font-bold text-zinc-400">{formatCurrency(bookingData.priceCents / 100)}</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -392,7 +392,7 @@ export default function BookingPage({ params }: { params: Promise<{ providerId: 
                                 )}
                             </Button>
 
-                            <p className="text-center text-xs text-muted-foreground font-medium px-8 leading-relaxed mt-4">
+                            <p className="text-center text-xs text-zinc-500 font-medium px-8 leading-relaxed mt-4">
                                 By proceeding, you agree to our Terms of Service. Payment processing secured by PayNow.
                             </p>
                         </motion.div>

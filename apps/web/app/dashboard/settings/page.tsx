@@ -255,38 +255,38 @@ export default function SettingsPage() {
 
     if (!profile) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
+            <div className="flex items-center justify-center min-h-[60vh] text-zinc-400">
                 Could not load profile.
             </div>
         );
     }
 
     return (
-        <div className="space-y-5 pt-4 pb-24 px-4">
+        <div className="space-y-5 pt-4 pb-24 px-4 text-white">
             <div className="mb-6 flex items-center gap-3">
                 <BackButton />
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Settings</h1>
-                    <p className="text-slate-400 text-sm">Manage your account and preferences.</p>
+                    <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1">Settings</h1>
+                    <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Manage your account and preferences.</p>
                 </div>
             </div>
 
             {/* Account Settings — Password & Email */}
-            <Card className="rounded-3xl overflow-hidden">
+            <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl">
                 <CardContent className="p-5 space-y-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Key className="h-3.5 w-3.5" /> Account Settings
+                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 relative z-10">
+                        <Key className="h-3.5 w-3.5 text-blue-400" /> Account Settings
                     </h3>
 
                     {/* Password Change */}
-                    <div>
+                    <div className="relative z-10">
                         <Button
                             variant="ghost"
                             onClick={() => setShowPasswordChange(!showPasswordChange)}
-                            className="w-full justify-between h-12 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl"
+                            className="w-full justify-between h-14 text-zinc-200 hover:text-white hover:bg-white/5 rounded-2xl border border-white/5 transition-all"
                         >
-                            <span className="flex items-center gap-2 text-sm font-medium"><Key className="h-4 w-4" /> Change Password</span>
-                            <span className="text-xs text-slate-500">{showPasswordChange ? "Cancel" : "→"}</span>
+                            <span className="flex items-center gap-3 text-sm font-bold"><Key className="h-4 w-4 text-zinc-400" /> Change Password</span>
+                            <span className="text-zinc-500">{showPasswordChange ? <X className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</span>
                         </Button>
                         <AnimatePresence>
                             {showPasswordChange && (
@@ -296,34 +296,34 @@ export default function SettingsPage() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="space-y-3 pt-3 px-1">
+                                    <div className="space-y-4 pt-4 px-1">
                                         <div className="space-y-1.5">
-                                            <Label className="text-slate-400 text-xs">New Password</Label>
+                                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">New Password</Label>
                                             <Input
                                                 type="password"
                                                 value={newPassword}
                                                 onChange={e => setNewPassword(e.target.value)}
                                                 placeholder="Min 6 characters"
-                                                className="bg-slate-800/50 border-white/10 text-white h-10"
+                                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md"
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-slate-400 text-xs">Confirm New Password</Label>
+                                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Confirm New Password</Label>
                                             <Input
                                                 type="password"
                                                 value={confirmPassword}
                                                 onChange={e => setConfirmPassword(e.target.value)}
                                                 placeholder="Re-enter password"
-                                                className="bg-slate-800/50 border-white/10 text-white h-10"
+                                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md"
                                             />
                                         </div>
                                         <Button
                                             onClick={handlePasswordChange}
                                             disabled={changingPassword || !newPassword || !confirmPassword}
-                                            className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm"
+                                            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-sm shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all"
                                         >
                                             {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                                            Update Password
+                                            UPDATE PASSWORD
                                         </Button>
                                     </div>
                                 </motion.div>
@@ -331,17 +331,17 @@ export default function SettingsPage() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="border-t border-white/5" />
+                    <div className="border-t border-white/10 relative z-10" />
 
                     {/* Email Change */}
-                    <div>
+                    <div className="relative z-10">
                         <Button
                             variant="ghost"
                             onClick={() => setShowEmailChange(!showEmailChange)}
-                            className="w-full justify-between h-12 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl"
+                            className="w-full justify-between h-14 text-zinc-200 hover:text-white hover:bg-white/5 rounded-2xl border border-white/5 transition-all"
                         >
-                            <span className="flex items-center gap-2 text-sm font-medium"><Mail className="h-4 w-4" /> Change Email</span>
-                            <span className="text-xs text-slate-500">{showEmailChange ? "Cancel" : "→"}</span>
+                            <span className="flex items-center gap-3 text-sm font-bold"><Mail className="h-4 w-4 text-zinc-400" /> Change Email</span>
+                            <span className="text-zinc-500">{showEmailChange ? <X className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</span>
                         </Button>
                         <AnimatePresence>
                             {showEmailChange && (
@@ -351,26 +351,29 @@ export default function SettingsPage() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="space-y-3 pt-3 px-1">
-                                        <p className="text-xs text-slate-500">Current: {profile.email}</p>
+                                    <div className="space-y-4 pt-4 px-1">
+                                        <div className="bg-white/5 px-4 py-2 rounded-lg border border-white/5">
+                                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Current Email</p>
+                                            <p className="text-sm font-bold text-white">{profile.email}</p>
+                                        </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-slate-400 text-xs">New Email Address</Label>
+                                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">New Email Address</Label>
                                             <Input
                                                 type="email"
                                                 value={newEmail}
                                                 onChange={e => setNewEmail(e.target.value)}
                                                 placeholder="new@email.com"
-                                                className="bg-slate-800/50 border-white/10 text-white h-10"
+                                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md"
                                             />
                                         </div>
-                                        <p className="text-xs text-slate-500">A confirmation link will be sent to your new email.</p>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide leading-relaxed ml-1 italic">A confirmation link will be sent to your new email.</p>
                                         <Button
                                             onClick={handleEmailChange}
                                             disabled={changingEmail || !newEmail}
-                                            className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm"
+                                            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-sm shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all"
                                         >
                                             {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                                            Send Confirmation
+                                            SEND CONFIRMATION
                                         </Button>
                                     </div>
                                 </motion.div>
@@ -381,13 +384,13 @@ export default function SettingsPage() {
             </Card>
 
             {/* Appearance — Background Picker */}
-            <Card className="rounded-3xl overflow-hidden">
+            <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl">
                 <CardContent className="p-5 space-y-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Palette className="h-3.5 w-3.5" /> Appearance
+                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 relative z-10">
+                        <Palette className="h-3.5 w-3.5 text-purple-400" /> Appearance
                     </h3>
-                    <p className="text-sm text-slate-400">Choose a background for your app experience.</p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <p className="text-sm text-zinc-300 font-bold relative z-10">Choose a background for your app experience.</p>
+                    <div className="grid grid-cols-2 gap-4 relative z-10">
                         {(Object.keys(BG_META) as BgKey[]).map((key) => {
                             const meta = BG_META[key];
                             const isActive = bg === key;
@@ -397,10 +400,10 @@ export default function SettingsPage() {
                                     type="button"
                                     onClick={() => setBg(key)}
                                     className={[
-                                        "relative rounded-2xl overflow-hidden aspect-[3/4] border-2 transition-all duration-200",
+                                        "relative rounded-2xl overflow-hidden aspect-[3/4] border-2 transition-all duration-300",
                                         isActive
-                                            ? "border-blue-500 shadow-lg shadow-blue-500/30 scale-[1.02]"
-                                            : "border-white/10 hover:border-white/30",
+                                            ? "border-blue-500 shadow-xl shadow-blue-500/30 scale-[1.05] z-10"
+                                            : "border-white/10 hover:border-white/30 grayscale-[50%] hover:grayscale-0",
                                     ].join(" ")}
                                 >
                                     <img
@@ -408,14 +411,14 @@ export default function SettingsPage() {
                                         alt={meta.label}
                                         className="absolute inset-0 w-full h-full object-cover"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
                                     <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
-                                        <p className="text-xs font-semibold text-white leading-tight">{meta.label}</p>
-                                        <p className="text-[10px] text-slate-300 mt-0.5">{meta.credit}</p>
+                                        <p className="text-[10px] font-black text-white leading-tight uppercase tracking-widest">{meta.label}</p>
+                                        <p className="text-[8px] text-zinc-400 mt-0.5 font-bold uppercase">{meta.credit}</p>
                                     </div>
                                     {isActive && (
-                                        <div className="absolute top-2 right-2 bg-blue-500 rounded-full p-0.5">
-                                            <Check className="h-3 w-3 text-white" />
+                                        <div className="absolute top-2 right-2 bg-blue-500 rounded-full p-1 shadow-lg">
+                                            <Check className="h-3 w-3 text-white stroke-[4px]" />
                                         </div>
                                     )}
                                 </button>
@@ -425,41 +428,48 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            <Card className="rounded-3xl overflow-hidden" id="help">
-                <CardContent className="p-5 space-y-5">
-                    <div className="space-y-1">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <LifeBuoy className="h-3.5 w-3.5" /> {t("onboardingTitle")}
+            <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl" id="help">
+                <CardContent className="p-5 space-y-6">
+                    <div className="space-y-1 relative z-10">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                            <LifeBuoy className="h-3.5 w-3.5 text-emerald-400" /> {t("onboardingTitle")}
                         </h3>
-                        <p className="text-sm text-slate-400">{t("onboardingBody")}</p>
+                        <p className="text-sm text-zinc-300 font-bold">{t("onboardingBody")}</p>
                     </div>
 
-                    <div className="space-y-3">
-                        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4">
-                            <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-4 relative z-10">
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                            <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                        <Globe className="h-4 w-4 text-blue-300" /> {t("languageTitle")}
+                                    <p className="text-sm font-bold text-white flex items-center gap-2">
+                                        <Globe className="h-4 w-4 text-blue-400" /> {t("languageTitle")}
                                     </p>
-                                    <p className="text-sm text-slate-400">{t("languageBody")}</p>
+                                    <p className="text-xs text-zinc-400 font-medium leading-relaxed">{t("languageBody")}</p>
                                 </div>
-                                <LocalePicker variant="chip" />
+                                <div className="shrink-0">
+                                    <LocalePicker variant="chip" />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid gap-4">
                             <button
                                 type="button"
                                 onClick={handleReplayTutorial}
                                 disabled={resettingTutorial}
-                                className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-left transition-colors hover:bg-slate-900/60 disabled:cursor-wait"
+                                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98] group"
                             >
-                                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                    <PlayCircle className="h-4 w-4 text-blue-300" /> {t("replayTourTitle")}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-400">{t("replayTourBody")}</p>
-                                <span className="mt-3 inline-flex items-center text-sm font-medium text-blue-300">
-                                    {resettingTutorial ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                                        <PlayCircle className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">{t("replayTourTitle")}</p>
+                                        <p className="text-xs text-zinc-400 font-medium">{t("replayTourBody")}</p>
+                                    </div>
+                                </div>
+                                <span className="mt-3 inline-flex items-center text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                                    {resettingTutorial ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : null}
                                     {t("replayTourCta")}
                                 </span>
                             </button>
@@ -468,14 +478,19 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={handleShowChecklist}
                                 disabled={revealingChecklist}
-                                className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-left transition-colors hover:bg-slate-900/60 disabled:cursor-wait"
+                                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98] group"
                             >
-                                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                    <ListTodo className="h-4 w-4 text-blue-300" /> {t("checklistTitle")}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-400">{t("checklistBody")}</p>
-                                <span className="mt-3 inline-flex items-center text-sm font-medium text-blue-300">
-                                    {revealingChecklist ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 group-hover:scale-110 transition-transform">
+                                        <ListTodo className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">{t("checklistTitle")}</p>
+                                        <p className="text-xs text-zinc-400 font-medium">{t("checklistBody")}</p>
+                                    </div>
+                                </div>
+                                <span className="mt-3 inline-flex items-center text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 px-2 py-1 rounded-md border border-purple-500/20">
+                                    {revealingChecklist ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : null}
                                     {t("checklistCta")}
                                 </span>
                             </button>
@@ -483,47 +498,52 @@ export default function SettingsPage() {
 
                         <Link
                             href="/dashboard/onboarding?rerun=1"
-                            className="block rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-left transition-colors hover:bg-slate-900/60"
+                            className="block rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98] group"
                         >
-                            <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                <SettingsIcon className="h-4 w-4 text-blue-300" /> {t("rerunWizardTitle")}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-400">{t("rerunWizardBody")}</p>
-                            <span className="mt-3 inline-flex items-center text-sm font-medium text-blue-300">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 group-hover:scale-110 transition-transform">
+                                    <SettingsIcon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white">{t("rerunWizardTitle")}</p>
+                                    <p className="text-xs text-zinc-400 font-medium">{t("rerunWizardBody")}</p>
+                                </div>
+                            </div>
+                            <span className="mt-3 inline-flex items-center text-[10px] font-black text-orange-400 uppercase tracking-widest bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">
                                 {t("rerunWizardCta")}
                             </span>
                         </Link>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4 relative z-10">
                         <div className="space-y-1">
-                            <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                <Video className="h-4 w-4 text-blue-300" /> {t("help.title")}
+                            <p className="text-sm font-bold text-white flex items-center gap-2">
+                                <Video className="h-4 w-4 text-blue-400" /> {t("help.title")}
                             </p>
-                            <p className="text-sm text-slate-400">{t("help.body")}</p>
+                            <p className="text-xs text-zinc-400 font-medium leading-relaxed">{t("help.body")}</p>
                         </div>
 
                         {publishedVideos.length > 0 ? (
-                            <div className="grid gap-3">
+                            <div className="grid gap-4">
                                 {helpVideos.map((video) => {
                                     if (!video.src) return null;
                                     const Icon = video.icon;
                                     return (
-                                        <div key={video.id} className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 space-y-3">
+                                        <div key={video.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4 overflow-hidden backdrop-blur-md">
                                             <div className="flex items-start gap-3">
-                                                <div className="mt-0.5 rounded-full bg-blue-500/15 p-2 text-blue-300">
+                                                <div className="mt-0.5 rounded-xl bg-blue-500/10 p-2 text-blue-400 border border-blue-500/20 shadow-inner">
                                                     <Icon className="h-4 w-4" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-white">{video.title}</p>
-                                                    <p className="text-sm text-slate-400">{video.body}</p>
+                                                    <p className="text-sm font-bold text-white leading-tight">{video.title}</p>
+                                                    <p className="text-xs text-zinc-400 font-medium mt-1">{video.body}</p>
                                                 </div>
                                             </div>
                                             <video
                                                 controls
                                                 preload="metadata"
                                                 poster={video.poster || undefined}
-                                                className="aspect-video w-full rounded-xl border border-white/10 bg-black/30"
+                                                className="aspect-video w-full rounded-xl border border-white/10 bg-black/40 shadow-inner"
                                             >
                                                 <source src={video.src} />
                                             </video>
@@ -532,11 +552,11 @@ export default function SettingsPage() {
                                 })}
                             </div>
                         ) : (
-                            <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/30 p-4">
-                                <p className="text-sm text-slate-300 flex items-center gap-2">
-                                    <Clock3 className="h-4 w-4 text-blue-300" /> {t("help.emptyTitle")}
+                            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-5 text-center">
+                                <p className="text-xs text-zinc-500 flex items-center justify-center gap-2 font-bold uppercase tracking-widest">
+                                    <Clock3 className="h-4 w-4 text-zinc-600" /> {t("help.emptyTitle")}
                                 </p>
-                                <p className="mt-1 text-sm text-slate-400">{t("help.emptyBody")}</p>
+                                <p className="mt-2 text-xs text-zinc-600 font-medium leading-relaxed">{t("help.emptyBody")}</p>
                             </div>
                         )}
                     </div>
@@ -547,65 +567,67 @@ export default function SettingsPage() {
             <AppInstallSection />
 
             {/* App Info & Logout */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-4 pt-2">
                 <Button
                     variant="destructive"
-                    className="w-full h-14 rounded-2xl shadow-lg shadow-red-500/10 text-lg bg-red-500/80 hover:bg-red-600/90 backdrop-blur-sm"
+                    className="w-full h-16 rounded-2xl shadow-xl shadow-red-500/20 text-lg font-black bg-red-600 hover:bg-red-700 backdrop-blur-md active:scale-[0.98] transition-all border-2 border-red-500/30"
                     onClick={handleLogout}
                 >
-                    <LogOut className="mr-2 h-5 w-5" /> Log Out
+                    <LogOut className="mr-3 h-6 w-6" /> LOG OUT
                 </Button>
 
                 {/* Danger Zone — Account Deletion */}
-                <div className="border-t border-white/10 pt-4 mt-4">
+                <div className="border-t border-white/10 pt-6 mt-4">
                     <AnimatePresence>
                         {!showDeleteConfirm ? (
                             <Button
                                 variant="ghost"
-                                className="w-full h-10 rounded-xl text-slate-600 hover:text-red-400 hover:bg-red-500/10 text-xs font-medium flex items-center justify-center gap-2 transition-colors"
+                                className="w-full h-10 rounded-xl text-zinc-600 hover:text-red-400 hover:bg-red-500/10 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all"
                                 onClick={() => setShowDeleteConfirm(true)}
                             >
-                                <Trash2 className="h-3.5 w-3.5" /> Delete my account
+                                <Trash2 className="h-3.5 w-3.5" /> DELETE ACCOUNT
                             </Button>
                         ) : (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
                             >
-                                <Card className="bg-red-950/40 border-red-500/30 rounded-2xl overflow-hidden">
-                                    <CardContent className="p-4 space-y-3">
-                                        <div className="flex items-center gap-2 text-red-400">
-                                            <AlertTriangle className="h-5 w-5 shrink-0" />
-                                            <p className="text-sm font-bold">Permanently delete your account?</p>
+                                <Card className="bg-red-950/20 border-red-500/30 rounded-2xl overflow-hidden backdrop-blur-xl">
+                                    <CardContent className="p-5 space-y-4">
+                                        <div className="flex items-center gap-3 text-red-400">
+                                            <div className="bg-red-500/20 p-2 rounded-lg">
+                                                <AlertTriangle className="h-5 w-5 shrink-0" />
+                                            </div>
+                                            <p className="text-sm font-black tracking-tight uppercase">Permanently delete?</p>
                                         </div>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
+                                        <p className="text-xs text-zinc-400 font-medium leading-relaxed bg-black/20 p-3 rounded-xl border border-white/5">
                                             This will permanently delete your profile, all clients, bookings, invoices, schedule entries, and services.
-                                            This action <span className="text-red-400 font-semibold">cannot be undone</span>.
+                                            This action <span className="text-red-400 font-bold">cannot be undone</span>.
                                             Type your email address to confirm.
                                         </p>
                                         <Input
                                             placeholder={profile.email || "your@email.com"}
                                             value={deleteEmail}
                                             onChange={(e) => setDeleteEmail(e.target.value)}
-                                            className="bg-red-950/50 border-red-500/30 text-white placeholder:text-red-800 h-10"
+                                            className="bg-red-950/30 border-red-500/20 text-white placeholder:text-red-900/50 h-12 rounded-xl focus:border-red-500/50 font-bold"
                                         />
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-3 pt-1">
                                             <Button
                                                 variant="ghost"
-                                                className="flex-1 h-10 text-sm text-slate-400 hover:text-white"
+                                                className="flex-1 h-12 text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest"
                                                 onClick={() => { setShowDeleteConfirm(false); setDeleteEmail(""); }}
                                                 disabled={deleting}
                                             >
-                                                Cancel
+                                                CANCEL
                                             </Button>
                                             <Button
-                                                className="flex-1 h-10 text-sm bg-red-600 hover:bg-red-700 text-white font-bold"
+                                                className="flex-1 h-12 text-[10px] bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-600/20"
                                                 onClick={handleDeleteAccount}
                                                 disabled={deleting || deleteEmail !== profile.email}
                                             >
-                                                {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
-                                                Delete Forever
+                                                {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
+                                                DELETE FOREVER
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -615,7 +637,7 @@ export default function SettingsPage() {
                     </AnimatePresence>
                 </div>
 
-                <p className="text-center text-xs text-slate-500 pt-2">
+                <p className="text-center text-[10px] font-black text-zinc-500 pt-6 uppercase tracking-[0.2em]">
                     Version 1.0.3 • ServiceSync SG
                 </p>
             </div>
@@ -636,41 +658,43 @@ function AppInstallSection() {
     if (isStandalone) return null;
 
     return (
-        <Card className="rounded-3xl overflow-hidden border-blue-500/20 bg-blue-500/5">
+        <Card variant="premium" className="rounded-3xl overflow-hidden border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
             <CardContent className="p-5 space-y-4">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4 relative z-10">
                     <div className="space-y-1">
-                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
                             <Smartphone className="h-3.5 w-3.5" /> App Installation
                         </h3>
-                        <p className="text-sm text-slate-300 font-medium">Install ServiceSync on your device</p>
-                        <p className="text-xs text-slate-500 leading-relaxed">
+                        <p className="text-sm text-white font-bold">Install ServiceSync on your device</p>
+                        <p className="text-xs text-zinc-400 font-medium leading-relaxed">
                             Get a faster, more reliable experience with our app. 
                             Access your dashboard directly from your home screen.
                         </p>
                     </div>
-                    <div className="bg-blue-500/10 p-2.5 rounded-2xl">
+                    <div className="bg-blue-500/10 p-2.5 rounded-2xl border border-blue-500/20 shrink-0">
                         <Download className="h-5 w-5 text-blue-400" />
                     </div>
                 </div>
 
-                {isInstallable ? (
-                    <Button 
-                        onClick={install}
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/20"
-                    >
-                        Install App Now
-                    </Button>
-                ) : (
-                    <div className="rounded-2xl bg-slate-900/50 p-4 border border-white/5">
-                        <p className="text-xs text-slate-400 flex items-start gap-2">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-                            <span>
-                                To install: Open your browser settings and select <strong>&quot;Add to Home Screen&quot;</strong> or <strong>&quot;Install App&quot;</strong>.
-                            </span>
-                        </p>
-                    </div>
-                )}
+                <div className="relative z-10">
+                    {isInstallable ? (
+                        <Button 
+                            onClick={install}
+                            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
+                        >
+                            Install App Now
+                        </Button>
+                    ) : (
+                        <div className="rounded-2xl bg-black/40 p-4 border border-white/5 backdrop-blur-sm">
+                            <p className="text-xs text-zinc-400 flex items-start gap-3 font-medium leading-relaxed">
+                                <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
+                                <span>
+                                    To install: Open your browser settings and select <strong>&quot;Add to Home Screen&quot;</strong> or <strong>&quot;Install App&quot;</strong>.
+                                </span>
+                            </p>
+                        </div>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );

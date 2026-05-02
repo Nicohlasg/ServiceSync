@@ -108,10 +108,6 @@ export default function SchedulePage() {
         },
     });
 
-    const deleteJob = (id: string) => {
-        deleteJobMutation.mutate({ bookingId: id });
-    };
-
     // BUG-10 fix: consolidated delete handler — previously there were two delete
     // functions (deleteJob + handleDelete) causing a race condition where the modal
     // closed before the async mutation settled. Now one path with proper awaiting.
@@ -188,17 +184,17 @@ export default function SchedulePage() {
                     key={day.toString()}
                     whileTap={{ scale: 0.9 }}
                     className={cn(
-                        "relative h-10 w-10 md:h-12 md:w-12 mx-auto flex items-center justify-center rounded-full text-[15px] font-medium cursor-pointer transition-all select-none",
-                        !isCurrentMonth ? "text-white/40" : "text-white",
-                        isSelected ? "bg-[#3399ff] text-white" : "hover:bg-slate-800/40",
-                        isToday(day) && !isSelected && "text-blue-400 font-bold"
+                        "relative h-10 w-10 md:h-12 md:w-12 mx-auto flex items-center justify-center rounded-full text-[15px] font-bold cursor-pointer transition-all select-none",
+                        !isCurrentMonth ? "text-white/20" : "text-white",
+                        isSelected ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40" : "hover:bg-white/5",
+                        isToday(day) && !isSelected && "text-blue-400 font-black ring-1 ring-blue-500/30"
                     )}
                     onClick={() => onDateClick(cloneDay)}
                 >
                     {formattedDate}
                     {hasEvents && !isSelected && (
                         <div
-                            className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full"
+                            className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.8)]"
                         />
                     )}
                 </motion.div>
@@ -224,27 +220,27 @@ export default function SchedulePage() {
     };
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full text-white">
             {/* Fixed Header & Calendar */}
             <div className="flex-none pt-4 pb-2 z-10 relative px-4">
                 <div
-                    className="flex items-center justify-between pb-2"
+                    className="flex items-center justify-between pb-4"
                 >
                     <div
-                        className="flex items-center gap-1 cursor-pointer hover:bg-slate-900/40 p-2 rounded-xl transition-colors active:scale-95 duration-200"
+                        className="flex items-center gap-1 cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-all active:scale-95 duration-200"
                         onClick={() => setIsMonthPickerOpen(true)}
                     >
-                        <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">
+                        <h1 className="text-2xl font-black text-white tracking-tight leading-none">
                             {format(currentMonth, "MMMM yyyy")}
                         </h1>
-                        <ChevronRight className="h-6 w-6 text-white/70 rotate-90" />
+                        <ChevronRight className="h-5 w-5 text-zinc-500 rotate-90" />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => { setSelectedDate(new Date()); setCurrentMonth(new Date()); }} className="hover:bg-slate-900/40 rounded-full text-white">
-                            <CalendarIcon className="h-6 w-6" />
+                    <div className="flex items-center gap-3">
+                        <Button variant="ghost" size="icon" onClick={() => { setSelectedDate(new Date()); setCurrentMonth(new Date()); }} className="h-11 w-11 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white">
+                            <CalendarIcon className="h-5 w-5" />
                         </Button>
                         <Link href="/dashboard/schedule/add">
-                            <Button size="icon" className="h-12 w-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-95 transition-all">
+                            <Button size="icon" className="h-11 w-11 bg-blue-600 hover:bg-blue-700 rounded-full shadow-xl shadow-blue-600/30 active:scale-90 transition-transform">
                                 <Plus className="h-6 w-6" />
                             </Button>
                         </Link>
@@ -258,16 +254,16 @@ export default function SchedulePage() {
                     dragElastic={0.2}
                     onDragEnd={handleDragEnd}
                 >
-                    <Card className="border-none shadow-none bg-transparent p-0">
+                    <Card variant="premium" className="bg-zinc-900/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl">
                         <CardContent className="p-0">
-                            <div className="grid grid-cols-7 mb-6 text-center px-2">
+                            <div className="grid grid-cols-7 mb-6 text-center">
                                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
-                                    <div key={i} className="text-[13px] font-normal text-white/70">
+                                    <div key={i} className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                                         {d}
                                     </div>
                                 ))}
                             </div>
-                            <div className="px-1">
+                            <div className="px-0">
                                 {rows}
                             </div>
                         </CardContent>
@@ -277,13 +273,13 @@ export default function SchedulePage() {
 
             {/* Scrollable Events List */}
             <div
-                className="flex-1 px-4 pt-6 pb-20 mt-4 border-t border-white/15 overflow-y-auto no-scrollbar"
+                className="flex-1 px-4 pt-6 pb-32 mt-4 border-t border-white/10 bg-zinc-950/20 overflow-y-auto no-scrollbar"
             >
-                <div className="flex items-center justify-between mb-4 sticky top-0 bg-transparent z-10 pb-2">
-                    <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                <div className="flex items-center justify-between mb-6 sticky top-0 bg-transparent z-10 pb-2 backdrop-blur-sm -mx-1 px-1">
+                    <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">
                         {isToday(selectedDate) ? "Today" : format(selectedDate, "EEEE, d MMM")}
                     </h2>
-                    <span className="text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-500/30 px-2 py-1 rounded-full">
+                    <span className="text-[10px] font-black bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-xl">
                         {selectedEvents.length} Jobs
                     </span>
                 </div>
@@ -296,38 +292,41 @@ export default function SchedulePage() {
                                 className="flex gap-4 group"
                                 onClick={() => setEditingJob(event)}
                             >
-                                <div className="flex flex-col items-center pt-1 min-w-[45px]">
-                                    {/* BUG-06 fix: show full time string including AM/PM;
-                                        the previous split(':')[1].substring(0,2) dropped it */}
-                                    <div className="text-sm font-bold text-white">{event.time}</div>
-                                    <div className="h-full w-[2px] bg-white/20 my-2 rounded-full group-last:hidden"></div>
+                                <div className="flex flex-col items-center pt-2 min-w-[50px]">
+                                    <div className="text-[11px] font-black text-white uppercase tracking-tighter text-center leading-tight">
+                                        {event.time.split(' ')[0]}<br/>
+                                        <span className="text-zinc-500">{event.time.split(' ')[1]}</span>
+                                    </div>
+                                    <div className="h-full w-px bg-white/10 my-3 rounded-full group-last:hidden shadow-[0_0_10px_rgba(255,255,255,0.1)]"></div>
                                 </div>
-                                <Card className="flex-1 min-w-0 mb-2 hover:shadow-lg hover:bg-white/[0.07] transition-all cursor-pointer border-l-4 border-l-blue-500 active:scale-[0.98]">
-                                    <CardContent className="p-4 py-3">
-                                        <h3 className="font-bold text-white text-base">{event.clientName}</h3>
-                                        <p className="text-sm text-slate-200 font-medium">{event.service}</p>
-                                        <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-300 font-medium truncate">
-                                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                                            <span className="truncate">{event.address}</span>
+                                <Card variant="premium" className="flex-1 min-w-0 mb-3 hover:border-blue-500/40 transition-all cursor-pointer group active:scale-[0.98] shadow-lg">
+                                    <CardContent className="p-4 relative z-10">
+                                        <h3 className="font-black text-white text-lg tracking-tight leading-tight group-hover:text-blue-400 transition-colors">{event.clientName}</h3>
+                                        <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider mt-1">{event.service}</p>
+                                        <div className="flex items-start gap-2 mt-3 text-xs text-zinc-500 font-medium">
+                                            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
+                                            <span className="line-clamp-2 leading-snug">{event.address}</span>
                                         </div>
                                     </CardContent>
                                 </Card>
                             </div>
                         ))
                     ) : (
-                        <div
-                            className="text-center py-8 opacity-60 flex flex-col items-center"
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center py-12 flex flex-col items-center opacity-60"
                         >
-                            <div className="bg-slate-900/65 h-20 w-20 rounded-full flex items-center justify-center mb-4 border border-white/15">
-                                <CalendarIcon className="h-8 w-8 text-white/50" />
+                            <div className="bg-white/5 h-20 w-20 rounded-full flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+                                <CalendarIcon className="h-8 w-8 text-zinc-700" />
                             </div>
-                            <p className="text-slate-300 font-medium">No jobs for {isToday(selectedDate) ? "today" : "this day"}.</p>
+                            <p className="text-zinc-500 font-black uppercase tracking-widest text-xs">No jobs for this day</p>
                             <Link href="/dashboard/schedule/add">
-                                <Button variant="link" className="text-blue-300 mt-1 font-semibold">
+                                <Button variant="link" className="text-blue-400 mt-2 font-black uppercase tracking-[0.2em] text-[10px] hover:text-blue-300">
                                     Schedule a job +
                                 </Button>
                             </Link>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
             </div>
@@ -335,31 +334,30 @@ export default function SchedulePage() {
             {/* Month Picker Modal */}
             <AnimatePresence>
                 {isMonthPickerOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-4">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 50 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+                            exit={{ opacity: 0, scale: 0.95, y: 50 }}
+                            className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl"
                         >
-                            <div className="flex justify-between items-center p-4 border-b border-white/10">
-                                <span className="text-lg font-bold text-white">Select Month</span>
-                                <Button variant="ghost" size="icon" onClick={() => setIsMonthPickerOpen(false)} className="rounded-full text-blue-400 hover:bg-white/10">
-                                    <Check className="h-6 w-6" />
+                            <div className="flex justify-between items-center p-5 border-b border-white/5 bg-white/5">
+                                <span className="text-sm font-black text-white uppercase tracking-widest">Select Month</span>
+                                <Button variant="ghost" size="icon" onClick={() => setIsMonthPickerOpen(false)} className="h-10 w-10 rounded-full text-blue-400 hover:bg-white/5">
+                                    <Check className="h-6 w-6 stroke-[3px]" />
                                 </Button>
                             </div>
-                            <div className="p-6 bg-slate-950/50">
+                            <div className="p-8 bg-zinc-950/50 backdrop-blur-xl">
                                 <MonthWheelPicker
                                     value={currentMonth}
                                     onChange={setCurrentMonth}
                                     minYear={new Date().getFullYear() - 5}
                                     maxYear={new Date().getFullYear() + 5}
                                     variant="dark"
-                                    fadeColor="#0a0f1a"
+                                    fadeColor="#09090b"
                                 />
                             </div>
                         </motion.div>
-                        {/* Click outside to close */}
                         <div className="absolute inset-0 -z-10" onClick={() => setIsMonthPickerOpen(false)} />
                     </div>
                 )}
@@ -370,47 +368,49 @@ export default function SchedulePage() {
                 {editingJob && (
                     <>
                         <div
-                            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+                            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md"
                             onClick={() => setEditingJob(null)}
                         />
                         <motion.div
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            className="fixed inset-x-0 bottom-0 z-[70] bg-slate-900 rounded-t-[2rem] border-t border-white/10 p-6 pb-safe space-y-6"
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="fixed inset-x-0 bottom-0 z-[70] bg-zinc-900 rounded-t-[2.5rem] border-t border-white/10 p-7 pb-safe space-y-6 shadow-2xl backdrop-blur-3xl"
                         >
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-white">Manage Job</h2>
-                                <Button variant="ghost" size="icon" onClick={() => setEditingJob(null)} className="rounded-full text-white/50 hover:text-white hover:bg-white/10">
+                                <h2 className="text-xl font-black text-white tracking-tight uppercase">Manage Job</h2>
+                                <button onClick={() => setEditingJob(null)} className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
                                     <X className="h-6 w-6" />
-                                </Button>
+                                </button>
                             </div>
 
-                            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <h3 className="font-bold text-white text-lg">{editingJob.clientName}</h3>
-                                <p className="text-slate-400">{editingJob.service}</p>
-                                <div className="flex gap-4 mt-2 text-sm text-slate-300">
-                                    <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {editingJob.time}</span>
-                                    <span className="flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> {format(new Date(editingJob.date), "dd MMM")}</span>
+                            <div className="bg-white/5 rounded-2xl p-5 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl" />
+                                <h3 className="font-black text-white text-xl tracking-tight relative z-10 leading-tight">{editingJob.clientName}</h3>
+                                <p className="text-xs text-blue-400 font-black uppercase tracking-widest mt-1 relative z-10">{editingJob.service}</p>
+                                <div className="flex gap-4 mt-4 text-xs font-black uppercase tracking-widest relative z-10">
+                                    <span className="flex items-center gap-2 text-zinc-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 shadow-inner"><Clock className="h-3.5 w-3.5 text-blue-500" /> {editingJob.time}</span>
+                                    <span className="flex items-center gap-2 text-zinc-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 shadow-inner"><CalendarIcon className="h-3.5 w-3.5 text-purple-500" /> {format(new Date(editingJob.date), "dd MMM")}</span>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 pb-4">
                                 <Button
                                     variant="outline"
-                                    className="h-14 rounded-xl border-white/10 text-white hover:bg-white/10 hover:text-white text-base font-semibold gap-2"
+                                    className="h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all"
                                     onClick={handleEdit}
                                 >
-                                    <Edit className="h-5 w-5" />
+                                    <Edit className="h-5 w-5 text-blue-400" />
                                     Edit Details
                                 </Button>
                                 <Button
                                     variant="destructive"
-                                    className="h-14 rounded-xl bg-red-500/80 hover:bg-red-600 text-white text-base font-semibold gap-2"
+                                    className="h-14 rounded-2xl bg-rose-600/80 hover:bg-rose-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all"
                                     onClick={() => handleDelete(editingJob.id)}
                                 >
                                     <Trash2 className="h-5 w-5" />
-                                    Delete
+                                    Delete Job
                                 </Button>
                             </div>
                         </motion.div>

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, CheckCircle2, Clock, Download, Loader2, ChevronDown, Trash2, CheckSquare, Square } from "lucide-react";
+import { Plus, Search, FileText, CheckCircle2, Clock, Download, Loader2, ChevronDown, Trash2, CheckSquare, Square, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/lib/types";
@@ -191,36 +191,36 @@ export default function InvoicesPage() {
     if (isLoading) {
         return (
             <div className="space-y-6 pt-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-2">
                     <SkeletonLine width="40%" className="h-7" />
                     <SkeletonLine width="48px" className="h-12 rounded-full" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 px-2">
                     <SkeletonStat />
                     <SkeletonStat />
                 </div>
-                {/* Filter pills */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 px-2">
                     <SkeletonLine width="50px" className="h-9 rounded-full" />
                     <SkeletonLine width="70px" className="h-9 rounded-full" />
                     <SkeletonLine width="50px" className="h-9 rounded-full" />
                 </div>
-                {/* Invoice row skeletons */}
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className="glass-card glass-inner-light rounded-2xl p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <SkeletonLine width="48px" className="h-12 rounded-xl" />
-                            <div className="space-y-1.5">
-                                <SkeletonLine width="110px" className="h-4" />
-                                <SkeletonLine width="80px" className="h-3" />
+                <div className="space-y-3 px-2">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="glass-card glass-inner-light rounded-2xl p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <SkeletonLine width="48px" className="h-12 rounded-xl" />
+                                <div className="space-y-1.5">
+                                    <SkeletonLine width="110px" className="h-4" />
+                                    <SkeletonLine width="80px" className="h-3" />
+                                </div>
+                            </div>
+                            <div className="space-y-1.5 text-right">
+                                <SkeletonLine width="70px" className="h-5" />
+                                <SkeletonLine width="50px" className="h-4 rounded-full" />
                             </div>
                         </div>
-                        <div className="space-y-1.5 text-right">
-                            <SkeletonLine width="70px" className="h-5" />
-                            <SkeletonLine width="50px" className="h-4 rounded-full" />
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         );
     }
@@ -229,7 +229,7 @@ export default function InvoicesPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
                 <p className="text-red-400 font-medium">Failed to load invoices.</p>
-                <Button variant="outline" onClick={() => refetch()} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+                <Button variant="outline" onClick={() => refetch()} className="border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl font-bold uppercase tracking-widest text-[10px]">
                     Try Again
                 </Button>
             </div>
@@ -237,16 +237,16 @@ export default function InvoicesPage() {
     }
 
     return (
-        <div className="space-y-6 pt-4 h-full flex flex-col">
+        <div className="space-y-6 pt-4 h-full flex flex-col text-white">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between"
             >
-                <h1 className="text-2xl font-bold text-white drop-shadow-md">Invoices</h1>
+                <h1 className="text-2xl font-black text-white tracking-tight leading-none">Invoices</h1>
                 <Link href="/dashboard/invoices/new">
-                    <Button size="icon" className="rounded-full h-12 w-12 shadow-lg shadow-blue-500/30">
+                    <Button size="icon" className="rounded-full h-12 w-12 shadow-xl shadow-blue-600/30 bg-blue-600 hover:bg-blue-700 active:scale-90 transition-transform">
                         <Plus className="h-6 w-6" />
                     </Button>
                 </Link>
@@ -257,41 +257,40 @@ export default function InvoicesPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-2 gap-3"
+                className="grid grid-cols-2 gap-4"
             >
-                {/* 60/30/10: neutral dark-glass base with semantic accent text only */}
-                <div className="glass-card glass-inner-light p-4">
-                    <p className="text-amber-300 text-xs font-bold uppercase tracking-wider mb-1">Pending</p>
-                    <p className="text-2xl font-extrabold text-white drop-shadow-sm">{formatCurrency(totalPending)}</p>
-                </div>
-                <div className="glass-card glass-inner-light p-4">
-                    <p className="text-emerald-300 text-xs font-bold uppercase tracking-wider mb-1">Collected</p>
-                    <p className="text-2xl font-extrabold text-white drop-shadow-sm">{formatCurrency(totalPaid)}</p>
-                </div>
+                <Card variant="premium" className="p-4 backdrop-blur-xl">
+                    <p className="text-amber-400 text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Pending</p>
+                    <p className="text-2xl font-black text-white tracking-tight">{formatCurrency(totalPending)}</p>
+                </Card>
+                <Card variant="premium" className="p-4 backdrop-blur-xl">
+                    <p className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-1 opacity-70">Collected</p>
+                    <p className="text-2xl font-black text-white tracking-tight">{formatCurrency(totalPaid)}</p>
+                </Card>
             </motion.div>
 
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="glass-card glass-inner-light p-4 space-y-4"
+                className="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4 backdrop-blur-xl shadow-lg"
             >
                 <button
                     type="button"
                     onClick={() => setArchivesOpen((open) => !open)}
-                    className="flex w-full items-start justify-between gap-4 text-left"
+                    className="flex w-full items-start justify-between gap-4 text-left group"
                     aria-expanded={archivesOpen}
                 >
                     <div className="space-y-1">
-                        <p className="text-white text-sm font-bold uppercase tracking-wider">Download Archives</p>
-                        <p className="text-sm text-slate-300">
-                            Export professional invoice PDFs for tax records by month, year, or all time.
+                        <p className="text-white text-xs font-black uppercase tracking-widest">Download Archives</p>
+                        <p className="text-sm text-zinc-400 font-medium leading-relaxed">
+                            Export professional invoice PDFs for tax records.
                         </p>
                     </div>
                     <motion.div
                         animate={{ rotate: archivesOpen ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className="mt-1 rounded-full border border-white/10 bg-slate-950/35 p-2 text-slate-300"
+                        className="mt-1 rounded-xl border border-white/10 bg-white/5 p-2 text-zinc-400 group-hover:text-white transition-colors shadow-inner"
                     >
                         <ChevronDown className="h-4 w-4" />
                     </motion.div>
@@ -304,16 +303,16 @@ export default function InvoicesPage() {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="space-y-4 overflow-hidden"
+                            className="space-y-4 overflow-hidden pt-2"
                         >
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="grid grid-cols-2 gap-3">
                                 <Select value={archiveMonth} onValueChange={setArchiveMonth}>
-                                    <SelectTrigger className="h-12 rounded-2xl border-white/15 bg-slate-950/55 text-white backdrop-blur-xl">
+                                    <SelectTrigger className="h-12 rounded-xl border-white/10 bg-white/5 text-white backdrop-blur-md font-bold text-xs uppercase tracking-widest">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
-                                    <SelectContent className="border-white/15 bg-slate-950/85 text-white backdrop-blur-2xl">
+                                    <SelectContent className="border-white/10 bg-zinc-900 text-white backdrop-blur-2xl">
                                         {monthOptions.map((month) => (
-                                            <SelectItem key={month.value} value={month.value} className="focus:bg-white/10 focus:text-white">
+                                            <SelectItem key={month.value} value={month.value} className="focus:bg-white/10 focus:text-white font-bold text-xs uppercase tracking-widest py-3">
                                                 {month.label}
                                             </SelectItem>
                                         ))}
@@ -321,12 +320,12 @@ export default function InvoicesPage() {
                                 </Select>
 
                                 <Select value={archiveYear} onValueChange={setArchiveYear}>
-                                    <SelectTrigger className="h-12 rounded-2xl border-white/15 bg-slate-950/55 text-white backdrop-blur-xl">
+                                    <SelectTrigger className="h-12 rounded-xl border-white/10 bg-white/5 text-white backdrop-blur-md font-bold text-xs uppercase tracking-widest">
                                         <SelectValue placeholder="Year" />
                                     </SelectTrigger>
-                                    <SelectContent className="border-white/15 bg-slate-950/85 text-white backdrop-blur-2xl">
+                                    <SelectContent className="border-white/10 bg-zinc-900 text-white backdrop-blur-2xl">
                                         {archiveYears.map((year) => (
-                                            <SelectItem key={year} value={String(year)} className="focus:bg-white/10 focus:text-white">
+                                            <SelectItem key={year} value={String(year)} className="focus:bg-white/10 focus:text-white font-bold text-xs uppercase tracking-widest py-3">
                                                 {year}
                                             </SelectItem>
                                         ))}
@@ -334,33 +333,33 @@ export default function InvoicesPage() {
                                 </Select>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-3">
                                 <Button
                                     variant="outline"
-                                    className="border-white/15 text-slate-200 hover:bg-white/10 hover:text-white"
+                                    className="h-12 rounded-xl border-white/10 bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 font-black uppercase tracking-widest text-[10px]"
                                     disabled={downloadMonthly.isPending || downloadYearly.isPending || downloadAll.isPending}
                                     onClick={handleDownloadMonthlyArchive}
                                 >
-                                    {downloadMonthly.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                    {downloadMonthly.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-2 h-3.5 w-3.5" />}
                                     Month ZIP
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    className="border-white/15 text-slate-200 hover:bg-white/10 hover:text-white"
+                                    className="h-12 rounded-xl border-white/10 bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 font-black uppercase tracking-widest text-[10px]"
                                     disabled={downloadMonthly.isPending || downloadYearly.isPending || downloadAll.isPending}
                                     onClick={handleDownloadYearlyArchive}
                                 >
-                                    {downloadYearly.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                    {downloadYearly.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-2 h-3.5 w-3.5" />}
                                     Year ZIP
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    className="border-white/15 text-slate-200 hover:bg-white/10 hover:text-white"
+                                    className="h-12 rounded-xl border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-[10px]"
                                     disabled={downloadMonthly.isPending || downloadYearly.isPending || downloadAll.isPending}
                                     onClick={handleDownloadAllArchive}
                                 >
-                                    {downloadAll.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                                    All Invoices
+                                    {downloadAll.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-2 h-3.5 w-3.5" />}
+                                    Full History ZIP
                                 </Button>
                             </div>
                         </motion.div>
@@ -369,22 +368,22 @@ export default function InvoicesPage() {
             </motion.div>
 
             {/* Search & Filter */}
-            <div className="sticky top-0 z-10 bg-transparent pb-2 pt-2 -mx-4 px-4 space-y-3">
+            <div className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl pb-3 pt-2 -mx-4 px-4 space-y-4 border-b border-white/5 shadow-2xl">
                 <div className="relative group">
-                    <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-300 z-10" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 group-focus-within:text-blue-400 transition-colors z-10" />
                     <Input
-                        placeholder="Search by name or invoice ID..."
-                        className="pl-12 rounded-2xl pr-12"
+                        placeholder="Client name or ID..."
+                        className="pl-12 h-14 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 pr-20 font-bold"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <button
                         type="button"
                         onClick={() => setShowAdvancedFilter(v => !v)}
-                        className={`absolute right-3 top-2.5 h-7 px-2 rounded-lg text-xs font-bold transition-colors ${
+                        className={`absolute right-4 top-1/2 -translate-y-1/2 h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                             showAdvancedFilter || clientFilter || dateFrom || dateTo
-                                ? 'bg-blue-500/30 text-blue-300'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                : 'bg-white/10 text-zinc-400 hover:text-white'
                         }`}
                     >
                         Filters
@@ -398,29 +397,29 @@ export default function InvoicesPage() {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.18 }}
-                            className="overflow-hidden space-y-2"
+                            className="overflow-hidden space-y-3 pb-2"
                         >
                             <Input
                                 placeholder="Filter by client name..."
-                                className="rounded-xl h-10 text-sm"
+                                className="rounded-xl h-11 text-sm bg-white/5 border-white/10 font-bold text-white placeholder:text-zinc-700"
                                 value={clientFilter}
                                 onChange={(e) => setClientFilter(e.target.value)}
                             />
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <div className="space-y-1 flex-1 min-w-0">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
+                            <div className="flex gap-3">
+                                <div className="space-y-1 flex-1">
+                                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-1">From</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3"
+                                        className="rounded-xl h-11 text-xs bg-white/5 border-white/10 text-white appearance-none px-3 font-bold"
                                         value={dateFrom}
                                         onChange={(e) => setDateFrom(e.target.value)}
                                     />
                                 </div>
-                                <div className="space-y-1 flex-1 min-w-0">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
+                                <div className="space-y-1 flex-1">
+                                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-1">To</p>
                                     <Input
                                         type="date"
-                                        className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3"
+                                        className="rounded-xl h-11 text-xs bg-white/5 border-white/10 text-white appearance-none px-3 font-bold"
                                         value={dateTo}
                                         onChange={(e) => setDateTo(e.target.value)}
                                     />
@@ -430,9 +429,9 @@ export default function InvoicesPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setClientFilter(''); setDateFrom(''); setDateTo(''); }}
-                                    className="text-xs text-red-400 font-semibold"
+                                    className="text-[10px] text-rose-400 font-black uppercase tracking-widest bg-rose-400/10 px-3 py-1.5 rounded-lg border border-rose-400/20 active:scale-95 transition-transform"
                                 >
-                                    Clear advanced filters
+                                    Clear all filters
                                 </button>
                             )}
                         </motion.div>
@@ -445,10 +444,10 @@ export default function InvoicesPage() {
                             key={f}
                             onClick={() => setFilter(f as typeof filter)}
                             className={`
-                        px-4 py-2 rounded-full text-sm font-bold capitalize whitespace-nowrap transition-all
+                        px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all border
                         ${filter === f
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
-                                    : "bg-slate-900/40 text-slate-300 border border-white/10 hover:bg-slate-900/60"}
+                                    ? "bg-blue-600 text-white border-blue-500 shadow-xl shadow-blue-600/25 scale-105 z-10"
+                                    : "bg-white/5 text-zinc-400 border-white/5 hover:border-white/10 hover:text-white"}
                     `}
                         >
                             {f}
@@ -458,7 +457,7 @@ export default function InvoicesPage() {
             </div>
 
             {/* Invoice List */}
-            <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pb-20">
+            <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar pb-32 px-1">
                 <AnimatePresence mode="popLayout">
                     {Object.keys(groupedInvoices).length > 0 ? (
                         Object.entries(groupedInvoices).map(([month, monthInvoices], groupIndex) => {
@@ -470,27 +469,28 @@ export default function InvoicesPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.05 + groupIndex * 0.05 }}
+                                    className="space-y-3"
                                 >
                                     {/* Collapsible month header */}
-                                    <div className="flex items-center gap-2 px-2 mb-2">
+                                    <div className="flex items-center gap-3 px-3">
                                         {selectMode && (
-                                            <button type="button" onClick={() => toggleSelectAll(monthInvoices.map(i => i.id))} className="text-slate-400 hover:text-blue-400 transition-colors">
-                                                {monthInvoices.every(i => selectedIds.has(i.id)) ? <CheckSquare className="h-4 w-4 text-blue-400" /> : <Square className="h-4 w-4" />}
+                                            <button type="button" onClick={() => toggleSelectAll(monthInvoices.map(i => i.id))} className="text-zinc-500 hover:text-blue-400 transition-colors">
+                                                {monthInvoices.every(i => selectedIds.has(i.id)) ? <CheckSquare className="h-5 w-5 text-blue-400" /> : <Square className="h-5 w-5" />}
                                             </button>
                                         )}
                                         <button
                                             type="button"
                                             onClick={() => toggleMonth(month)}
-                                            className="flex-1 flex items-center justify-between group"
+                                            className="flex-1 flex items-center justify-between group py-1"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+                                                <ChevronDown className={`h-4 w-4 text-zinc-500 group-hover:text-zinc-300 transition-all duration-200 ${
                                                     isCollapsed ? '-rotate-90' : ''
                                                 }`} />
-                                                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">{month}</h3>
+                                                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] group-hover:text-white transition-colors">{month}</h3>
                                             </div>
-                                            <span className="text-xs text-slate-400 font-semibold">
-                                                {monthInvoices.length} invoice{monthInvoices.length !== 1 ? 's' : ''} · {formatCurrency(monthTotal)}
+                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                                                {formatCurrency(monthTotal)}
                                             </span>
                                         </button>
                                     </div>
@@ -509,40 +509,44 @@ export default function InvoicesPage() {
                                                     return (
                                                     <Card
                                                         key={invoice.id}
-                                                        className={`active:scale-[0.98] transition-all cursor-pointer hover:bg-white/[0.07] rounded-2xl group border-l-4 ${
-                                                            isSelected ? 'border-l-blue-500 bg-blue-500/10' : 'border-l-transparent hover:border-l-blue-500'
+                                                        variant="premium"
+                                                        className={`active:scale-[0.98] transition-all cursor-pointer group rounded-2xl border ${
+                                                            isSelected ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-600/10' : 'border-white/10 hover:border-blue-500/40'
                                                         }`}
                                                         onClick={() => selectMode ? toggleSelect(invoice.id) : push(`/dashboard/invoices/${invoice.id}`)}
                                                         onContextMenu={(e) => { e.preventDefault(); toggleSelect(invoice.id); }}
                                                     >
-                                                        <CardContent className="p-4 flex items-center justify-between">
+                                                        <CardContent className="p-4 flex items-center justify-between relative z-10">
                                                             <div className="flex items-center gap-4">
                                                                 {selectMode ? (
-                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleSelect(invoice.id); }} className="h-12 w-12 rounded-xl flex items-center justify-center border border-white/15 text-slate-300 hover:text-white transition-colors">
-                                                                        {isSelected ? <CheckSquare className="h-6 w-6 text-blue-400" /> : <Square className="h-6 w-6" />}
-                                                                    </button>
+                                                                    <div className="h-12 w-12 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-blue-400">
+                                                                        {isSelected ? <CheckSquare className="h-6 w-6" /> : <Square className="h-6 w-6 text-zinc-600" />}
+                                                                    </div>
                                                                 ) : (
-                                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-inner border backdrop-blur-sm ${invoice.status === "paid" ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-300" : invoice.status === "void" ? "bg-red-500/15 border-red-400/25 text-red-300" : "bg-amber-500/15 border-amber-400/25 text-amber-300"}`}>
+                                                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-inner border backdrop-blur-sm ${invoice.status === "paid" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : invoice.status === "void" ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"}`}>
                                                                     {invoice.status === "paid" ? <CheckCircle2 className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
                                                                 </div>
                                                                 )}
-                                                                <div>
-                                                                    <h3 className="font-bold text-white text-base">{invoice.clientName}</h3>
-                                                                    <div className="flex items-center text-xs text-slate-300 gap-2 font-medium">
+                                                                <div className="overflow-hidden">
+                                                                    <h3 className="font-black text-white text-base truncate leading-tight group-hover:text-blue-400 transition-colors">{invoice.clientName}</h3>
+                                                                    <div className="flex items-center text-[10px] text-zinc-500 gap-2 font-bold uppercase tracking-wider mt-1">
                                                                         <span>#{invoice.id.slice(0, 6).toUpperCase()}</span>
-                                                                        <span>•</span>
-                                                                        <span>{format(new Date(invoice.date), "d MMM")}</span>
+                                                                        <span className="opacity-30">•</span>
+                                                                        <span className="text-zinc-400">{format(new Date(invoice.date), "d MMM")}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <p className="font-bold text-white text-lg">{formatCurrency(invoice.amount)}</p>
-                                                                <Badge
-                                                                    variant={invoice.status === "paid" ? "success" : invoice.status === "void" ? "danger" : "warning"}
-                                                                    className="mt-1 text-[10px] uppercase tracking-wide"
-                                                                >
-                                                                    {invoice.status}
-                                                                </Badge>
+                                                            <div className="text-right flex items-center gap-3">
+                                                                <div>
+                                                                    <p className="font-black text-white text-lg tracking-tight">{formatCurrency(invoice.amount)}</p>
+                                                                    <Badge
+                                                                        variant={invoice.status === "paid" ? "success" : invoice.status === "void" ? "danger" : "warning"}
+                                                                        className="mt-1 text-[9px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-md"
+                                                                    >
+                                                                        {invoice.status}
+                                                                    </Badge>
+                                                                </div>
+                                                                <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-white transition-colors group-hover:translate-x-0.5" />
                                                             </div>
                                                         </CardContent>
                                                     </Card>
@@ -556,19 +560,21 @@ export default function InvoicesPage() {
                         })
                     ) : (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-center py-12 text-slate-400 glass-card glass-inner-light rounded-3xl mt-4"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center py-16 text-zinc-500 bg-white/5 rounded-3xl mt-4 border border-white/5 border-dashed backdrop-blur-md"
                         >
-                            <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                            <p className="font-medium text-lg text-slate-200">No invoices found.</p>
-                            <p className="text-sm opacity-70">Create a new invoice to get started.</p>
+                            <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-inner">
+                                <FileText className="h-10 w-10 opacity-20" />
+                            </div>
+                            <p className="font-black text-lg text-zinc-300 tracking-tight uppercase">No records found</p>
+                            <p className="text-sm font-medium opacity-70 mt-1">Ready to start earning? Create your first invoice.</p>
                             <Button
-                                variant="link"
-                                className="text-blue-400 mt-2 font-bold hover:text-blue-300"
+                                size="lg"
+                                className="mt-8 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs px-8 rounded-xl shadow-xl shadow-blue-600/20 active:scale-95 transition-transform"
                                 onClick={() => push("/dashboard/invoices/new")}
                             >
-                                Create Invoice
+                                <Plus className="h-4 w-4 mr-2 stroke-[3px]" /> New Invoice
                             </Button>
                         </motion.div>
                     )}
@@ -579,39 +585,39 @@ export default function InvoicesPage() {
             <AnimatePresence>
                 {selectMode && (
                     <motion.div
-                        initial={{ y: 80, opacity: 0 }}
+                        initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 80, opacity: 0 }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md"
+                        exit={{ y: 100, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        className="fixed bottom-28 left-4 right-4 z-50 max-w-md mx-auto"
                     >
-                        <div className="bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 p-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm font-bold text-white">
-                                    {selectedIds.size} selected
+                        <div className="bg-zinc-900/95 border border-white/15 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 space-y-4 backdrop-blur-3xl">
+                            <div className="flex items-center justify-between px-1">
+                                <p className="text-sm font-black text-white uppercase tracking-widest">
+                                    <span className="text-blue-400">{selectedIds.size}</span> selected
                                 </p>
-                                <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs text-slate-400 hover:text-white font-semibold">
-                                    Clear
+                                <button type="button" onClick={() => setSelectedIds(new Set())} className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-[0.2em] transition-colors">
+                                    Deselect
                                 </button>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 <Button
-                                    size="sm"
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    size="lg"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-xl shadow-lg shadow-emerald-600/20"
                                     disabled={isBulkBusy}
                                     onClick={() => bulkUpdateStatus.mutate({ invoiceIds: Array.from(selectedIds), status: 'paid_cash' })}
                                 >
-                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />}
+                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                                     Mark Paid
                                 </Button>
                                 <Button
-                                    size="sm"
+                                    size="lg"
                                     variant="outline"
-                                    className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/15"
+                                    className="flex-1 border-white/10 bg-white/5 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 font-black uppercase tracking-widest text-[10px] h-12 rounded-xl"
                                     disabled={isBulkBusy}
                                     onClick={() => bulkDelete.mutate({ invoiceIds: Array.from(selectedIds) })}
                                 >
-                                    {bulkDelete.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
+                                    {bulkDelete.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                                     Delete
                                 </Button>
                             </div>

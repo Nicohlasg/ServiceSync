@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Phone, MapPin, Wrench, Calendar, FileText, Pencil,
-  Trash2, X, ChevronDown, CheckCircle2, Clock, Search, Filter,
+  Trash2, X, ChevronDown, CheckCircle2, Clock, Search, Filter, ChevronRight,
 } from "lucide-react";
 import { SkeletonCard, SkeletonLine, SkeletonCircle } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -135,16 +135,16 @@ function ClientDetails() {
   if (isLoading || !client) {
     if (isError && !isFetching) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-          <p className="text-red-400 font-medium">Failed to load client details.</p>
-          <Button variant="outline" onClick={() => refetch()} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 text-white">
+          <p className="text-rose-400 font-bold uppercase tracking-widest text-xs">Failed to load client details.</p>
+          <Button variant="outline" onClick={() => refetch()} className="border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-widest text-[10px]">
             Try Again
           </Button>
         </div>
       );
     }
     return (
-      <div className="space-y-6 pt-4 pb-24">
+      <div className="space-y-6 pt-4 pb-24 px-1">
         <div className="flex items-center gap-3">
           <SkeletonCircle size={40} />
           <div className="flex-1 space-y-2">
@@ -227,82 +227,88 @@ function ClientDetails() {
   }, [invoices, bookings, txTab, txSearch, txDateFrom, txDateTo]);
 
   return (
-    <div className="space-y-6 pt-4 pb-24">
+    <div className="space-y-6 pt-4 pb-24 text-white">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between px-1"
       >
         <div className="flex items-center gap-3">
           <BackButton href="/dashboard/clients" />
-          <h1 className="text-xl font-bold text-white">Client Profile</h1>
+          <h1 className="text-xl font-black text-white tracking-tight leading-none">Client Profile</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={startEdit} className="rounded-full text-slate-300 hover:text-white hover:bg-white/10">
-            <Pencil className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={startEdit} className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-white transition-all">
+            <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(true)} className="rounded-full text-slate-300 hover:text-red-400 hover:bg-red-500/10">
-            <Trash2 className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={() => setConfirmDelete(true)} className="h-10 w-10 rounded-xl bg-rose-600/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-all">
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </motion.div>
 
       {/* Delete Confirmation */}
-      {confirmDelete && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/15 border border-red-500/30 rounded-2xl p-4 flex items-center justify-between">
-          <p className="text-red-300 text-sm font-semibold">Delete {client.name}? This cannot be undone.</p>
-          <div className="flex gap-2 shrink-0">
-            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} className="text-slate-300 hover:text-white">Cancel</Button>
-            <Button size="sm" onClick={() => deleteMutation.mutate({ clientId })} disabled={deleteMutation.isPending} className="bg-red-600 hover:bg-red-700 text-white">
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {confirmDelete && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-rose-600/10 border border-rose-500/20 rounded-2xl p-5 mx-1 backdrop-blur-md">
+            <div className="flex items-center gap-3 mb-4 text-rose-400">
+                <Trash2 className="h-5 w-5" />
+                <p className="text-sm font-black uppercase tracking-tight">Permanently Delete?</p>
+            </div>
+            <p className="text-xs text-rose-200/80 font-medium mb-5 leading-relaxed">This will delete all history for <span className="font-bold text-white">{client.name}</span>. This action cannot be undone.</p>
+            <div className="flex gap-3">
+                <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} className="flex-1 text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest h-11 bg-white/5 rounded-xl border border-white/5">CANCEL</Button>
+                <Button size="sm" onClick={() => deleteMutation.mutate({ clientId })} disabled={deleteMutation.isPending} className="flex-1 text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-widest h-11 rounded-xl shadow-lg shadow-rose-600/20">
+                {deleteMutation.isPending ? "DELETING..." : "DELETE FOREVER"}
+                </Button>
+            </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Form */}
       {editing ? (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card className="border-t-4 border-t-amber-400/70 rounded-3xl overflow-hidden">
-            <CardContent className="p-6 space-y-4">
+          <Card variant="premium" className="rounded-[2.5rem] overflow-hidden backdrop-blur-2xl shadow-2xl">
+            <CardContent className="p-7 space-y-5">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-bold text-white">Edit Client</h2>
-                <Button variant="ghost" size="icon" onClick={() => setEditing(false)} className="text-slate-400 hover:text-white hover:bg-white/10">
-                  <X className="h-5 w-5" />
-                </Button>
+                <h2 className="text-sm font-black text-blue-400 uppercase tracking-[0.2em] relative z-10">Edit Profile</h2>
+                <button onClick={() => setEditing(false)} className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors relative z-10">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Name</label>
-                  <Input value={editForm.name} onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="mt-1" />
+              <div className="space-y-4 relative z-10">
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Client Name</Label>
+                  <Input value={editForm.name} onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md font-bold" />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Phone</label>
-                  <Input value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} className="mt-1" />
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Phone Number</Label>
+                  <Input value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md font-bold" />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Address</label>
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><MapPin className="h-3 w-3 text-emerald-400" /> Address</Label>
                   <AddressAutocomplete
                     value={editForm.address}
                     onChange={(addr, lat, lng) => setEditForm(prev => ({ ...prev, address: addr, lat, lng }))}
                     placeholder="Search address..."
-                    className="mt-1"
+                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Unit Number</label>
-                  <Input value={editForm.unitNumber} onChange={(e) => setEditForm(prev => ({ ...prev, unitNumber: e.target.value }))} placeholder="e.g. #01-345" className="mt-1" />
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Unit Number</Label>
+                  <Input value={editForm.unitNumber} onChange={(e) => setEditForm(prev => ({ ...prev, unitNumber: e.target.value }))} placeholder="e.g. #01-345" className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md font-bold" />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Notes</label>
-                  <Textarea value={editForm.notes} onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))} className="mt-1 min-h-[80px]" />
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Private Notes</Label>
+                  <Textarea value={editForm.notes} onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))} className="bg-white/5 border-white/10 text-white resize-none rounded-xl focus:border-blue-500/50 backdrop-blur-md font-medium" rows={3} />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" onClick={() => setEditing(false)} className="flex-1 h-12 rounded-xl">Cancel</Button>
-                <Button onClick={saveEdit} disabled={updateMutation.isPending} className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              <div className="flex gap-4 pt-4 relative z-10">
+                <Button variant="outline" onClick={() => setEditing(false)} className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 text-zinc-500 font-black uppercase tracking-widest text-[10px] hover:text-white transition-all active:scale-95">CANCEL</Button>
+                <Button onClick={saveEdit} disabled={updateMutation.isPending} className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-600/20 active:scale-95 transition-all">
+                  {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "SAVE CHANGES"}
                 </Button>
               </div>
             </CardContent>
@@ -310,53 +316,67 @@ function ClientDetails() {
         </motion.div>
       ) : (
         /* Profile Card (view mode) */
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-          <Card className="border-t-4 border-t-blue-500 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-3xl font-bold text-white tracking-tight">{client.name}</h2>
-                  <a href={`tel:${client.phone}`} className="inline-flex items-center gap-2 text-blue-300 mt-1 font-semibold hover:text-blue-200 hover:underline">
-                    <Phone className="h-4 w-4" />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="px-1">
+          <Card variant="premium" className="rounded-[2.5rem] overflow-hidden backdrop-blur-2xl shadow-2xl">
+            <CardContent className="p-7">
+              <div className="flex justify-between items-start mb-8 relative z-10">
+                <div className="overflow-hidden pr-4">
+                  <h2 className="text-4xl font-black text-white tracking-tighter leading-tight mb-2 truncate">{client.name}</h2>
+                  <a href={`tel:${client.phone}`} className="inline-flex items-center gap-2 text-blue-400 font-black uppercase tracking-widest text-xs hover:text-blue-300 transition-colors group">
+                    <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                        <Phone className="h-3.5 w-3.5" />
+                    </div>
                     {client.phone}
                   </a>
                 </div>
-                <div className="h-16 w-16 rounded-2xl bg-blue-500/15 border border-blue-400/25 flex items-center justify-center text-blue-200 font-bold text-2xl shadow-inner backdrop-blur-sm">
-                  {client.name.charAt(0)}
+                <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 font-black text-3xl shadow-inner backdrop-blur-sm shrink-0">
+                  {client.name.charAt(0).toUpperCase()}
                 </div>
               </div>
 
-              <div className="space-y-4 text-sm text-slate-300 bg-white/[0.04] p-4 rounded-2xl border border-white/10">
-                <div className="flex gap-3 items-start">
-                  <MapPin className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
-                  <span className="font-medium leading-relaxed">{fullAddress}</span>
+              <div className="space-y-5 relative z-10">
+                <div className="bg-white/5 p-5 rounded-2xl border border-white/5 backdrop-blur-md shadow-inner">
+                    <div className="flex gap-4 items-start mb-4">
+                    <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
+                        <MapPin className="h-5 w-5" />
+                    </div>
+                    <span className="font-bold text-zinc-200 leading-snug text-sm pt-1">{fullAddress}</span>
+                    </div>
+                    <div className="flex gap-6 items-center border-t border-white/5 pt-4 mt-1">
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Total Jobs</p>
+                            <p className="text-lg font-black text-white leading-none tabular-nums">{totalJobs}</p>
+                        </div>
+                        <div className="w-px h-8 bg-white/5" />
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">LTV Revenue</p>
+                            <p className="text-lg font-black text-emerald-400 leading-none tabular-nums">{formatCurrency(totalRevenueCents / 100)}</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-3 items-center">
-                  <Wrench className="h-5 w-5 text-slate-400 shrink-0" />
-                  <span>Jobs: <span className="font-bold text-white">{totalJobs}</span> &middot; Revenue: <span className="font-bold text-white">{formatCurrency(totalRevenueCents / 100)}</span></span>
-                </div>
+
+                {client.notes && (
+                    <div className="bg-amber-500/5 p-4 rounded-2xl border border-amber-500/10 text-amber-200/80 text-xs font-medium leading-relaxed backdrop-blur-sm relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 bg-amber-500/30 h-full" />
+                        <span className="font-black block text-[9px] uppercase tracking-widest mb-1.5 text-amber-400/80">PRIVATE NOTES</span>
+                        &ldquo;{client.notes}&rdquo;
+                    </div>
+                )}
               </div>
 
-              {client.notes && (
-                <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-400/25 text-amber-100 mt-4 backdrop-blur-sm">
-                  <span className="font-bold block text-xs uppercase tracking-wider mb-1 text-amber-300">Notes</span>
-                  {client.notes}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <Button className="w-full gap-2 rounded-xl h-12 shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700" onClick={() => window.open(`tel:${client.phone}`)}>
-                  <Phone className="h-4 w-4" /> Call
+              <div className="grid grid-cols-2 gap-4 mt-8 relative z-10">
+                <Button className="h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-600/20 active:scale-95 transition-all border-none" onClick={() => window.open(`tel:${client.phone}`)}>
+                  <Phone className="h-4 w-4 mr-2" /> CALL NOW
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full gap-2 text-emerald-300 border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200 rounded-xl h-12"
+                  className="h-14 rounded-2xl bg-white/5 border-white/10 text-emerald-400 hover:bg-emerald-600/10 font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all"
                   onClick={() => {
                     const phone = (client.phone ?? "").replace(/\D/g, "");
                     if (phone) window.open(`https://wa.me/${phone}`, "_blank");
                   }}
                 >
-                  WhatsApp
+                  WHATSAPP
                 </Button>
               </div>
             </CardContent>
@@ -364,18 +384,18 @@ function ClientDetails() {
         </motion.div>
       )}
 
-      {/* ── Transaction History (redesigned) ── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      {/* ── Transaction History ── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-1 mt-4">
         {/* Tab row */}
-        <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar pb-1 px-1">
           {(["all", "invoices", "jobs"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setTxTab(tab)}
-              className={`px-4 py-2 rounded-full text-sm font-bold capitalize whitespace-nowrap transition-all ${
+              className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all border ${
                 txTab === tab
-                  ? "bg-white text-slate-900 shadow-lg scale-105"
-                  : "bg-slate-900/40 text-slate-300 border border-white/10 hover:bg-slate-900/60"
+                  ? "bg-blue-600 text-white border-blue-500 shadow-xl shadow-blue-600/25 scale-105 z-10"
+                  : "bg-white/5 text-zinc-400 border-white/5 hover:border-white/10 hover:text-white"
               }`}
             >
               {tab}
@@ -383,13 +403,13 @@ function ClientDetails() {
           ))}
           <button
             onClick={() => setShowFilters(v => !v)}
-            className={`ml-auto px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 transition-colors ${
+            className={`ml-auto h-10 w-10 rounded-full flex items-center justify-center border transition-all ${
               showFilters || txSearch || txDateFrom || txDateTo
-                ? "bg-blue-500/30 text-blue-300"
-                : "text-slate-400 border border-white/10 hover:text-slate-200"
+                ? "bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-lg"
+                : "bg-white/5 border-white/10 text-zinc-500 hover:text-white"
             }`}
           >
-            <Filter className="h-3.5 w-3.5" /> Filters
+            <Filter className="h-4 w-4" />
           </button>
         </div>
 
@@ -401,34 +421,34 @@ function ClientDetails() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="overflow-hidden mb-4 space-y-2"
+              className="overflow-hidden mb-6 space-y-4 px-1"
             >
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-blue-400 transition-colors z-10" />
                 <Input
-                  placeholder="Search by invoice # or service type..."
-                  className="pl-9 rounded-xl h-10 text-sm"
+                  placeholder="Search by invoice # or service..."
+                  className="pl-11 rounded-xl h-11 text-sm bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-blue-500/50 font-bold"
                   value={txSearch}
                   onChange={(e) => setTxSearch(e.target.value)}
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="space-y-1 flex-1 min-w-0 max-w-full">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">From</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-1">From</p>
+                  <Input type="date" className="rounded-xl h-11 text-xs bg-white/5 border-white/10 text-white appearance-none px-3 font-bold" value={txDateFrom} onChange={(e) => setTxDateFrom(e.target.value)} />
                 </div>
-                <div className="space-y-1 flex-1 min-w-0 max-w-full">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">To</p>
-                  <Input type="date" className="rounded-xl h-10 text-sm w-full min-w-0 max-w-full appearance-none px-3" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
+                <div className="space-y-1.5">
+                  <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-1">To</p>
+                  <Input type="date" className="rounded-xl h-11 text-xs bg-white/5 border-white/10 text-white appearance-none px-3 font-bold" value={txDateTo} onChange={(e) => setTxDateTo(e.target.value)} />
                 </div>
               </div>
               {(txSearch || txDateFrom || txDateTo) && (
                 <button
                   type="button"
                   onClick={() => { setTxSearch(""); setTxDateFrom(""); setTxDateTo(""); }}
-                  className="text-xs text-red-400 font-semibold"
+                  className="text-[10px] text-rose-400 font-black uppercase tracking-widest bg-rose-400/10 px-3 py-1.5 rounded-lg border border-rose-400/20 active:scale-95 transition-transform"
                 >
-                  Clear filters
+                  Clear all filters
                 </button>
               )}
             </motion.div>
@@ -436,7 +456,7 @@ function ClientDetails() {
         </AnimatePresence>
 
         {/* Grouped list */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <AnimatePresence mode="popLayout">
             {Object.keys(transactions).length > 0 ? (
               Object.entries(transactions).map(([month, rows], groupIdx) => {
@@ -455,15 +475,16 @@ function ClientDetails() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 + groupIdx * 0.04 }}
+                    className="space-y-3"
                   >
                     {/* Month header */}
-                    <button type="button" onClick={() => toggleMonth(month)} className="w-full flex items-center justify-between px-2 mb-2 group">
+                    <button type="button" onClick={() => toggleMonth(month)} className="w-full flex items-center justify-between px-2 group py-1">
                       <div className="flex items-center gap-2">
-                        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
-                        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">{month}</h3>
+                        <ChevronDown className={`h-4 w-4 text-zinc-500 group-hover:text-zinc-300 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                        <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] group-hover:text-white transition-colors">{month}</h3>
                       </div>
-                      <span className="text-xs text-slate-400 font-semibold">
-                        {rows.length} item{rows.length !== 1 ? "s" : ""} · {formatCurrency(monthTotal)}
+                      <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                        {formatCurrency(monthTotal)}
                       </span>
                     </button>
 
@@ -474,7 +495,7 @@ function ClientDetails() {
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="overflow-hidden space-y-3"
+                          className="overflow-hidden space-y-4 px-1"
                         >
                           {rows.map((r) => {
                             if (r.kind === "invoice") {
@@ -486,29 +507,33 @@ function ClientDetails() {
                               return (
                                 <Card
                                   key={`inv-${inv.id}`}
-                                  className="active:scale-[0.98] transition-all cursor-pointer hover:bg-white/[0.07] rounded-2xl group border-l-4 border-l-transparent hover:border-l-emerald-500"
+                                  variant="premium"
+                                  className="active:scale-[0.98] transition-all cursor-pointer hover:border-blue-500/40 rounded-2xl group shadow-lg backdrop-blur-xl"
                                   onClick={() => push(`/dashboard/invoices/${inv.id}`)}
                                 >
-                                  <CardContent className="p-4 flex justify-between items-center">
+                                  <CardContent className="p-4 flex justify-between items-center relative z-10">
                                     <div className="flex items-center gap-4">
                                       <div className={`h-11 w-11 rounded-xl flex items-center justify-center shadow-inner border backdrop-blur-sm ${
-                                        isPaid ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-300"
-                                          : inv.status === "void" ? "bg-red-500/15 border-red-400/25 text-red-300"
-                                          : "bg-amber-500/15 border-amber-400/25 text-amber-300"
+                                        isPaid ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                          : inv.status === "void" ? "bg-rose-500/10 border-rose-400/20 text-rose-400"
+                                          : "bg-amber-500/10 border-amber-400/20 text-amber-400"
                                       }`}>
                                         {isPaid ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                                       </div>
-                                      <div>
-                                        <p className="font-bold text-white text-sm">{inv.invoice_number ?? "Invoice"}</p>
-                                        <p className="text-xs font-medium text-slate-400">
-                                          {inv.paid_at ? format(new Date(inv.paid_at), "dd MMM yyyy") : inv.created_at ? format(new Date(inv.created_at), "dd MMM yyyy") : "No date"}
+                                      <div className="overflow-hidden">
+                                        <p className="font-black text-white text-sm truncate tracking-tight">{inv.invoice_number ?? "Invoice"}</p>
+                                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">
+                                          {inv.paid_at ? format(new Date(inv.paid_at), "d MMM yyyy") : inv.created_at ? format(new Date(inv.created_at), "d MMM yyyy") : "No date"}
                                           {inv.payment_method && isPaid ? ` · ${inv.payment_method === "cash" || inv.payment_method === "mixed" ? "Cash" : "PayNow"}` : ""}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="text-right">
-                                      <span className="font-bold block text-white">{formatCurrency((inv.total_cents ?? inv.amount ?? 0) / 100)}</span>
-                                      <Badge variant={statusVariant} className="mt-1 text-[10px] h-5 px-1.5">{statusLabel}</Badge>
+                                    <div className="text-right flex items-center gap-3">
+                                      <div>
+                                        <span className="font-black block text-white tracking-tight">{formatCurrency((inv.total_cents ?? inv.amount ?? 0) / 100)}</span>
+                                        <Badge variant={statusVariant} className="mt-1 text-[9px] font-black uppercase tracking-widest h-5 px-1.5 rounded-md">{statusLabel}</Badge>
+                                      </div>
+                                      <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-white transition-colors" />
                                     </div>
                                   </CardContent>
                                 </Card>
@@ -524,23 +549,24 @@ function ClientDetails() {
                             return (
                               <Card
                                 key={`job-${job.id}`}
-                                className="hover:bg-white/[0.07] transition-all rounded-2xl group border-l-4 border-l-transparent hover:border-l-blue-500"
+                                variant="premium"
+                                className="transition-all rounded-2xl group border-l-4 border-l-transparent hover:border-l-blue-500 shadow-lg backdrop-blur-xl"
                               >
-                                <CardContent className="p-4 flex justify-between items-center">
+                                <CardContent className="p-4 flex justify-between items-center relative z-10">
                                   <div className="flex items-center gap-4">
-                                    <div className="h-11 w-11 rounded-xl flex items-center justify-center border bg-white/[0.06] border-white/10 text-slate-300 group-hover:bg-blue-500/15 group-hover:text-blue-200 group-hover:border-blue-400/25 transition-colors backdrop-blur-sm">
+                                    <div className="h-11 w-11 rounded-xl flex items-center justify-center border bg-white/5 border-white/10 text-blue-400 shadow-inner group-hover:bg-blue-600/10 transition-colors backdrop-blur-sm">
                                       <Calendar className="h-5 w-5" />
                                     </div>
-                                    <div>
-                                      <p className="font-bold text-white text-sm">{job.service_type ?? "Service"}</p>
-                                      <p className="text-xs font-medium text-slate-400">
-                                        {job.scheduled_date ? format(new Date(job.scheduled_date + "T00:00:00"), "dd MMM yyyy") : "No date"}
+                                    <div className="overflow-hidden">
+                                      <p className="font-black text-white text-sm truncate tracking-tight">{job.service_type ?? "Service"}</p>
+                                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">
+                                        {job.scheduled_date ? format(new Date(job.scheduled_date + "T00:00:00"), "d MMM yyyy") : "No date"}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <span className="font-bold block text-white">{formatCurrency((job.amount ?? 0) / 100)}</span>
-                                    <Badge variant={jobVariant} className="mt-1 text-[10px] h-5 px-1.5">{jobLabel}</Badge>
+                                    <span className="font-black block text-white tracking-tight">{formatCurrency((job.amount ?? 0) / 100)}</span>
+                                    <Badge variant={jobVariant} className="mt-1 text-[9px] font-black uppercase tracking-widest h-5 px-1.5 rounded-md">{jobLabel}</Badge>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -553,9 +579,12 @@ function ClientDetails() {
                 );
               })
             ) : (
-              <div className="text-center py-8 glass-card glass-inner-light rounded-2xl">
-                <p className="text-slate-400 font-medium">
-                  {txSearch || txDateFrom || txDateTo ? "No transactions match your filters" : "No transaction history yet"}
+              <div className="text-center py-20 bg-white/5 rounded-[2rem] border border-white/5 border-dashed backdrop-blur-md">
+                <div className="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                    <FileText className="h-8 w-8 text-zinc-700" />
+                </div>
+                <p className="text-zinc-500 font-black uppercase tracking-widest text-xs">
+                  {txSearch || txDateFrom || txDateTo ? "No matches found" : "No history yet"}
                 </p>
               </div>
             )}
@@ -570,7 +599,7 @@ export default function ClientDetailsPage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6 pt-4 pb-24">
+        <div className="space-y-6 pt-4 pb-24 px-2">
           <div className="flex items-center gap-3">
             <SkeletonCircle size={40} />
             <div className="flex-1 space-y-2">

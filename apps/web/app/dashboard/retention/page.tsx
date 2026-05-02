@@ -3,14 +3,15 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Clock, Sparkles, CheckCircle2, ChevronRight, X, User } from "lucide-react";
+import { Send, Clock, Sparkles, CheckCircle2, ChevronRight, X, User, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { api } from "@/lib/api";
 import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
+import { BackButton } from "@/components/ui/back-button";
 
 interface RetentionItem {
     assetId: string;
@@ -88,15 +89,15 @@ export default function RetentionQueuePage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-6 pt-4">
-                <div className="flex items-center gap-2 px-2">
+            <div className="space-y-6 pt-4 px-2">
+                <div className="flex items-center gap-3 px-2">
                     <SkeletonLine width="40px" className="h-10 rounded-full" />
                     <div className="flex-1 space-y-2">
                         <SkeletonLine width="55%" className="h-7" />
                         <SkeletonLine width="75%" className="h-4" />
                     </div>
                 </div>
-                <div className="px-2 space-y-4">
+                <div className="px-2 space-y-5">
                     <SkeletonCard />
                     <SkeletonCard />
                 </div>
@@ -106,9 +107,9 @@ export default function RetentionQueuePage() {
 
     if (isError) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                <p className="text-red-400 font-medium">Failed to load retention queue.</p>
-                <Button variant="outline" onClick={() => refetch()} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+            <div className="flex flex-col items-center justify-center h-64 space-y-4 text-white">
+                <p className="text-rose-400 font-bold uppercase tracking-widest text-xs">Failed to load follow-ups.</p>
+                <Button variant="outline" onClick={() => refetch()} className="border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-widest text-[10px]">
                     Try Again
                 </Button>
             </div>
@@ -116,20 +117,19 @@ export default function RetentionQueuePage() {
     }
 
     return (
-        <div className="space-y-6 pt-4 relative pb-24">
+        <div className="space-y-6 pt-4 relative pb-32 text-white">
             {/* Header */}
-            <div className="flex items-center gap-2 px-2">
-                <Button variant="ghost" size="icon" onClick={() => push('/dashboard')} className="hover:bg-white/10 rounded-full text-white">
-                    <ChevronRight className="h-6 w-6 rotate-180" />
-                </Button>
+            <div className="flex items-center gap-3 px-2">
+                <BackButton />
                 <div>
-                    <h1 className="text-2xl font-bold text-white shadow-sm tracking-tight">Smart Follow-ups</h1>
-                    <p className="text-sm text-indigo-300 font-medium">AI-drafted reminders to secure repeat jobs.</p>
+                    <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1">Smart Follow-ups</h1>
+                    <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">AI reminders to secure repeat jobs.</p>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="px-2 space-y-4">
+            <div className="px-1 space-y-5">
+                <AnimatePresence mode="popLayout">
                 {queue.length > 0 ? (
                     queue.map((msg, idx: number) => {
                         const lastStr = msg.lastServiceDate
@@ -139,67 +139,67 @@ export default function RetentionQueuePage() {
                         return (
                         <motion.div
                             key={msg.assetId}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, x: -100 }}
+                            transition={{ delay: idx * 0.05 }}
                         >
-                            <Card className="shadow-xl rounded-3xl overflow-hidden relative">
+                            <Card variant="premium" className="shadow-2xl rounded-3xl overflow-hidden relative backdrop-blur-2xl">
                                 {/* Status/Context Header */}
-                                <div className="bg-gradient-to-r from-indigo-500/20 to-purple-600/20 p-4 border-b border-white/5 flex items-center justify-between">
+                                <div className="bg-white/5 p-4 border-b border-white/5 flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border backdrop-blur-sm ${msg.isOverdue ? "bg-rose-500/15 text-rose-200 border-rose-400/25" : "bg-blue-500/15 text-blue-200 border-blue-400/25"}`}>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border backdrop-blur-xl ${msg.isOverdue ? "bg-rose-600/20 text-rose-400 border-rose-500/30" : "bg-blue-600/20 text-blue-400 border-blue-500/30"}`}>
                                             {msg.isOverdue ? "Overdue" : "Due Soon"} &middot; {msg.monthsPassed}mo
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
-                                        <Clock className="h-3.5 w-3.5" />
+                                    <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                                        <Clock className="h-3 w-3" />
                                         Last: {lastStr}
                                     </div>
                                 </div>
 
-                                <CardContent className="p-5 space-y-4">
+                                <CardContent className="p-6 space-y-5 relative z-10">
                                     {/* Client Info */}
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="bg-indigo-600 p-2 rounded-full text-white shadow-lg shadow-indigo-500/30">
-                                            <User className="h-4 w-4" />
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center text-blue-400 border border-white/10 shadow-inner">
+                                            <User className="h-6 w-6" />
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-white text-lg leading-tight">{msg.clientName}</p>
-                                            <p className="text-sm text-slate-400 font-medium">{msg.assetType}{msg.locationInHome ? ` — ${msg.locationInHome}` : ""}</p>
+                                        <div className="overflow-hidden">
+                                            <p className="font-black text-white text-xl tracking-tight leading-tight truncate">{msg.clientName}</p>
+                                            <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest mt-1 truncate">{msg.assetType}{msg.locationInHome ? ` — ${msg.locationInHome}` : ""}</p>
                                         </div>
                                     </div>
 
                                     {/* Draft Content */}
-                                    <div className="bg-slate-800/50 p-4 rounded-2xl border border-white/5 relative">
-                                        <div className="absolute -top-3 left-4 bg-slate-800 px-2 flex items-center gap-1.5 border border-white/5 rounded-full shadow-sm">
+                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5 relative backdrop-blur-md overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-1 bg-blue-500/40 h-full group-hover:bg-blue-500 transition-colors" />
+                                        <div className="flex items-center gap-2 mb-3">
                                             <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                                            <span className="text-[10px] font-bold uppercase text-slate-300 tracking-wider">Draft</span>
+                                            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.15em]">AI Suggested Draft</span>
                                         </div>
                                         {editingId === msg.assetId ? (
-                                            <div className="pt-2">
+                                            <div className="pt-1">
                                                 <Textarea
                                                     value={editDraft}
                                                     onChange={(e) => setEditDraft(e.target.value)}
-                                                    className="min-h-[120px] bg-slate-900 border-white/10 text-white rounded-xl mb-3"
+                                                    className="min-h-[140px] bg-zinc-900/50 border-white/10 text-white rounded-xl mb-4 font-medium leading-relaxed focus:border-blue-500/50"
                                                 />
                                                 <div className="flex gap-2">
-                                                    <Button size="sm" onClick={saveEdit} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4">Save</Button>
-                                                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="text-slate-400">Cancel</Button>
+                                                    <Button size="sm" onClick={saveEdit} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px] px-6 h-10 shadow-lg shadow-blue-600/20">SAVE</Button>
+                                                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="text-zinc-500 font-black uppercase tracking-widest text-[10px] h-10 px-4 hover:text-white">CANCEL</Button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <>
-                                                <p className="text-sm text-slate-300 whitespace-pre-line leading-relaxed pb-6 pt-1">
+                                                <p className="text-sm text-zinc-300 whitespace-pre-line leading-relaxed pb-8 pt-1 font-medium italic">
                                                     &ldquo;{getDraft(msg)}&rdquo;
                                                 </p>
-                                                <Button
-                                                    variant="link"
-                                                    size="sm"
+                                                <button
                                                     onClick={() => handleEditClick(msg)}
-                                                    className="absolute bottom-2 right-2 text-indigo-400 font-medium h-auto p-0"
+                                                    className="absolute bottom-3 right-4 text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors bg-white/5 px-2 py-1 rounded-md border border-white/5"
                                                 >
                                                     Edit Draft
-                                                </Button>
+                                                </button>
                                             </>
                                         )}
                                     </div>
@@ -210,15 +210,15 @@ export default function RetentionQueuePage() {
                                             <Button
                                                 variant="outline"
                                                 onClick={() => handleDismiss(msg.assetId)}
-                                                className="h-12 w-12 rounded-2xl bg-white/5 border-white/10 text-slate-400 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all p-0 shrink-0"
+                                                className="h-14 w-14 rounded-2xl bg-white/5 border-white/10 text-zinc-500 hover:bg-rose-600/10 hover:text-rose-400 hover:border-rose-500/30 transition-all p-0 shrink-0 shadow-lg"
                                             >
-                                                <X className="h-5 w-5" />
+                                                <X className="h-6 w-6" />
                                             </Button>
                                             <Button
                                                 onClick={() => handleApprove(msg)}
-                                                className="flex-1 h-12 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold text-base shadow-lg shadow-green-500/20 active:scale-[0.98] transition-all border-0 flex items-center justify-center gap-2"
+                                                className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-xl shadow-blue-600/30 active:scale-95 transition-all border-none flex items-center justify-center gap-3 uppercase tracking-widest"
                                             >
-                                                Send to WhatsApp <Send className="h-4 w-4" />
+                                                Send via WhatsApp <Send className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     )}
@@ -229,19 +229,20 @@ export default function RetentionQueuePage() {
                     })
                 ) : (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-16 bg-slate-900/40 rounded-3xl border border-white/5 backdrop-blur-md mt-8"
+                        className="text-center py-20 bg-white/5 rounded-[2rem] border border-white/5 border-dashed backdrop-blur-md mt-4"
                     >
-                        <div className="mx-auto w-16 h-16 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mb-4">
-                            <CheckCircle2 className="h-8 w-8" />
+                        <div className="mx-auto w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-inner">
+                            <CheckCircle2 className="h-10 w-10 text-zinc-700" />
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2 tracking-tight">All Caught Up!</h3>
-                        <p className="text-slate-400 text-sm max-w-[250px] mx-auto leading-relaxed">
-                            You&apos;ve reviewed all pending follow-ups. We&apos;ll generate new drafts when clients hit their 3-month mark.
+                        <h3 className="text-xl font-black text-white mb-1 tracking-tight uppercase">All Caught Up!</h3>
+                        <p className="text-zinc-500 text-xs font-bold max-w-[250px] mx-auto leading-relaxed uppercase tracking-wider">
+                            You&apos;re all set. New follow-ups appear automatically based on service history.
                         </p>
                     </motion.div>
                 )}
+                </AnimatePresence>
             </div>
 
         </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays, Eye, EyeOff, ExternalLink, X, FileText, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/utils";
 import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type InvoiceStatus = "draft" | "pending" | "awaiting_qr_confirmation" | "paid_cash" | "paid_qr" | "disputed" | "void";
 type InvoiceLineItem = { description: string; amountCents: number };
@@ -126,16 +127,16 @@ export default function InvoiceDetailPage() {
   if (isLoading || !invoice) {
     if (isError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-          <p className="text-red-400 font-medium">Failed to load invoice.</p>
-          <Button variant="outline" onClick={() => refetch()} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 text-white">
+          <p className="text-rose-400 font-bold uppercase tracking-widest text-xs">Failed to load invoice.</p>
+          <Button variant="outline" onClick={() => refetch()} className="border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-widest text-[10px]">
             Try Again
           </Button>
         </div>
       );
     }
     return (
-      <div className="space-y-6 pt-4 pb-24">
+      <div className="space-y-6 pt-4 pb-24 px-1">
         <div className="flex items-center gap-3">
           <SkeletonLine width="40px" className="h-10 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -231,59 +232,60 @@ export default function InvoiceDetailPage() {
   }
 
   return (
-    <div className="space-y-6 pt-4 pb-24">
+    <div className="space-y-6 pt-4 pb-24 text-white">
       <motion.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-3"
+        className="flex items-center gap-3 px-1"
       >
         <BackButton href="/dashboard/invoices" />
-        <h1 className="text-xl font-bold text-white">Invoice {invoiceNumber}</h1>
+        <h1 className="text-2xl font-black text-white tracking-tight leading-none">Invoice {invoiceNumber}</h1>
       </motion.div>
 
       {/* Invoice Header */}
-      <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 rounded-3xl">
-        <CardContent className="p-6 space-y-4">
-          <div className="flex justify-between items-start gap-4">
-            <div>
-              <p className="text-sm text-slate-400">Client</p>
-              <p className="font-bold text-white">{invoiceMeta.clients?.name ?? "Unknown Client"}</p>
-              <p className="text-xs text-slate-500">#{invoice.id.slice(0, 8).toUpperCase()}</p>
+      <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl shadow-2xl">
+        <CardContent className="p-6 space-y-6">
+          <div className="flex justify-between items-start gap-4 relative z-10">
+            <div className="overflow-hidden pr-2">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Client</p>
+              <p className="font-black text-white text-xl tracking-tight leading-tight truncate">{invoiceMeta.clients?.name ?? "Unknown Client"}</p>
+              <p className="text-[10px] font-mono text-zinc-500 mt-1 uppercase">#{invoice.id.slice(0, 8).toUpperCase()}</p>
             </div>
-            <span className={`text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border backdrop-blur-xl shrink-0 ${
               ['paid_cash', 'paid_qr'].includes(invoice.status)
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30'
                 : invoice.status === 'void'
-                  ? 'bg-red-500/20 text-red-300 border border-red-400/30'
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                  ? 'bg-rose-600/20 text-rose-400 border-rose-500/30'
+                  : 'bg-amber-600/20 text-amber-400 border-amber-500/30'
             }`}>
               {formatStatus(invoice.status)}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <p className="text-slate-400">Created</p>
-              <p className="font-semibold text-white">{new Date(invoice.created_at).toLocaleDateString("en-SG")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+            <div className="bg-white/5 border border-white/5 rounded-2xl p-4 shadow-inner">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Created</p>
+              <p className="font-bold text-white text-sm">{new Date(invoice.created_at).toLocaleDateString("en-SG", { day: 'numeric', month: 'short', year: 'numeric' })}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
-              <p className="text-slate-400 flex items-center gap-1">
-                Due Date <CalendarDays className="h-3 w-3" />
+            <div className="bg-white/5 border border-white/5 rounded-2xl p-4 shadow-inner space-y-3">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                Due Date <CalendarDays className="h-3 w-3 text-blue-500" />
               </p>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <Input
                   type="date"
                   value={dueDate || invoice.due_date || ""}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-slate-800/50 border-white/10 text-white h-9 w-full min-w-0 max-w-full appearance-none px-3 sm:flex-1"
+                  className="bg-zinc-900/50 border-white/10 text-white h-10 w-full min-w-0 max-w-full appearance-none px-3 rounded-xl focus:border-blue-500/50 font-bold"
                 />
                 <Button
                   size="sm"
-                  className="bg-blue-600 text-white hover:bg-blue-500 h-9 px-4 w-full sm:w-auto"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest h-10 rounded-xl shadow-lg shadow-blue-600/20"
                   disabled={updateDueDate.isPending || !(dueDate && dueDate !== invoice.due_date)}
                   onClick={() => updateDueDate.mutate({ invoiceId, dueDate })}
                 >
-                  {updateDueDate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                  {updateDueDate.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                  SAVE DATE
                 </Button>
               </div>
             </div>
@@ -292,59 +294,61 @@ export default function InvoiceDetailPage() {
       </Card>
 
       {/* Line Items */}
-      <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 rounded-3xl">
-        <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Line Items</h2>
-          <div className="space-y-2">
+      <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl shadow-2xl">
+        <CardContent className="p-6 space-y-5 relative z-10">
+          <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-500" /> Line Items
+          </h2>
+          <div className="space-y-3">
             {lineItems.length > 0 ? (
               lineItems.map((item: InvoiceLineItem, index: number) => (
-                <div key={`${item.description}-${index}`} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-3">
-                  <p className="text-sm font-medium text-slate-300">{item.description}</p>
-                  <p className="text-sm font-bold text-white">{formatCurrency(item.amountCents / 100)}</p>
+                <div key={`${item.description}-${index}`} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 p-4 shadow-inner group transition-all hover:bg-white/10">
+                  <p className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors">{item.description}</p>
+                  <p className="text-sm font-black text-white tabular-nums">{formatCurrency(item.amountCents / 100)}</p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">No line items found.</p>
+              <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest text-center py-4">No line items found.</p>
             )}
           </div>
 
-          <div className="border-t border-white/10 pt-3 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Subtotal</span>
-              <span className="font-semibold text-slate-200">{formatCurrency(subtotalCents / 100)}</span>
+          <div className="border-t border-white/10 pt-5 space-y-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Subtotal</span>
+              <span className="font-bold text-zinc-400 tabular-nums">{formatCurrency(subtotalCents / 100)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Tax</span>
-              <span className="font-semibold text-slate-200">{formatCurrency(taxCents / 100)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tax (0%)</span>
+              <span className="font-bold text-zinc-400 tabular-nums">{formatCurrency(taxCents / 100)}</span>
             </div>
-            <div className="flex justify-between text-base">
-              <span className="font-bold text-white">Total</span>
-              <span className="font-bold text-white">{formatCurrency(totalCents / 100)}</span>
+            <div className="flex justify-between items-center pt-2 border-t border-white/5">
+              <span className="font-black text-white text-lg tracking-tight uppercase">Total Amount</span>
+              <span className="font-black text-white text-2xl tracking-tighter tabular-nums">{formatCurrency(totalCents / 100)}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* PDF Preview Section */}
-      <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 rounded-3xl">
-        <CardContent className="p-6 space-y-4">
+      <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl shadow-2xl">
+        <CardContent className="p-6 space-y-5 relative z-10">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Invoice Preview</h2>
+            <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                <Eye className="h-4 w-4 text-purple-500" /> Invoice Preview
+            </h2>
             <div className="flex items-center gap-2">
               {showPreview && previewUrl && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-slate-400 hover:text-white h-8 px-2"
+                <button
                   onClick={() => window.open(previewUrl, '_blank', 'noopener,noreferrer')}
+                  className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-90"
                 >
                   <ExternalLink className="h-4 w-4" />
-                </Button>
+                </button>
               )}
               <Button
                 variant="outline"
                 size="sm"
-                className="border-white/15 text-slate-300 hover:bg-white/10 hover:text-white h-8"
+                className={`h-10 rounded-xl border transition-all active:scale-95 ${showPreview ? 'bg-zinc-800 border-white/20 text-white' : 'border-white/10 bg-white/5 text-zinc-400 hover:text-white'}`}
                 onClick={() => {
                   if (showPreview) {
                     setShowPreview(false);
@@ -355,13 +359,13 @@ export default function InvoiceDetailPage() {
                 disabled={activeAction === "preview"}
               >
                 {activeAction === "preview" ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : showPreview ? (
-                  <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                  <EyeOff className="mr-2 h-4 w-4" />
                 ) : (
-                  <Eye className="mr-1.5 h-3.5 w-3.5" />
+                  <Eye className="mr-2 h-4 w-4" />
                 )}
-                {showPreview ? "Hide" : existingPdfUrl ? "Preview" : "Generate & Preview"}
+                <span className="font-black text-[10px] uppercase tracking-widest">{showPreview ? "HIDE" : existingPdfUrl ? "PREVIEW" : "GENERATE"}</span>
               </Button>
             </div>
           </div>
@@ -375,29 +379,31 @@ export default function InvoiceDetailPage() {
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
-                <div className="rounded-2xl overflow-hidden border border-white/10 bg-white">
+                <div className="rounded-[1.5rem] overflow-hidden border border-white/10 bg-white shadow-inner">
                   <object
                     data={`${previewUrl}#view=FitH`}
                     type="application/pdf"
                     className="w-full border-0"
                     style={{ height: "70vh", minHeight: 400 }}
                   >
-                    <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-50">
-                      <p className="text-slate-500 mb-4">Your browser does not support inline PDFs.</p>
-                      <Button asChild variant="outline">
-                        <a href={previewUrl} target="_blank" rel="noopener noreferrer">Download PDF</a>
+                    <div className="flex flex-col items-center justify-center p-8 text-center bg-zinc-950">
+                      <p className="text-zinc-500 font-bold mb-4 text-sm uppercase tracking-wider">Inline Preview Not Supported</p>
+                      <Button asChild variant="outline" className="rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase tracking-widest text-[10px]">
+                        <a href={previewUrl} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4 mr-2" /> DOWNLOAD TO VIEW</a>
                       </Button>
                     </div>
                   </object>
                 </div>
-                <p className="text-[10px] text-slate-500 text-center mt-2">
-                  If the preview doesn&apos;t load, your browser may be blocking embedded PDFs. Use the external link icon or download the file.
+                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider text-center mt-3">
+                  Preview quality depends on device support. Download for full accuracy.
                 </p>
               </motion.div>
             ) : !showPreview ? (
-              <div className="text-center py-6 rounded-2xl border border-dashed border-white/10">
-                <Eye className="h-8 w-8 mx-auto text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">
+              <div className="text-center py-12 rounded-[2rem] border border-dashed border-white/5 bg-white/5">
+                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/5">
+                    <Eye className="h-6 w-6 text-zinc-700" />
+                </div>
+                <p className="text-zinc-600 font-black uppercase tracking-widest text-[10px]">
                   {existingPdfUrl ? "Tap Preview to see the invoice" : "Generate a PDF to see a preview here"}
                 </p>
               </div>
@@ -407,91 +413,95 @@ export default function InvoiceDetailPage() {
       </Card>
 
       {/* Actions */}
-      <Card className="bg-slate-900/65 backdrop-blur-xl border-white/15 rounded-3xl">
-        <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Actions</h2>
+      <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl shadow-2xl">
+        <CardContent className="p-6 space-y-6 relative z-10">
+          <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+            <Settings className="h-4 w-4 text-orange-500" /> Actions
+          </h2>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
-              className="flex-1 border-white/15 text-slate-300 hover:bg-white/10 hover:text-white"
+              className="h-14 rounded-2xl border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all"
               onClick={handleResendInvoice}
               disabled={activeAction !== null}
             >
-              {activeAction === "resend" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              Resend
+              {activeAction === "resend" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4 text-blue-400" />}
+              RESEND
             </Button>
             <Button
               variant="outline"
-              className="flex-1 border-white/15 text-slate-300 hover:bg-white/10 hover:text-white"
+              className="h-14 rounded-2xl border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all"
               onClick={handleDownloadPdf}
               disabled={activeAction !== null}
             >
-              {activeAction === "download" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-              Download PDF
+              {activeAction === "download" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4 text-purple-400" />}
+              DOWNLOAD
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-300">Update Status</p>
+          <div className="space-y-3 pt-2">
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Update Invoice Status</p>
             <Select value={effectiveStatus} onValueChange={(value) => setSelectedStatus(value as InvoiceStatus)}>
-              <SelectTrigger className="bg-slate-800/50 border-white/15 text-white">
+              <SelectTrigger className="bg-zinc-900/50 border-white/10 text-white h-12 rounded-xl backdrop-blur-md font-bold">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-zinc-900 border-white/10 text-white backdrop-blur-2xl">
                 {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="focus:bg-white/10 focus:text-white font-bold text-xs uppercase tracking-widest py-3">
                     {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-blue-600/20 active:scale-95 transition-all mt-2"
               disabled={!canSaveStatus}
               onClick={() => updateStatus.mutate({ invoiceId, status: effectiveStatus })}
             >
               {updateStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Status
+              SAVE STATUS
             </Button>
           </div>
 
           {/* Delete Invoice */}
           {isDeletable && (
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-white/10 pt-6 mt-2">
+              <AnimatePresence>
               {confirmDelete ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-red-400 font-medium text-center">
-                    Are you sure? This cannot be undone.
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+                  <p className="text-[10px] text-rose-400 font-black text-center uppercase tracking-widest">
+                    ARE YOU SURE? THIS ACTION CANNOT BE UNDONE.
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     <Button
                       variant="outline"
-                      className="flex-1 border-white/15 text-slate-300 hover:bg-white/10"
+                      className="flex-1 h-12 rounded-xl border-white/10 bg-white/5 text-zinc-500 font-black uppercase tracking-widest text-[10px]"
                       onClick={() => setConfirmDelete(false)}
                     >
-                      Cancel
+                      CANCEL
                     </Button>
                     <Button
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      className="flex-1 h-12 bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-rose-600/20"
                       disabled={deleteInvoice.isPending}
                       onClick={() => deleteInvoice.mutate({ invoiceId })}
                     >
-                      {deleteInvoice.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                      Delete
+                      {deleteInvoice.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4 mr-1.5" />}
+                      DELETE FOREVER
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               ) : (
                 <Button
                   variant="outline"
-                  className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  className="w-full h-12 rounded-xl border-rose-600/20 bg-rose-600/5 text-rose-400 hover:bg-rose-600/10 font-black uppercase tracking-widest text-[10px] transition-all"
                   onClick={() => setConfirmDelete(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Invoice
+                  DELETE INVOICE
                 </Button>
               )}
+              </AnimatePresence>
             </div>
           )}
         </CardContent>

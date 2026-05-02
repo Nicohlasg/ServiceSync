@@ -189,7 +189,7 @@ export default function ProviderProfilePage() {
             {/* Profile Content */}
             <div className="px-4 relative -mt-20 z-10 space-y-6 max-w-2xl mx-auto">
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-                    <Card className="border border-border shadow-xl rounded-3xl overflow-hidden bg-card/95 backdrop-blur-xl">
+                    <Card variant="premium" className="overflow-hidden bg-card/60 backdrop-blur-xl">
                         <CardContent className="p-6">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="space-y-1.5 flex-1 pr-4">
@@ -197,25 +197,25 @@ export default function ProviderProfilePage() {
                                         {displayName}
                                     </h1>
                                     <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wider mb-2">
-                                        <span className="flex items-center gap-1 text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">
+                                        <span className="flex items-center gap-1 text-muted-foreground bg-white/5 px-2 py-1 rounded-md border border-white/10">
                                             <Wrench className="h-3 w-3" />
                                             {tradeLabel}
                                         </span>
                                         {profile.review_count > 0 && (
-                                            <span className="flex items-center gap-1 text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">
+                                            <span className="flex items-center gap-1 text-muted-foreground bg-white/5 px-2 py-1 rounded-md border border-white/10">
                                                 <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
                                                 <span>{profile.avg_rating.toFixed(1)} ({profile.review_count} Reviews)</span>
                                             </span>
                                         )}
                                         {profile.total_jobs > 10 && (
-                                            <span className="flex items-center gap-1 text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">
+                                            <span className="flex items-center gap-1 text-muted-foreground bg-white/5 px-2 py-1 rounded-md border border-white/10">
                                                 <BadgeCheck className="h-3 w-3 text-blue-500" />
                                                 <span>{profile.total_jobs}+ Jobs</span>
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="h-20 w-20 rounded-2xl bg-muted overflow-hidden border-4 border-card shadow-md shrink-0 relative">
+                                <div className="h-20 w-20 rounded-2xl bg-muted overflow-hidden border-4 border-white/10 shadow-md shrink-0 relative">
                                     <Image
                                         src={profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3b82f6&color=fff&size=150`}
                                         alt={displayName}
@@ -231,7 +231,7 @@ export default function ProviderProfilePage() {
                                 <p className="text-muted-foreground text-sm leading-relaxed mb-5">{profile.bio}</p>
                             )}
 
-                            <div className="grid grid-cols-2 gap-3 text-sm border-t border-border pt-5">
+                            <div className="grid grid-cols-2 gap-3 text-sm border-t border-white/10 pt-5">
                                 <div className="space-y-3">
                                     <div className="flex items-start gap-2 text-muted-foreground font-medium">
                                         <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
@@ -256,7 +256,7 @@ export default function ProviderProfilePage() {
                         <div className="grid gap-3">
                             {services.map((service) => (
                                 <Link href={`/p/${slug}/book?service=${service.id}`} key={service.id}>
-                                    <Card className="border border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer group overflow-hidden relative">
+                                    <Card variant="premium" className="hover:border-white/20 transition-all cursor-pointer group overflow-hidden relative">
                                         <CardContent className="p-4 flex items-center justify-between">
                                             <div className="pr-4">
                                                 <h4 className="font-semibold text-foreground leading-tight">{service.name}</h4>
@@ -276,7 +276,7 @@ export default function ProviderProfilePage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-10 bg-card border border-border rounded-2xl">
+                        <div className="text-center py-10 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl">
                             <Wrench className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
                             <p className="text-muted-foreground text-sm">This provider hasn&apos;t listed any services yet.</p>
                             <p className="text-muted-foreground/80 text-sm mt-1">Please contact the provider for a quote.</p>
@@ -286,7 +286,7 @@ export default function ProviderProfilePage() {
             </div>
 
             {/* Sticky Bottom Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border z-40 max-w-2xl mx-auto shadow-lg">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 z-40 max-w-2xl mx-auto shadow-2xl">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex-1">
                         <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Contact</p>
@@ -303,7 +303,7 @@ export default function ProviderProfilePage() {
                             </Button>
                         </Link>
                     ) : (
-                        <Button size="lg" disabled className="w-full h-14 rounded-2xl bg-muted text-muted-foreground text-lg font-bold flex items-center justify-center cursor-not-allowed">
+                        <Button size="lg" disabled className="w-full h-14 rounded-2xl bg-white/10 text-muted-foreground text-lg font-bold flex items-center justify-center cursor-not-allowed border border-white/10">
                             Unavailable
                         </Button>
                     )}

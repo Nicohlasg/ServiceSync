@@ -268,7 +268,7 @@ export default function ProfilePage() {
 
     if (!profile) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
+            <div className="flex items-center justify-center min-h-[60vh] text-zinc-400">
                 Could not load profile.
             </div>
         );
@@ -277,12 +277,12 @@ export default function ProfilePage() {
     const displayName = profile.name || "Provider";
 
     return (
-        <div className="space-y-5 pt-4 pb-24 px-4 w-full max-w-none">
+        <div className="space-y-5 pt-4 pb-24 px-4 w-full max-w-none text-white">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative bg-slate-900 rounded-3xl overflow-hidden px-6 pt-12 pb-6 border border-white/10 flex flex-col items-center text-center space-y-3"
+                className="relative bg-zinc-900 rounded-3xl overflow-hidden px-6 pt-12 pb-6 border border-white/10 flex flex-col items-center text-center space-y-3 backdrop-blur-2xl shadow-2xl"
             >
                 {/* Back Button (Top Left) */}
                 <div className="absolute top-4 left-4 z-10">
@@ -336,17 +336,17 @@ export default function ProfilePage() {
                 )}
                 <div className="relative z-10">
                     <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px] shadow-xl shadow-blue-500/20">
-                        <div className="h-full w-full rounded-full bg-slate-900 p-1">
+                        <div className="h-full w-full rounded-full bg-zinc-900 p-1">
                             <Avatar className="h-full w-full">
                                 <AvatarImage src={profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3b82f6&color=fff&size=150`} />
-                                <AvatarFallback className="bg-slate-800 text-slate-200 text-xl font-bold">
+                                <AvatarFallback className="bg-zinc-800 text-zinc-200 text-xl font-bold">
                                     {displayName.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                         </div>
                     </div>
                     {profile.acra_verified && (
-                        <div className="absolute bottom-0 right-0 h-8 w-8 bg-emerald-500 rounded-full border-4 border-slate-900 flex items-center justify-center text-white">
+                        <div className="absolute bottom-0 right-0 h-8 w-8 bg-emerald-500 rounded-full border-4 border-zinc-900 flex items-center justify-center text-white">
                             <BadgeCheck className="h-4 w-4" />
                         </div>
                     )}
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                     <button
                         onClick={() => avatarInputRef.current?.click()}
                         disabled={uploadingAvatar}
-                        className="absolute -bottom-1 -left-1 h-8 w-8 bg-blue-600 rounded-full border-2 border-slate-900 flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                        className="absolute -bottom-1 -left-1 h-8 w-8 bg-blue-600 rounded-full border-2 border-zinc-900 flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
                     >
                         {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                     </button>
@@ -369,19 +369,19 @@ export default function ProfilePage() {
                     {profile.avatar_url && (
                         <button
                             onClick={() => handleRemoveMedia('avatarUrl')}
-                            className="absolute -bottom-1 -right-1 h-8 w-8 bg-red-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                            className="absolute -bottom-1 -right-1 h-8 w-8 bg-red-500 rounded-full border-2 border-zinc-900 flex items-center justify-center text-white hover:bg-red-600 transition-colors"
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
                 <div className="mt-6 relative z-10">
-                    <h1 className="text-2xl font-bold text-white">{displayName}</h1>
-                    {profile.acra_uen && <p className="text-slate-400 text-sm font-medium">UEN: {profile.acra_uen}</p>}
-                    {profile.email && <p className="text-slate-500 text-xs">{profile.email}</p>}
+                    <h1 className="text-2xl font-black text-white tracking-tight">{displayName}</h1>
+                    {profile.acra_uen && <p className="text-zinc-400 text-sm font-bold uppercase tracking-wider mt-1">UEN: {profile.acra_uen}</p>}
+                    {profile.email && <p className="text-zinc-500 text-xs mt-1 font-medium">{profile.email}</p>}
                 </div>
                 {profile.acra_verified && (
-                    <span className="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/30 relative z-10 mt-2">
+                    <span className="bg-emerald-500/10 text-emerald-300 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-emerald-500/30 relative z-10 mt-3 uppercase">
                         ACRA VERIFIED
                     </span>
                 )}
@@ -389,17 +389,17 @@ export default function ProfilePage() {
 
             {/* Public Profile Link */}
             {profile.slug && (
-                <Card className="rounded-2xl overflow-hidden">
+                <Card variant="premium" className="rounded-2xl overflow-hidden backdrop-blur-xl">
                     <CardContent className="p-4 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Your Public Page</p>
-                            <p className="text-sm text-blue-400 font-mono truncate">/p/{profile.slug}</p>
+                        <div className="min-w-0 relative z-10">
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Your Public Page</p>
+                            <p className="text-sm text-blue-400 font-mono truncate font-bold">/p/{profile.slug}</p>
                         </div>
-                        <div className="flex gap-2 shrink-0">
-                            <Button data-tutorial-target="copy-profile-link" variant="ghost" size="sm" onClick={copyProfileLink} className="text-slate-400 hover:text-white h-8 w-8 p-0">
+                        <div className="flex gap-2 shrink-0 relative z-10">
+                            <Button data-tutorial-target="copy-profile-link" variant="ghost" size="sm" onClick={copyProfileLink} className="text-zinc-400 hover:text-white h-9 w-9 p-0 bg-white/5 rounded-xl border border-white/10">
                                 <Copy className="h-4 w-4" />
                             </Button>
-                            <Button data-tutorial-target="view-service-page" variant="ghost" size="sm" onClick={() => window.open(`/p/${profile.slug}`, '_blank')} className="text-slate-400 hover:text-white h-8 w-8 p-0">
+                            <Button data-tutorial-target="view-service-page" variant="ghost" size="sm" onClick={() => window.open(`/p/${profile.slug}`, '_blank')} className="text-zinc-400 hover:text-white h-9 w-9 p-0 bg-white/5 rounded-xl border border-white/10">
                                 <ExternalLink className="h-4 w-4" />
                             </Button>
                         </div>
@@ -414,97 +414,100 @@ export default function ProfilePage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setEditing(!editing)}
-                    className={`text-sm font-semibold ${editing ? 'text-red-400 hover:text-red-300' : 'text-blue-400 hover:text-blue-300'}`}
+                    className={`text-xs font-black uppercase tracking-widest px-4 h-9 rounded-full transition-all ${editing ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
                 >
-                    {editing ? <><X className="h-4 w-4 mr-1" /> Cancel</> : <><Pencil className="h-4 w-4 mr-1" /> Edit Profile</>}
+                    {editing ? <><X className="h-3.5 w-3.5 mr-1.5" /> Cancel</> : <><Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Profile</>}
                 </Button>
             </div>
 
             {/* Profile Fields */}
-            <Card className="rounded-3xl overflow-hidden">
-                <CardContent className="p-5 space-y-5">
+            <Card variant="premium" className="rounded-[2rem] overflow-hidden backdrop-blur-2xl">
+                <CardContent className="p-6 space-y-6">
                     {/* Personal Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <User className="h-3.5 w-3.5" /> Personal Info
+                    <div className="space-y-5 relative z-10">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-blue-400" /> Personal Info
                         </h3>
 
                         <div className="space-y-1.5">
-                            <Label className="text-slate-400 text-xs">Display Name</Label>
+                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
                             {editing ? (
-                                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-slate-800/50 border-white/10 text-white h-10" />
+                                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md" />
                             ) : (
-                                <p className="text-white font-medium text-sm">{profile.name || "—"}</p>
+                                <p className="text-white font-bold text-base bg-white/5 px-4 py-3 rounded-xl border border-white/5">{profile.name || "—"}</p>
                             )}
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-slate-400 text-xs">Phone</Label>
+                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Phone</Label>
                             {editing ? (
-                                <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-slate-800/50 border-white/10 text-white h-10" />
+                                <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-blue-500/50 backdrop-blur-md" />
                             ) : (
-                                <p className="text-white font-medium text-sm">{profile.phone || "—"}</p>
+                                <p className="text-white font-bold text-base bg-white/5 px-4 py-3 rounded-xl border border-white/5">{profile.phone || "—"}</p>
                             )}
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-slate-400 text-xs">Bio</Label>
+                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Bio</Label>
                             {editing ? (
-                                <Textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="bg-slate-800/50 border-white/10 text-white resize-none" />
+                                <Textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} rows={3} className="bg-white/5 border-white/10 text-white resize-none rounded-xl focus:border-blue-500/50 backdrop-blur-md" />
                             ) : (
-                                <p className="text-slate-300 text-sm">{profile.bio || "No bio set"}</p>
+                                <p className="text-zinc-300 font-medium text-sm leading-relaxed bg-white/5 px-4 py-3 rounded-xl border border-white/5">{profile.bio || "No bio set"}</p>
                             )}
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-slate-400 text-xs flex items-center gap-1"><MapPin className="h-3 w-3" /> Home Address</Label>
+                            <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><MapPin className="h-3 w-3 text-emerald-400" /> Home Address</Label>
                             {editing ? (
                                 <AddressAutocomplete
                                     value={form.base_address}
                                     onChange={(addr, lat, lng) => setForm({ ...form, base_address: addr, base_lat: lat, base_lng: lng })}
                                     placeholder="Search your home address..."
-                                    className="bg-slate-800/50 border-white/10 text-white h-10"
+                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md"
                                 />
                             ) : (
-                                <p className="text-white font-medium text-sm">{profile.base_address || "Not set — used as starting point for route calculations"}</p>
+                                <div className="bg-white/5 px-4 py-3 rounded-xl border border-white/5">
+                                    <p className="text-white font-bold text-sm leading-snug">{profile.base_address || "Not set"}</p>
+                                    {!profile.base_address && <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mt-1">Used for route calculations</p>}
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="border-t border-white/10" />
+                    <div className="border-t border-white/10 relative z-10" />
 
                     {/* Business Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <Shield className="h-3.5 w-3.5" /> Business & Verification
+                    <div className="space-y-5 relative z-10">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                            <Shield className="h-3.5 w-3.5 text-purple-400" /> Business & Verification
                         </h3>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-slate-400 text-xs">UEN Number</Label>
+                                <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">UEN Number</Label>
                                 {editing ? (
-                                    <Input value={form.acra_uen} onChange={e => setForm({ ...form, acra_uen: e.target.value })} placeholder="e.g. 52912345X" className="bg-slate-800/50 border-white/10 text-white h-10" />
+                                    <Input value={form.acra_uen} onChange={e => setForm({ ...form, acra_uen: e.target.value })} placeholder="e.g. 52912345X" className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md" />
                                 ) : (
-                                    <p className="text-white font-medium text-sm">{profile.acra_uen || "Not set"}</p>
+                                    <p className="text-white font-bold text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5">{profile.acra_uen || "Not set"}</p>
                                 )}
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-slate-400 text-xs">PayNow Mobile/UEN</Label>
+                                <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">PayNow Mobile/UEN</Label>
                                 {editing ? (
-                                    <Input value={form.paynow_key} onChange={e => setForm({ ...form, paynow_key: e.target.value })} placeholder="Mobile or UEN" className="bg-slate-800/50 border-white/10 text-white h-10" />
+                                    <Input value={form.paynow_key} onChange={e => setForm({ ...form, paynow_key: e.target.value })} placeholder="Mobile or UEN" className="bg-white/5 border-white/10 text-white h-12 rounded-xl backdrop-blur-md" />
                                 ) : (
-                                    <p className="text-white font-medium text-sm">{profile.paynow_key || "Not set"}</p>
+                                    <p className="text-white font-bold text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5">{profile.paynow_key || "Not set"}</p>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="border-t border-white/10" />
+                    <div className="border-t border-white/10 relative z-10" />
 
                     {/* Working Hours */}
-                    <div className="space-y-4" data-tutorial-target="working-hours">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <Settings className="h-3.5 w-3.5" /> Working Hours
+                    <div className="space-y-5 relative z-10" data-tutorial-target="working-hours">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                            <Settings className="h-3.5 w-3.5 text-orange-400" /> Working Hours
                         </h3>
                         {editing ? (
                             <div className="space-y-3">
@@ -512,7 +515,7 @@ export default function ProfilePage() {
                                     const schedule = form.working_hours[day as keyof WorkingHours];
                                     return (
                                         <div key={day} className="flex items-center gap-3">
-                                            <Label className="w-10 text-xs font-bold uppercase text-slate-400">{day}</Label>
+                                            <Label className="w-10 text-[10px] font-black uppercase tracking-widest text-zinc-500">{day}</Label>
                                             <div className="flex items-center gap-2 flex-1">
                                                 {schedule ? (
                                                     <>
@@ -520,19 +523,19 @@ export default function ProfilePage() {
                                                             type="time"
                                                             value={schedule.start}
                                                             onChange={(e) => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { ...schedule, start: e.target.value } } }))}
-                                                            className="bg-slate-800/50 border-white/10 text-white h-9 min-w-0 max-w-full appearance-none px-2"
+                                                            className="bg-white/5 border-white/10 text-white h-10 min-w-0 max-w-full appearance-none px-3 rounded-xl backdrop-blur-sm"
                                                         />
-                                                        <span className="text-slate-500">to</span>
+                                                        <span className="text-zinc-500 text-xs font-bold uppercase">to</span>
                                                         <Input
                                                             type="time"
                                                             value={schedule.end}
                                                             onChange={(e) => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { ...schedule, end: e.target.value } } }))}
-                                                            className="bg-slate-800/50 border-white/10 text-white h-9 min-w-0 max-w-full appearance-none px-2"
+                                                            className="bg-white/5 border-white/10 text-white h-10 min-w-0 max-w-full appearance-none px-3 rounded-xl backdrop-blur-sm"
                                                         />
-                                                        <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: null } }))} className="text-red-400 hover:text-red-300 h-9 px-2">Off</Button>
+                                                        <Button variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: null } }))} className="text-red-400 hover:text-red-300 h-10 px-3 bg-red-400/10 rounded-xl border border-red-400/20">Off</Button>
                                                     </>
                                                 ) : (
-                                                    <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { start: "09:00", end: "18:00" } } }))} className="w-full justify-start h-9 bg-slate-800/20 border-dashed border-white/20 text-slate-400">
+                                                    <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, working_hours: { ...f.working_hours, [day]: { start: "09:00", end: "18:00" } } }))} className="w-full justify-start h-10 bg-white/5 border-dashed border-white/10 text-zinc-500 font-bold rounded-xl">
                                                         Enable Day
                                                     </Button>
                                                 )}
@@ -542,32 +545,32 @@ export default function ProfilePage() {
                                 })}
                             </div>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2 bg-white/5 px-4 py-4 rounded-2xl border border-white/5">
                                 {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => {
                                     const schedule = profile?.working_hours?.[day as keyof WorkingHours];
                                     if (!schedule) return null;
                                     return (
-                                        <div key={day} className="flex items-center gap-2 text-sm text-slate-300">
-                                            <span className="w-10 font-bold uppercase text-slate-400 text-xs">{day}</span>
-                                            <span>{schedule.start} — {schedule.end}</span>
+                                        <div key={day} className="flex items-center gap-3 text-sm">
+                                            <span className="w-10 font-black uppercase text-zinc-500 text-[10px] tracking-widest">{day}</span>
+                                            <span className="text-white font-bold">{schedule.start} — {schedule.end}</span>
                                         </div>
                                     );
                                 })}
-                                {!profile?.working_hours && <p className="text-sm text-slate-500">No working hours set.</p>}
+                                {!profile?.working_hours && <p className="text-sm text-zinc-500 font-medium">No working hours set.</p>}
                             </div>
                         )}
                     </div>
 
                     {/* Save Button */}
                     {editing && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-2 relative z-10">
                             <Button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20"
+                                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all"
                             >
-                                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                                Save Changes
+                                {saving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />}
+                                SAVE PROFILE
                             </Button>
                         </motion.div>
                     )}
@@ -578,13 +581,13 @@ export default function ProfilePage() {
             <div className="space-y-3 pt-2 mt-4">
                 <Button
                     variant="destructive"
-                    className="w-full h-14 rounded-2xl shadow-lg shadow-red-500/10 text-lg bg-red-500/80 hover:bg-red-600/90 backdrop-blur-sm"
+                    className="w-full h-16 rounded-2xl shadow-xl shadow-red-500/20 text-lg font-black bg-red-600 hover:bg-red-700 backdrop-blur-md active:scale-[0.98] transition-all border-2 border-red-500/30"
                     onClick={handleLogout}
                 >
-                    <LogOut className="mr-2 h-5 w-5" /> Log Out
+                    <LogOut className="mr-3 h-6 w-6" /> LOG OUT
                 </Button>
 
-                <p className="text-center text-xs text-slate-500 pt-2">
+                <p className="text-center text-[10px] font-black text-zinc-500 pt-4 uppercase tracking-[0.2em]">
                     Version 1.0.3 • ServiceSync SG
                 </p>
             </div>
