@@ -261,6 +261,9 @@ export const cashRouter = router({
         : null;
 
       // 2b. Persist cash_payment record (store Storage URL, not raw base64)
+      // The schema enforces UNIQUE (invoice_id). If a duplicate arrives (double-tap / retry),
+      // Postgres raises 23505 — we fetch the existing record and return it unchanged so the
+      // caller gets an identical successful response without re-running side effects.
       const { data: cashRecord, error: cashErr } = await ctx.supabase
         .from('cash_payments')
         .insert({
@@ -281,8 +284,46 @@ export const cashRouter = router({
         .select()
         .single();
 
-      if (cashErr || !cashRecord) {
+      if (cashErr) {
+        if ((cashErr as { code?: string }).code === '23505') {
+          // Duplicate — a concurrent or retried request already recorded this payment.
+          // Fetch the existing record and return it so the response is idempotent.
+          const { data: existing } = await ctx.supabase
+            .from('cash_payments')
+            .select()
+            .eq('invoice_id', invoiceId)
+            .eq('provider_id', providerId)
+            .single();
+
+          if (existing) {
+            return {
+              id: existing.id,
+              invoiceId,
+              providerId,
+              clientId: existing.client_id,
+              amountDueCents: existing.amount_due_cents,
+              amountCollectedCents: existing.amount_collected_cents,
+              adjustmentCents: existing.adjustment_cents,
+              adjustmentReason: existing.adjustment_reason,
+              whatsappConfirmationSent: existing.whatsapp_confirmation_sent ?? false,
+              whatsappMessageId: existing.whatsapp_message_id,
+              signatureRequired: existing.signature_required,
+              signatureDataUrl: undefined,
+              signatureConfirmedAmountCents: existing.signature_confirmed_cents ?? undefined,
+              signatureCollectedAt: existing.signature_collected_at ?? undefined,
+              collectedAt: existing.collected_at,
+            };
+          }
+        }
+
         console.error('[Cash] insert error:', cashErr?.message);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to record cash payment',
+        });
+      }
+
+      if (!cashRecord) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to record cash payment',
