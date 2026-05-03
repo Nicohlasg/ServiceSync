@@ -56,8 +56,9 @@ function ClientDetails() {
 
   const { data: client, isLoading, isFetching, isError, refetch } = api.clients.getById.useQuery(
     { clientId },
-    { 
+    {
       enabled: !!clientId,
+      staleTime: 30 * 1000,
       retry: 1, // Mitigate transient Supabase cold-starts or network blips
       retryDelay: 1000,
     },

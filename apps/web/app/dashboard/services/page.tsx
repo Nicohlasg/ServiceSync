@@ -17,7 +17,7 @@ export default function ServicesPage() {
     const utils = api.useUtils();
     
     // Query existing services
-    const { data: services, isLoading } = api.provider.getServices.useQuery();
+    const { data: services, isLoading } = api.provider.getServices.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
     
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);

@@ -27,12 +27,13 @@ export default function RequestsPage() {
         isLoading,
         isError,
         refetch,
-    } = api.booking.listBookings.useQuery(pendingInput, { refetchInterval: 30000 });
+    } = api.booking.listBookings.useQuery(pendingInput, { refetchInterval: 30000, staleTime: 30 * 1000 });
 
     // Also fetch today's accepted/in-progress jobs for clash detection
     const today = new Date().toISOString().slice(0, 10);
     const { data: todayJobs } = api.booking.listBookings.useQuery(
         { status: "accepted", date: today, limit: 50 },
+        { staleTime: 30 * 1000 },
     );
 
     /**

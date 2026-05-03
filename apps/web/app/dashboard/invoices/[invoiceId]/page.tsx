@@ -58,7 +58,7 @@ export default function InvoiceDetailPage() {
 
   const { data: invoice, isLoading, isError, refetch } = api.invoices.getById.useQuery(
     { invoiceId },
-    { enabled: !!invoiceId },
+    { enabled: !!invoiceId, staleTime: 30 * 1000 },
   );
 
   const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | "">("");

@@ -43,7 +43,7 @@ function AddEvent() {
 
     // Real DB state
     const [clients, setClients] = useState<ClientWithUnit[]>([]);
-    const { data: servicesData } = api.provider.getServices.useQuery();
+    const { data: servicesData } = api.provider.getServices.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
     const providerServices = servicesData?.filter(s => s.is_active) || [];
 
     useEffect(() => {

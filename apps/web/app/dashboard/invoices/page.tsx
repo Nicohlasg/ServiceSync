@@ -96,7 +96,7 @@ export default function InvoicesPage() {
         });
     };
 
-    const { data: invoicesData, isLoading, isError, refetch } = api.invoices.list.useQuery({ limit: 100 });
+    const { data: invoicesData, isLoading, isError, refetch } = api.invoices.list.useQuery({ limit: 100 }, { staleTime: 30 * 1000 });
     const downloadMonthly = api.invoices.downloadMonthly.useMutation();
     const downloadYearly = api.invoices.downloadYearly.useMutation();
     const downloadAll = api.invoices.downloadAll.useMutation();

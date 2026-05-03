@@ -22,7 +22,7 @@ export default function AddClientPage() {
   const { push } = useRouter();
 
   // Task 1.5: Check if user has already given PDPA consent
-  const profileQuery = api.provider.getProfile.useQuery();
+  const profileQuery = api.provider.getProfile.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const hasPdpaConsent = !!profileQuery.data?.pdpa_consent_at;
   const acceptPdpaMutation = api.provider.acceptPdpa.useMutation();
 

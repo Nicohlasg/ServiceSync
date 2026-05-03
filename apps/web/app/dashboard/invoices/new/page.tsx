@@ -46,7 +46,7 @@ function NewInvoice() {
   // Service catalog
   const [serviceSearch, setServiceSearch] = useState("");
   const [serviceDropdownOpen, setServiceDropdownOpen] = useState(false);
-  const servicesQuery = api.provider.getServices.useQuery();
+  const servicesQuery = api.provider.getServices.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
 
   useEffect(() => {
     async function loadClients() {
@@ -145,15 +145,46 @@ function NewInvoice() {
   const [showQrConfirm, setShowQrConfirm] = useState(false);
 
   const confirmQrPayment = api.cash.confirmQrPayment.useMutation({
+    onMutate: async ({ invoiceId: targetInvoiceId }) => {
+      await utils.invoices.list.cancel();
+      await utils.invoices.getById.cancel({ invoiceId: targetInvoiceId });
+
+      const prevList = utils.invoices.list.getData({ limit: 100 });
+      const prevDetail = utils.invoices.getById.getData({ invoiceId: targetInvoiceId });
+
+      utils.invoices.list.setData({ limit: 100 }, (old) => {
+        if (!old?.invoices) return old;
+        return {
+          ...old,
+          invoices: old.invoices.map((inv) =>
+            inv.id === targetInvoiceId ? { ...inv, status: "paid_qr" } : inv,
+          ),
+        };
+      });
+      utils.invoices.getById.setData({ invoiceId: targetInvoiceId }, (old: RouterOutputs["invoices"]["getById"] | undefined) => {
+        if (!old) return old;
+        return { ...old, status: "paid_qr" };
+      });
+
+      return { prevList, prevDetail, targetInvoiceId };
+    },
     onSuccess: () => {
       trackEvent('first_paid', { method: 'paynow' });
       toast.success("PayNow payment confirmed!");
-      utils.invoices.list.invalidate();
       setShowQrConfirm(false);
       push("/dashboard/invoices");
     },
-    onError: (error) => {
+    onError: (error, _vars, ctx) => {
+      if (ctx?.prevList) {
+        utils.invoices.list.setData({ limit: 100 }, ctx.prevList);
+      }
+      if (ctx?.prevDetail && ctx.targetInvoiceId) {
+        utils.invoices.getById.setData({ invoiceId: ctx.targetInvoiceId }, ctx.prevDetail);
+      }
       toast.error(error.message || "Failed to confirm QR payment");
+    },
+    onSettled: () => {
+      utils.invoices.list.invalidate();
     },
   });
 

@@ -41,6 +41,7 @@ export default function RetentionQueuePage() {
 
     const { data: retentionData, isLoading, isError, refetch } = api.clients.getRetentionQueue.useQuery(
         { lookaheadDays: 14, limit: 50 },
+        { staleTime: 2 * 60 * 1000 },
     );
 
     const initialQueue = useMemo<QueueItem[]>(() => {
