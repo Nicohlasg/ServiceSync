@@ -34,6 +34,7 @@ const serverSchema = z.object({
     NETS_MERCHANT_ID: z.string().optional(),
     NETS_API_BASE_URL: urlString.optional(),
 
+
     PLATFORM_TRANSACTION_FEE_BPS: z
         .string()
         .regex(/^\d+$/)
