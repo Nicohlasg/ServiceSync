@@ -93,6 +93,66 @@ function ClientDetails() {
     });
   };
 
+  // ── Transaction list — must be before any early returns (Rules of Hooks) ──
+  const transactions = useMemo(() => {
+    const safeInvoices = ((client as any)?.invoices ?? []) as InvoiceRow[];
+    const safeBookings = ((client as any)?.bookings ?? []) as BookingRow[];
+    const rows: TransactionRow[] = [];
+
+    if (txTab === "all" || txTab === "invoices") {
+      safeInvoices.forEach(inv => {
+        rows.push({
+          kind: "invoice",
+          date: inv.paid_at ?? inv.created_at ?? new Date().toISOString(),
+          data: inv,
+        });
+      });
+    }
+    if (txTab === "all" || txTab === "jobs") {
+      const invoicedBookingIds = new Set(
+        safeInvoices.map(inv => inv.booking_id).filter(Boolean)
+      );
+      safeBookings.forEach(b => {
+        if (invoicedBookingIds.has(b.id)) return;
+        rows.push({
+          kind: "job",
+          date: b.scheduled_date ? b.scheduled_date + "T00:00:00" : new Date().toISOString(),
+          data: b,
+        });
+      });
+    }
+
+    const q = txSearch.toLowerCase().trim();
+    const filtered = rows.filter(r => {
+      if (q) {
+        if (r.kind === "invoice") {
+          const inv = r.data as InvoiceRow;
+          if (!(inv.invoice_number ?? "").toLowerCase().includes(q) && !inv.id.toLowerCase().includes(q)) return false;
+        } else {
+          const job = r.data as BookingRow;
+          if (!(job.service_type ?? "").toLowerCase().includes(q) && !job.id.toLowerCase().includes(q)) return false;
+        }
+      }
+      const d = new Date(r.date);
+      if (txDateFrom && d < new Date(txDateFrom + "T00:00:00")) return false;
+      if (txDateTo && d > new Date(txDateTo + "T23:59:59")) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const groups: Record<string, TransactionRow[]> = {};
+    filtered.forEach(r => {
+      let d = new Date(r.date);
+      if (isNaN(d.getTime())) d = new Date();
+      const monthKey = format(d, "MMMM yyyy");
+      if (!groups[monthKey]) groups[monthKey] = [];
+      groups[monthKey].push(r);
+    });
+
+    return groups;
+  }, [client, txTab, txSearch, txDateFrom, txDateTo]);
+
   // ── Mutations ──
   const updateMutation = api.clients.update.useMutation({
     onSuccess: async () => {
@@ -169,79 +229,12 @@ function ClientDetails() {
     );
   }
 
-  // ── Computed data ──
+  // ── Computed data (after guard — client is non-null here) ──
   const unitNum = (client as any).unit_number;
   const fullAddress = [client.address, unitNum].filter(Boolean).join(', ') || "No address provided";
   const bookings = (client.bookings ?? []) as BookingRow[];
-  const invoices = (client.invoices ?? []) as InvoiceRow[];
-
-  // Fix: count ALL non-cancelled jobs, not just "completed"
   const totalJobs = bookings.filter(b => b.status !== "cancelled").length;
   const totalRevenueCents = client.stats?.totalRevenueCents ?? 0;
-
-  // ── Build unified, filtered, grouped transaction list ──
-  const transactions = useMemo(() => {
-    const rows: TransactionRow[] = [];
-
-    if (txTab === "all" || txTab === "invoices") {
-      invoices.forEach(inv => {
-        rows.push({
-          kind: "invoice",
-          date: inv.paid_at ?? inv.created_at ?? new Date().toISOString(),
-          data: inv,
-        });
-      });
-    }
-    if (txTab === "all" || txTab === "jobs") {
-      // Collect booking IDs already covered by an invoice so they're not
-      // shown twice — once as a $0 booking and again as a paid invoice.
-      const invoicedBookingIds = new Set(
-        invoices.map(inv => inv.booking_id).filter(Boolean)
-      );
-      bookings.forEach(b => {
-        if (invoicedBookingIds.has(b.id)) return;
-        rows.push({
-          kind: "job",
-          date: b.scheduled_date ? b.scheduled_date + "T00:00:00" : new Date().toISOString(),
-          data: b,
-        });
-      });
-    }
-
-    // Search filter
-    const q = txSearch.toLowerCase().trim();
-    const filtered = rows.filter(r => {
-      if (q) {
-        if (r.kind === "invoice") {
-          const inv = r.data as InvoiceRow;
-          if (!(inv.invoice_number ?? "").toLowerCase().includes(q) && !inv.id.toLowerCase().includes(q)) return false;
-        } else {
-          const job = r.data as BookingRow;
-          if (!(job.service_type ?? "").toLowerCase().includes(q) && !job.id.toLowerCase().includes(q)) return false;
-        }
-      }
-      // Date range
-      const d = new Date(r.date);
-      if (txDateFrom && d < new Date(txDateFrom + "T00:00:00")) return false;
-      if (txDateTo && d > new Date(txDateTo + "T23:59:59")) return false;
-      return true;
-    });
-
-    // Sort newest first
-    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    // Group by month
-    const groups: Record<string, TransactionRow[]> = {};
-    filtered.forEach(r => {
-      let d = new Date(r.date);
-      if (isNaN(d.getTime())) d = new Date();
-      const monthKey = format(d, "MMMM yyyy");
-      if (!groups[monthKey]) groups[monthKey] = [];
-      groups[monthKey].push(r);
-    });
-
-    return groups;
-  }, [invoices, bookings, txTab, txSearch, txDateFrom, txDateTo]);
 
   return (
     <div className="space-y-6 pt-4 pb-24 text-white">
