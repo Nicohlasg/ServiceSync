@@ -259,7 +259,7 @@ export default function ServicesPage() {
                                             
                                             <div className="pt-2 flex items-center justify-between">
                                                 <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-2 py-1 rounded-md border ${service.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-500 bg-white/5 border-white/5'}`}>
-                                                    {service.is_active ? 'Active' : 'Hidden'}
+                                                    {service.is_active ? 'Active' : 'Disabled'}
                                                 </span>
                                                 <Button 
                                                     variant="outline" 
@@ -267,7 +267,7 @@ export default function ServicesPage() {
                                                     onClick={() => toggleActive(service.id, !!service.is_active)}
                                                     className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 ${service.is_active ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-white' : 'bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-lg shadow-emerald-600/20'}`}
                                                 >
-                                                    {service.is_active ? 'Hide Service' : 'Enable Service'}
+                                                    {service.is_active ? 'Disable Service' : 'Enable Service'}
                                                 </Button>
                                             </div>
                                         </div>

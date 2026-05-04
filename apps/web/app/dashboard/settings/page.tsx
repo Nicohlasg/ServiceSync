@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon, Smartphone, Download, Palette, Check } from "lucide-react";
+import { Key, Mail, PlayCircle, ListTodo, LifeBuoy, Video, Clock3, LogOut, Trash2, AlertTriangle, Loader2, Globe, Settings as SettingsIcon, Smartphone, Download, Palette, Check, X, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -160,7 +160,9 @@ export default function SettingsPage() {
         try {
             await resetTutorial();
             toast.success(t("replayTourToast"));
-            push("/dashboard");
+            // Hard reload so the React Query cache is fully cleared and the
+            // tutorial gate starts fresh — push() keeps stale cache alive.
+            window.location.href = "/dashboard";
         } catch {
             toast.error("Couldn't restart the tour. Please try again.");
         } finally {
@@ -264,7 +266,7 @@ export default function SettingsPage() {
     return (
         <div className="space-y-5 pt-4 pb-24 px-4 text-white">
             <div className="mb-6 flex items-center gap-3">
-                <BackButton />
+                <BackButton href="/dashboard" />
                 <div>
                     <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1">Settings</h1>
                     <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Manage your account and preferences.</p>

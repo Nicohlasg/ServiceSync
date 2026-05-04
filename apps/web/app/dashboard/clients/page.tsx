@@ -11,19 +11,22 @@ import { Client } from "@/lib/types";
 import { motion } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { ContactImportButton } from "@/components/clients/ContactImportButton";
+import { SkeletonCard, SkeletonLine } from "@/components/ui/skeleton";
 
 export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { push } = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function loadClients() {
+      setIsLoading(true);
       try {
         const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) { setIsLoading(false); return; }
 
         const { data } = await supabase
           .from('clients')
@@ -52,6 +55,8 @@ export default function ClientsPage() {
         }
       } catch (err) {
         console.error("Failed to load clients", err);
+      } finally {
+        setIsLoading(false);
       }
     }
     loadClients();
@@ -100,7 +105,19 @@ export default function ClientsPage() {
 
       {/* Client List */}
       <div className="space-y-4 px-1">
-        {filteredClients.length > 0 ? (
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} className="rounded-2xl h-[74px]">
+              <div className="flex items-center gap-4 p-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/5 shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <SkeletonLine width="45%" className="h-4" />
+                  <SkeletonLine width="30%" className="h-3" />
+                </div>
+              </div>
+            </SkeletonCard>
+          ))
+        ) : filteredClients.length > 0 ? (
           filteredClients.map((client, index) => (
             <motion.div
               key={client.id}

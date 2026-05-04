@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, ShieldCheck, MapPin, ArrowRight, Wrench, BadgeCheck } from "lucide-react";
+import { Star, ShieldCheck, MapPin, ArrowRight, Wrench, BadgeCheck, ArrowLeft } from "lucide-react";
 import { SkeletonLineLight, SkeletonCircleLight, SkeletonBlockLight } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -42,6 +42,14 @@ export default function ProviderProfilePage() {
     const [services, setServices] = useState<ServiceData[]>([]);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const supabase = createSupabaseBrowserClient();
+        supabase.auth.getSession().then(({ data }) => {
+            setIsLoggedIn(!!data.session);
+        });
+    }, []);
 
     useEffect(() => {
         async function fetchProfile() {
@@ -162,6 +170,16 @@ export default function ProviderProfilePage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}
             />
+            {/* Back to Dashboard — only visible to logged-in users previewing their own page */}
+            {isLoggedIn && (
+                <Link
+                    href="/dashboard"
+                    className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-sm font-semibold shadow-lg hover:bg-black/80 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Dashboard
+                </Link>
+            )}
             {/* Cover Image & Header */}
             <div className="relative h-64 bg-black overflow-hidden">
                 <Image

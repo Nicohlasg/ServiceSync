@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getOneMapToken } from '@/lib/onemap-token';
 
 export const runtime = 'nodejs';
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     try {
         const headers: Record<string, string> = { 'Accept': 'application/json' };
-        const token = process.env.ONEMAP_TOKEN;
+        const token = await getOneMapToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
         const url = `https://www.onemap.gov.sg/api/public/revgeocode?location=${lat},${lng}&buffer=50&addressType=All`;

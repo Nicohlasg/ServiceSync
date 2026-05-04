@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { checkHttpRateLimit } from '@servicesync/api';
+import { getOneMapToken } from '@/lib/onemap-token';
 
 export const runtime = 'nodejs';
 
@@ -44,10 +45,7 @@ export async function GET(req: NextRequest) {
             'Accept': 'application/json',
         };
 
-        // Add Bearer token if configured — get a free token at:
-        // https://www.onemap.gov.sg/apidocs/apidocs
-        // Then add ONEMAP_TOKEN=<your_token> to .env.local
-        const token = process.env.ONEMAP_TOKEN;
+        const token = await getOneMapToken();
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }

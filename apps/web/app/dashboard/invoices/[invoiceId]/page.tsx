@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays, Eye, EyeOff, ExternalLink, X, FileText, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Send, Trash2, CalendarDays, Eye, EyeOff, ExternalLink, X, FileText, CheckCircle2, Clock, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

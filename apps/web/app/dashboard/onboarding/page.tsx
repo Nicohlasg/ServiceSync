@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, DollarSign, ShieldCheck, Loader2, CheckCircle2, ArrowRight, Sparkles, BadgeCheck } from "lucide-react";
+import { MapPin, DollarSign, ShieldCheck, Loader2, CheckCircle2, ArrowRight, Sparkles, BadgeCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
@@ -99,20 +99,23 @@ export default function OnboardingPage() {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
-    const completionItems = [
-        { label: "Business name", done: !!formData.businessName },
-        { label: "Bio", done: !!formData.bio },
-        { label: "Service area", done: !!formData.serviceArea },
-        { label: "First service", done: !!formData.serviceName && !!formData.servicePrice },
-        { label: "ACRA verified", done: !!formData.uen },
-    ];
-    const completionPct = Math.round((completionItems.filter(i => i.done).length / completionItems.length) * 100);
-
     // SEC-H6: Use tRPC mutation instead of direct Supabase update
+    const utils = api.useUtils();
     const updateProfileMutation = api.provider.updateProfile.useMutation();
     const addServiceMutation = api.provider.addService.useMutation();
     const resetTutorialMutation = api.provider.resetTutorialCompletion.useMutation();
     const resetChecklistMutation = api.provider.resetOnboardingChecklist.useMutation();
+    const existingServicesQuery = api.provider.getServices.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+
+    const hasExistingService = (existingServicesQuery.data?.length ?? 0) > 0;
+    const completionItems = [
+        { label: "Business name", done: !!formData.businessName },
+        { label: "Bio", done: !!formData.bio },
+        { label: "Service area", done: !!formData.serviceArea },
+        { label: "First service", done: hasExistingService || (!!formData.serviceName && !!formData.servicePrice) },
+        { label: "ACRA verified", done: !!formData.uen },
+    ];
+    const completionPct = Math.round((completionItems.filter(i => i.done).length / completionItems.length) * 100);
 
     const saveStep1 = async () => {
         if (!userId) return;
@@ -150,6 +153,7 @@ export default function OnboardingPage() {
                     priceCents,
                     durationMinutes: 60,
                 });
+                void utils.provider.getServices.invalidate();
             } catch {
                 toast.error("Could not create service. You can add it later in Settings.");
             }
@@ -207,19 +211,19 @@ export default function OnboardingPage() {
 
                 {/* Progress Header */}
                 <div className="text-center space-y-3 relative">
-                    <div className="absolute left-0 top-0 hidden sm:block">
-                        <BackButton 
-                            onClick={step > 1 ? () => setStep(step - 1) : undefined} 
-                            href={step === 1 ? "/dashboard/settings" : undefined}
-                        />
-                    </div>
-                    <div className="sm:hidden absolute left-0 -top-2">
-                         <BackButton 
-                            onClick={step > 1 ? () => setStep(step - 1) : undefined} 
-                            href={step === 1 ? "/dashboard/settings" : undefined}
-                        />
-                    </div>
-                    <h1 className="text-3xl font-black text-white tracking-tight pt-1">
+                    <BackButton
+                        onClick={step > 1 ? () => setStep(step - 1) : undefined}
+                        href={step === 1 ? "/dashboard/settings" : undefined}
+                        className="absolute left-0 top-0"
+                    />
+                    <button
+                        onClick={() => push("/dashboard")}
+                        className="absolute right-0 top-0 h-12 w-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-sm hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                        aria-label="Close wizard"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                    <h1 className="text-3xl font-black text-white tracking-tight pt-14">
                         {isRerun ? t("rerunTitle") : t("title")}
                     </h1>
                     <p className="text-slate-400 text-sm">
@@ -351,13 +355,13 @@ export default function OnboardingPage() {
                                         </p>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-3">
-                                    <Button variant="ghost" onClick={skipStep} className="text-slate-400 hover:text-white hover:bg-slate-800">
-                                        Skip for now
-                                    </Button>
-                                    <Button onClick={saveStep1} disabled={loading} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25">
+                                <CardFooter className="flex flex-col gap-2">
+                                    <Button onClick={saveStep1} disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25">
                                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                                         Save & Continue <ArrowRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                    <Button variant="ghost" onClick={skipStep} className="w-full text-slate-400 hover:text-white hover:bg-slate-800">
+                                        Skip for now
                                     </Button>
                                 </CardFooter>
                             </Card>
@@ -405,23 +409,6 @@ export default function OnboardingPage() {
                                         </Select>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="basePrice" className="text-slate-300 flex items-center gap-2">
-                                            <DollarSign className="h-4 w-4" /> Base Service Fee (S$)
-                                        </Label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-3.5 text-slate-400 border-r border-white/10 pr-2">S$</span>
-                                            <Input
-                                                id="basePrice"
-                                                type="number"
-                                                value={formData.basePrice}
-                                                onChange={handleInputChange}
-                                                className="bg-slate-900/50 border-white/10 text-white pl-12 h-12 text-lg font-bold"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-slate-500">You set your own rates. ServiceSync takes 0% commission.</p>
-                                    </div>
-
                                     <div className="border-t border-white/10 pt-4 space-y-3">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                             <Sparkles className="h-3 w-3" /> Add your first service (optional)
@@ -446,13 +433,13 @@ export default function OnboardingPage() {
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-3">
-                                    <Button variant="ghost" onClick={skipStep} className="text-slate-400 hover:text-white hover:bg-slate-800">
-                                        Skip
-                                    </Button>
-                                    <Button onClick={saveStep2} disabled={loading} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25">
+                                <CardFooter className="flex flex-col gap-2">
+                                    <Button onClick={saveStep2} disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25">
                                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                                         Save & Continue <ArrowRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                    <Button variant="ghost" onClick={skipStep} className="w-full text-slate-400 hover:text-white hover:bg-slate-800">
+                                        Skip
                                     </Button>
                                 </CardFooter>
                             </Card>
