@@ -139,17 +139,21 @@ function ClientDetails() {
     });
   };
 
-  if (isLoading || !client) {
-    if (isError && !isFetching) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 text-white">
-          <p className="text-rose-400 font-bold uppercase tracking-widest text-xs">Failed to load client details.</p>
-          <Button variant="outline" onClick={() => refetch()} className="border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-widest text-[10px]">
-            Try Again
-          </Button>
-        </div>
-      );
-    }
+  // Show error only when we're genuinely done loading and have no data.
+  // Never show the error screen while a fetch is still in flight — this was
+  // causing the "Something went wrong" flash on cold Supabase starts.
+  if (isError && !isLoading && !isFetching) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 text-white">
+        <p className="text-rose-400 font-bold uppercase tracking-widest text-xs">Failed to load client details.</p>
+        <Button variant="outline" onClick={() => refetch()} className="border-white/10 bg-white/5 text-white hover:bg-white/10 rounded-xl font-black uppercase tracking-widest text-[10px]">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  if (isLoading || isFetching || !client) {
     return (
       <div className="space-y-6 pt-4 pb-24 px-1">
         <div className="flex items-center gap-3">
