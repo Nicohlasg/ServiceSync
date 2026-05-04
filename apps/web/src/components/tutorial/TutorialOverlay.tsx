@@ -44,16 +44,30 @@ export function TutorialOverlay({ open, onClose }: Props) {
   const { shouldShow, markComplete } = useTutorialGate();
   const isOpen = open ?? shouldShow;
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const saved = sessionStorage.getItem('tutorial-step-v1');
+    const parsed = saved !== null ? parseInt(saved, 10) : NaN;
+    return isNaN(parsed) || parsed < 0 || parsed >= TUTORIAL_TOTAL_STEPS ? 0 : parsed;
+  });
   const current = TUTORIAL_STEPS[index];
   const isLast = index === TUTORIAL_TOTAL_STEPS - 1;
   const isFirst = index === 0;
 
-  // Reset to step 0 on a fresh open (handles replay flow).
+  // Persist step to sessionStorage so navigating pages doesn't lose position.
+  useEffect(() => {
+    if (isOpen) sessionStorage.setItem('tutorial-step-v1', String(index));
+  }, [isOpen, index]);
+
+  // On a fresh open after being closed: restore from sessionStorage (navigation
+  // safe) or start at 0 if nothing is saved (first-time or post-replay).
   const prevOpenRef = useRef(isOpen);
   useEffect(() => {
     if (!prevOpenRef.current && isOpen) {
-      const raf = window.requestAnimationFrame(() => setIndex(0));
+      const saved = sessionStorage.getItem('tutorial-step-v1');
+      const parsed = saved !== null ? parseInt(saved, 10) : NaN;
+      const restored = isNaN(parsed) || parsed < 0 || parsed >= TUTORIAL_TOTAL_STEPS ? 0 : parsed;
+      const raf = window.requestAnimationFrame(() => setIndex(restored));
       prevOpenRef.current = isOpen;
       return () => window.cancelAnimationFrame(raf);
     }
@@ -79,6 +93,7 @@ export function TutorialOverlay({ open, onClose }: Props) {
       trackEvent(reason === 'completed' ? 'tutorial_completed' : 'tutorial_skipped', {
         step: index + 1,
       });
+      sessionStorage.removeItem('tutorial-step-v1');
       void markComplete(reason);
       onClose?.(reason);
     },

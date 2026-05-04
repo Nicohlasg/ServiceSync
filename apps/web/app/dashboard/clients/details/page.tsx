@@ -33,6 +33,7 @@ type InvoiceRow = {
   payment_method?: string | null;
   total_cents?: number | null;
   amount?: number | null;
+  booking_id?: string | null;
 };
 
 type BookingRow = {
@@ -188,7 +189,13 @@ function ClientDetails() {
       });
     }
     if (txTab === "all" || txTab === "jobs") {
+      // Collect booking IDs already covered by an invoice so they're not
+      // shown twice — once as a $0 booking and again as a paid invoice.
+      const invoicedBookingIds = new Set(
+        invoices.map(inv => inv.booking_id).filter(Boolean)
+      );
       bookings.forEach(b => {
+        if (invoicedBookingIds.has(b.id)) return;
         rows.push({
           kind: "job",
           date: b.scheduled_date ? b.scheduled_date + "T00:00:00" : new Date().toISOString(),

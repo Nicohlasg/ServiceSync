@@ -368,7 +368,7 @@ export default function InvoicesPage() {
             </motion.div>
 
             {/* Search & Filter */}
-            <div className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl pb-3 pt-2 -mx-4 px-4 space-y-4 border-b border-white/5 shadow-2xl">
+            <div className="sticky top-0 z-20 bg-zinc-900/75 backdrop-blur-xl pb-3 pt-2 -mx-4 px-4 space-y-4 border-b border-white/10 shadow-2xl">
                 <div className="relative group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 group-focus-within:text-blue-400 transition-colors z-10" />
                     <Input
@@ -438,7 +438,7 @@ export default function InvoicesPage() {
                     )}
                 </AnimatePresence>
 
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-0.5">
                     {["all", "pending", "paid"].map((f) => (
                         <button
                             key={f}

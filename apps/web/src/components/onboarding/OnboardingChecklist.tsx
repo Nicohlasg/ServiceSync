@@ -181,6 +181,17 @@ export function OnboardingChecklist({ onPreviewPaynow }: Props) {
     prevFlagsRef.current = current;
   }, [checklist, state.service, state.client, state.paynow]);
 
+  // Auto-dismiss 4 s after all items are done so the widget doesn't linger.
+  const setHiddenRef = useRef(setHidden);
+  setHiddenRef.current = setHidden;
+  useEffect(() => {
+    if (!state.allDone || state.hidden) return;
+    const timer = window.setTimeout(() => {
+      setHiddenRef.current.mutate({ hidden: true });
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [state.allDone, state.hidden]);
+
   const handleRowTap = useCallback(
     (row: Row) => {
       if (isComplete(row.id)) return;

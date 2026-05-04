@@ -67,6 +67,7 @@ export default function InvoiceDetailPage() {
   const [activeAction, setActiveAction] = useState<"download" | "resend" | "preview" | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(100);
 
   const updateStatus = api.invoices.updateStatus.useMutation({
     onSuccess: async () => {
@@ -272,12 +273,27 @@ export default function InvoiceDetailPage() {
                 Due Date <CalendarDays className="h-3 w-3 text-blue-500" />
               </p>
               <div className="flex flex-col gap-2">
-                <Input
-                  type="date"
-                  value={dueDate || invoice.due_date || ""}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-zinc-900/50 border-white/10 text-white h-10 w-full min-w-0 max-w-full appearance-none px-3 rounded-xl focus:border-blue-500/50 font-bold"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={dueDate || invoice.due_date || ""}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="bg-zinc-900/50 border-white/10 text-white h-10 flex-1 min-w-0 appearance-none px-3 rounded-xl focus:border-blue-500/50 font-bold"
+                  />
+                  {(invoice.due_date || dueDate) && (
+                    <button
+                      type="button"
+                      title="Clear due date"
+                      onClick={() => {
+                        setDueDate("");
+                        updateDueDate.mutate({ invoiceId, dueDate: "" });
+                      }}
+                      className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-zinc-500 hover:text-rose-400 hover:border-rose-500/30 transition-all active:scale-90"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
                 <Button
                   size="sm"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest h-10 rounded-xl shadow-lg shadow-blue-600/20"
@@ -379,12 +395,32 @@ export default function InvoiceDetailPage() {
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Zoom: {previewZoom}%</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewZoom(z => Math.max(50, z - 25))}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all active:scale-90 font-bold text-sm"
+                    >−</button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewZoom(100)}
+                      className="h-8 px-3 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all active:scale-90 font-black text-[10px] uppercase tracking-widest"
+                    >Reset</button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewZoom(z => Math.min(200, z + 25))}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all active:scale-90 font-bold text-sm"
+                    >+</button>
+                  </div>
+                </div>
                 <div className="rounded-[1.5rem] overflow-hidden border border-white/10 bg-white shadow-inner">
                   <object
                     data={`${previewUrl}#view=FitH`}
                     type="application/pdf"
                     className="w-full border-0"
-                    style={{ height: "70vh", minHeight: 400 }}
+                    style={{ height: "70vh", minHeight: 400, transform: `scale(${previewZoom / 100})`, transformOrigin: "top center", marginBottom: previewZoom > 100 ? `${(previewZoom - 100) * 4}px` : undefined }}
                   >
                     <div className="flex flex-col items-center justify-center p-8 text-center bg-zinc-950">
                       <p className="text-zinc-500 font-bold mb-4 text-sm uppercase tracking-wider">Inline Preview Not Supported</p>

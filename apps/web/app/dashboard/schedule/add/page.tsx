@@ -502,34 +502,18 @@ function AddEvent() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="duration-h" className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Estimated Duration</Label>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-1 relative">
-                                        <Input
-                                            id="duration-h"
-                                            type="number"
-                                            min="0"
-                                            max="24"
-                                            value={durationHours}
-                                            onChange={(e) => setDurationHours(parseInt(e.target.value) || 0)}
-                                            className="h-14 bg-white/5 border-white/10 text-white rounded-xl pr-8 font-black text-center text-xl backdrop-blur-md focus:border-blue-500/50"
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-500 uppercase tracking-widest pointer-events-none">h</span>
-                                    </div>
-                                    <div className="flex-1 relative">
-                                        <Input
-                                            id="duration-m"
-                                            type="number"
-                                            min="0"
-                                            max="59"
-                                            step="5"
-                                            value={durationMinutes}
-                                            onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-                                            className="h-14 bg-white/5 border-white/10 text-white rounded-xl pr-8 font-black text-center text-xl backdrop-blur-md focus:border-blue-500/50"
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-500 uppercase tracking-widest pointer-events-none">m</span>
-                                    </div>
-                                </div>
+                                <Label htmlFor="duration" className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Estimated Duration</Label>
+                                <Input
+                                    id="duration"
+                                    type="time"
+                                    value={`${String(durationHours).padStart(2, '0')}:${String(durationMinutes).padStart(2, '0')}`}
+                                    onChange={(e) => {
+                                        const [h, m] = (e.target.value || '01:00').split(':').map(Number);
+                                        setDurationHours(isNaN(h) ? 1 : h);
+                                        setDurationMinutes(isNaN(m) ? 0 : m);
+                                    }}
+                                    className="h-14 bg-white/5 border-white/10 text-white rounded-xl appearance-none px-3 font-black backdrop-blur-md focus:border-blue-500/50 text-xl"
+                                />
                                 <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider ml-1 mt-1">How long will this job take?</p>
                             </div>
 

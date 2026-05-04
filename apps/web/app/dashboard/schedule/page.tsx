@@ -273,7 +273,7 @@ export default function SchedulePage() {
 
             {/* Scrollable Events List */}
             <div
-                className="flex-1 px-4 pt-6 pb-32 mt-4 border-t border-white/10 bg-zinc-950/20 overflow-y-auto no-scrollbar"
+                className="flex-1 px-4 pt-6 pb-32 mt-4 rounded-t-3xl border border-white/10 bg-white/5 overflow-y-auto no-scrollbar"
             >
                 <div className="flex items-center justify-between mb-6 sticky top-0 bg-transparent z-10 pb-2 backdrop-blur-sm -mx-1 px-1">
                     <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">

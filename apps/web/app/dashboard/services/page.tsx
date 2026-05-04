@@ -21,6 +21,7 @@ export default function ServicesPage() {
     
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [optimisticActive, setOptimisticActive] = useState<Record<string, boolean>>({});
 
     // Detect ?action=new from onboarding checklist link
     const searchParams = useSearchParams();
@@ -86,11 +87,23 @@ export default function ServicesPage() {
         });
     };
 
+    const toggleMutation = api.provider.updateService.useMutation({
+        onSuccess: () => {
+            utils.provider.getServices.invalidate();
+        },
+        onError: (e, vars) => {
+            toast.error(e.message || "Failed to update service");
+            setOptimisticActive(prev => {
+                const next = { ...prev };
+                delete next[vars.serviceId];
+                return next;
+            });
+        },
+    });
+
     const toggleActive = (id: string, active: boolean) => {
-        updateMutation.mutate({
-            serviceId: id,
-            isActive: !active
-        });
+        setOptimisticActive(prev => ({ ...prev, [id]: !active }));
+        toggleMutation.mutate({ serviceId: id, isActive: !active });
     }
 
     const startEditing = (service: Service) => {
@@ -199,7 +212,7 @@ export default function ServicesPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <Card variant="premium" className={`rounded-3xl transition-all backdrop-blur-xl ${!service.is_active ? 'opacity-40 grayscale blur-[1px]' : 'shadow-xl'}`}>
+                            <Card variant="premium" className={`rounded-3xl transition-all backdrop-blur-xl ${!(optimisticActive[service.id] ?? service.is_active) ? 'opacity-70' : 'shadow-xl'}`}>
                                 <CardContent className="p-6">
                                     {editingId === service.id ? (
                                         <div className="space-y-4">
@@ -258,17 +271,25 @@ export default function ServicesPage() {
                                             </div>
                                             
                                             <div className="pt-2 flex items-center justify-between">
-                                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-2 py-1 rounded-md border ${service.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-500 bg-white/5 border-white/5'}`}>
-                                                    {service.is_active ? 'Active' : 'Disabled'}
-                                                </span>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    onClick={() => toggleActive(service.id, !!service.is_active)}
-                                                    className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 ${service.is_active ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-white' : 'bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-lg shadow-emerald-600/20'}`}
-                                                >
-                                                    {service.is_active ? 'Disable Service' : 'Enable Service'}
-                                                </Button>
+                                                {(() => {
+                                                    const isActive = optimisticActive[service.id] ?? !!service.is_active;
+                                                    return (
+                                                        <>
+                                                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-2 py-1 rounded-md border ${isActive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20'}`}>
+                                                                {isActive ? 'Active' : 'Disabled'}
+                                                            </span>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => toggleActive(service.id, isActive)}
+                                                                disabled={toggleMutation.isPending && toggleMutation.variables?.serviceId === service.id}
+                                                                className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 ${isActive ? 'bg-rose-600/10 text-rose-400 border-rose-500/20 hover:bg-rose-600/20' : 'bg-emerald-600 hover:bg-emerald-700 border-none text-white shadow-lg shadow-emerald-600/20'}`}
+                                                            >
+                                                                {isActive ? 'Disable Service' : 'Enable Service'}
+                                                            </Button>
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     )}
