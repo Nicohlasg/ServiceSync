@@ -25,9 +25,7 @@ yarn-error.log*
 
 # IDE
 .idea
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 *.swp
 *.swo
 
@@ -72,4 +70,24 @@ eslint-output.txt
 .claude-flow/
 .hive-mind/
 .swarm/
+
+# AI assistant config files (local dev only)
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+.mcp.json
+
+# Internal project tracking (not for public)
+INTEGRATION_STATUS.md
+audit-tracker.md
+ARCHITECTURE_CHANGE_LOG.md
+WHATSAPP_SETUP.md
+
+# Scratch/dev scripts (not needed by consumers)
+create_bucket.js
+test-pdf.ts
+run_in_supabase.sql
+
+# Duplicate lockfile (project uses bun)
+package-lock.json
 
