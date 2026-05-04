@@ -61,8 +61,8 @@ function ClientDetails() {
     {
       enabled: !!clientId,
       staleTime: 30 * 1000,
-      retry: 1, // Mitigate transient Supabase cold-starts or network blips
-      retryDelay: 1000,
+      retry: 4,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     },
   );
 
