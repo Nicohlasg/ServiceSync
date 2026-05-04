@@ -9,7 +9,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { AuthGuard } from '@/components/AuthGuard';
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 
 // Lazy-load non-critical UI overlays — these render nothing on mount
 // (they wait for browser events / timeouts), so deferring them avoids
@@ -107,18 +106,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: '/api/trpc',
           transformer: superjson,
-          async headers() {
-            // Silently refresh the Supabase session before each tRPC batch
-            // so long form-fills don't hit an expired JWT.
-            try {
-              const supabase = createSupabaseBrowserClient();
-              await supabase.auth.getSession();
-            } catch {
-              // Refresh failed — let the request proceed with the existing cookie;
-              // the server-side auth check will handle the expired session.
-            }
-            return {};
-          },
         }),
       ],
     })
