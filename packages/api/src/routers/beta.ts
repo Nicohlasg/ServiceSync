@@ -167,7 +167,7 @@ export const betaRouter = router({
   listKnownBugs: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
       .from('beta_bug_reports')
-      .select('id, title, severity, status, created_at')
+      .select('id, title, severity, status, admin_note, created_at')
       .in('status', ['verified', 'in_progress', 'fixed'])
       .order('created_at', { ascending: false });
 

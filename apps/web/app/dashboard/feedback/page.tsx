@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   Bug, Lightbulb, ListChecks, Trophy, ShieldCheck,
-  ThumbsUp, ThumbsDown, Loader2,
+  ThumbsUp, ThumbsDown, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -314,6 +314,11 @@ function KnownBugsTab() {
                 </span>
                 <span className="text-[10px] text-zinc-500">{new Date(bug.created_at).toLocaleDateString()}</span>
               </div>
+              {bug.admin_note && (
+                <p className="text-xs text-zinc-300 bg-white/5 rounded-lg px-3 py-2 border border-white/5 leading-relaxed italic">
+                  💬 {bug.admin_note}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))
@@ -435,17 +440,75 @@ function LeaderboardTab() {
 // Admin Tab
 // ---------------------------------------------------------------------------
 
+type EditState = {
+  validity: "pending" | "verified" | "rejected";
+  progress: "open" | "in_progress" | "fixed";
+  note: string;
+};
+
+function dbStatusToEdit(status: string, adminNote: string | null): EditState {
+  const note = adminNote ?? "";
+  if (status === "rejected") return { validity: "rejected", progress: "open", note };
+  if (status === "in_progress") return { validity: "verified", progress: "in_progress", note };
+  if (status === "fixed") return { validity: "verified", progress: "fixed", note };
+  if (status === "verified") return { validity: "verified", progress: "open", note };
+  return { validity: "pending", progress: "open", note };
+}
+
+function editToDbStatus(edit: EditState): "submitted" | "verified" | "in_progress" | "fixed" | "rejected" {
+  if (edit.validity === "rejected") return "rejected";
+  if (edit.validity === "verified") {
+    if (edit.progress === "in_progress") return "in_progress";
+    if (edit.progress === "fixed") return "fixed";
+    return "verified";
+  }
+  return "submitted";
+}
+
 function AdminTab() {
   const [statusFilter, setStatusFilter] = useState<"submitted" | "verified" | "in_progress" | "fixed" | "rejected" | "all">("submitted");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [edits, setEdits] = useState<Record<string, EditState>>({});
+
   const { data, isLoading, refetch } = api.beta.admin.listAllBugs.useQuery({ status: statusFilter });
   const setBugStatus = api.beta.admin.setBugStatus.useMutation({
-    onSuccess: () => { toast.success("Status updated"); void refetch(); },
+    onSuccess: (_data, vars) => {
+      toast.success("Status updated");
+      setExpanded((prev) => { const n = new Set(prev); n.delete(vars.id); return n; });
+      void refetch();
+    },
     onError: (err) => toast.error(err.message),
   });
 
-  const [notes, setNotes] = useState<Record<string, string>>({});
-
   const FILTER_OPTIONS = ["submitted", "verified", "in_progress", "fixed", "rejected", "all"] as const;
+
+  function toggleExpand(bug: Record<string, unknown>) {
+    const id = bug.id as string;
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        setEdits((e) => ({
+          ...e,
+          [id]: e[id] ?? dbStatusToEdit(bug.status as string, bug.admin_note as string | null),
+        }));
+      }
+      return next;
+    });
+  }
+
+  function handleSave(id: string) {
+    const edit = edits[id];
+    if (!edit) return;
+    setBugStatus.mutate({ id, status: editToDbStatus(edit), adminNote: edit.note || undefined });
+  }
+
+  function handleCancel(id: string, bug: Record<string, unknown>) {
+    setEdits((e) => ({ ...e, [id]: dbStatusToEdit(bug.status as string, bug.admin_note as string | null) }));
+    setExpanded((prev) => { const n = new Set(prev); n.delete(id); return n; });
+  }
 
   return (
     <div className="space-y-4">
@@ -460,55 +523,124 @@ function AdminTab() {
       </div>
 
       {isLoading ? <LoadingCard /> : !data?.length ? <EmptyCard text="No submissions here." /> : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {data.map((bug: Record<string, unknown>) => {
             const id = bug.id as string;
+            const isOpen = expanded.has(id);
+            const edit = edits[id];
             const profiles = bug.profiles as { name?: string; email?: string } | null;
+
             return (
-              <Card key={id} variant="premium" className="rounded-2xl">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-bold text-white">{bug.title as string}</p>
-                      <p className="text-[10px] text-zinc-500 font-bold">
-                        {profiles?.name ?? "Unknown"} · {profiles?.email ?? ""}
-                      </p>
+              <Card key={id} variant="premium" className="rounded-2xl overflow-hidden">
+                {/* Collapsed header — always visible */}
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(bug)}
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-white/5 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-sm font-bold text-white truncate">{bug.title as string}</p>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${SEV_COLOR[bug.severity as string]}`}>
+                        {bug.severity as string}
+                      </span>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${STATUS_COLOR[bug.status as string]}`}>
+                        {STATUS_LABEL[bug.status as string]}
+                      </span>
                     </div>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0 ${STATUS_COLOR[bug.status as string]}`}>
-                      {STATUS_LABEL[bug.status as string]}
-                    </span>
                   </div>
-                  <p className="text-xs text-zinc-300 bg-white/5 rounded-lg px-3 py-2 border border-white/5 leading-relaxed">
-                    {bug.description as string}
-                  </p>
-                  {(bug.steps_to_reproduce as string | null) && (
-                    <p className="text-xs text-zinc-400 italic leading-relaxed">
-                      Steps: {bug.steps_to_reproduce as string}
+                  {isOpen
+                    ? <ChevronUp className="h-4 w-4 text-zinc-400 shrink-0" />
+                    : <ChevronDown className="h-4 w-4 text-zinc-400 shrink-0" />}
+                </button>
+
+                {/* Expanded body */}
+                {isOpen && edit && (
+                  <div className="px-4 pb-4 space-y-4 border-t border-white/10 pt-4">
+                    {/* Submitter */}
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                      {profiles?.name ?? "Unknown"} · {profiles?.email ?? ""}
                     </p>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${SEV_COLOR[bug.severity as string]}`}>
-                      {bug.severity as string}
-                    </span>
-                    <span className="text-[10px] text-zinc-500">{new Date(bug.created_at as string).toLocaleDateString()}</span>
-                  </div>
-                  <Input
-                    value={notes[id] ?? (bug.admin_note as string | null) ?? ""}
-                    onChange={(e) => setNotes((prev) => ({ ...prev, [id]: e.target.value }))}
-                    placeholder="Admin note (optional)"
-                    className="bg-white/5 border-white/10 text-white h-10 rounded-xl text-xs focus:border-blue-500/50"
-                  />
-                  <div className="flex gap-2 flex-wrap">
-                    {(["verified", "in_progress", "fixed", "rejected"] as const).map((s) => (
-                      <button key={s} onClick={() => setBugStatus.mutate({ id, status: s, adminNote: notes[id] })}
+
+                    {/* Description */}
+                    <p className="text-xs text-zinc-300 bg-white/5 rounded-xl px-3 py-2.5 border border-white/5 leading-relaxed">
+                      {bug.description as string}
+                    </p>
+
+                    {/* Steps */}
+                    {(bug.steps_to_reproduce as string | null) && (
+                      <p className="text-xs text-zinc-400 italic leading-relaxed">
+                        Steps: {bug.steps_to_reproduce as string}
+                      </p>
+                    )}
+
+                    {/* Two dropdowns */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Validity</p>
+                        <select
+                          value={edit.validity}
+                          onChange={(e) => setEdits((prev) => ({
+                            ...prev,
+                            [id]: { ...prev[id]!, validity: e.target.value as EditState["validity"] },
+                          }))}
+                          className="w-full bg-zinc-800 border border-white/10 text-white text-xs rounded-xl px-3 py-2.5 font-bold focus:border-blue-500/50 focus:outline-none cursor-pointer"
+                        >
+                          <option value="pending">⏳ Pending</option>
+                          <option value="verified">✅ Verified</option>
+                          <option value="rejected">❌ Rejected</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Progress</p>
+                        <select
+                          value={edit.progress}
+                          disabled={edit.validity !== "verified"}
+                          onChange={(e) => setEdits((prev) => ({
+                            ...prev,
+                            [id]: { ...prev[id]!, progress: e.target.value as EditState["progress"] },
+                          }))}
+                          className="w-full bg-zinc-800 border border-white/10 text-white text-xs rounded-xl px-3 py-2.5 font-bold focus:border-blue-500/50 focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <option value="open">📋 Open</option>
+                          <option value="in_progress">🔧 In Progress</option>
+                          <option value="fixed">✅ Fixed</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Admin note */}
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Note (visible to all users)</p>
+                      <Textarea
+                        value={edit.note}
+                        onChange={(e) => setEdits((prev) => ({ ...prev, [id]: { ...prev[id]!, note: e.target.value } }))}
+                        placeholder="Add a public note about this bug…"
+                        className="bg-white/5 border-white/10 text-white rounded-xl text-xs focus:border-blue-500/50 min-h-[60px]"
+                      />
+                    </div>
+
+                    {/* Save / Cancel */}
+                    <div className="flex gap-3">
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleCancel(id, bug)}
                         disabled={setBugStatus.isPending}
-                        className={["px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50",
-                          STATUS_COLOR[s]].join(" ")}>
-                        {STATUS_LABEL[s]}
-                      </button>
-                    ))}
+                        className="flex-1 h-11 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl text-xs font-black uppercase tracking-widest"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => handleSave(id)}
+                        disabled={setBugStatus.isPending}
+                        className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20"
+                      >
+                        {setBugStatus.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                        Save
+                      </Button>
+                    </div>
                   </div>
-                </CardContent>
+                )}
               </Card>
             );
           })}
