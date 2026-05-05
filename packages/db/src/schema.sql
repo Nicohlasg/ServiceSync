@@ -760,3 +760,114 @@ CREATE POLICY "audit_log_select_own" ON audit_log
 
 COMMENT ON TABLE audit_log IS
   'Append-only audit trail for sensitive mutations (SEC-M3). IRAS record retention.';
+
+-- =============================================================================
+-- BETA-ONLY: REMOVE FOR PUBLIC LAUNCH
+-- Tables 9-11: beta_bug_reports, beta_feature_requests, beta_feature_votes
+-- Removal checklist:
+--   1. DELETE apps/web/app/dashboard/feedback/ (entire directory)
+--   2. DELETE packages/api/src/routers/beta.ts, remove its line from _app.ts
+--   3. DELETE packages/api/src/services/beta-rewards.ts
+--   4. DROP TABLE beta_feature_votes, beta_feature_requests, beta_bug_reports (in that order)
+--   5. Remove the BETA-ONLY block from apps/web/app/dashboard/settings/page.tsx
+--   6. Remove ADMIN_EMAILS from env
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 9. beta_bug_reports — Bug / feedback submissions from beta testers
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS beta_bug_reports (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id       UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title             TEXT NOT NULL,
+  description       TEXT NOT NULL,
+  steps_to_reproduce TEXT,
+  severity          TEXT NOT NULL DEFAULT 'med'
+                    CHECK (severity IN ('low', 'med', 'high')),
+  status            TEXT NOT NULL DEFAULT 'submitted'
+                    CHECK (status IN ('submitted', 'verified', 'in_progress', 'fixed', 'rejected')),
+  admin_note        TEXT,
+  verified_at       TIMESTAMPTZ,
+  verified_by       UUID REFERENCES profiles(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_beta_bugs_provider ON beta_bug_reports(provider_id);
+CREATE INDEX IF NOT EXISTS idx_beta_bugs_status   ON beta_bug_reports(status);
+
+ALTER TABLE beta_bug_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "beta_bugs_insert_own" ON beta_bug_reports
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "beta_bugs_select_authenticated" ON beta_bug_reports
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "beta_bugs_update_own_pending" ON beta_bug_reports
+  FOR UPDATE USING (auth.uid() = provider_id AND status = 'submitted');
+
+CREATE TRIGGER trg_beta_bugs_updated_at BEFORE UPDATE ON beta_bug_reports
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE beta_bug_reports IS
+  'BETA-ONLY: Bug and feedback submissions with admin verification workflow.';
+
+-- -----------------------------------------------------------------------------
+-- 10. beta_feature_requests — Feature ideas from beta testers
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS beta_feature_requests (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'open'
+              CHECK (status IN ('open', 'planned', 'shipped', 'declined')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_beta_features_provider ON beta_feature_requests(provider_id);
+CREATE INDEX IF NOT EXISTS idx_beta_features_status   ON beta_feature_requests(status);
+
+ALTER TABLE beta_feature_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "beta_features_insert_own" ON beta_feature_requests
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "beta_features_select_authenticated" ON beta_feature_requests
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE TRIGGER trg_beta_features_updated_at BEFORE UPDATE ON beta_feature_requests
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE beta_feature_requests IS
+  'BETA-ONLY: Feature requests from testers with community up/down voting.';
+
+-- -----------------------------------------------------------------------------
+-- 11. beta_feature_votes — One vote per user per feature (+1 / -1)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS beta_feature_votes (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  feature_id  UUID NOT NULL REFERENCES beta_feature_requests(id) ON DELETE CASCADE,
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  value       SMALLINT NOT NULL CHECK (value IN (1, -1)),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (feature_id, provider_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_beta_votes_feature ON beta_feature_votes(feature_id);
+
+ALTER TABLE beta_feature_votes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "beta_votes_upsert_own" ON beta_feature_votes
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "beta_votes_update_own" ON beta_feature_votes
+  FOR UPDATE USING (auth.uid() = provider_id);
+CREATE POLICY "beta_votes_delete_own" ON beta_feature_votes
+  FOR DELETE USING (auth.uid() = provider_id);
+CREATE POLICY "beta_votes_select_authenticated" ON beta_feature_votes
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+COMMENT ON TABLE beta_feature_votes IS
+  'BETA-ONLY: One up/down vote per user per feature request. UNIQUE(feature_id, provider_id).';

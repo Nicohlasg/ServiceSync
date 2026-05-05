@@ -565,6 +565,28 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* BETA-ONLY: REMOVE FOR PUBLIC LAUNCH */}
+            <Card variant="premium" className="rounded-3xl overflow-hidden backdrop-blur-2xl border-amber-500/20 bg-amber-500/5">
+                <CardContent className="p-5 space-y-3">
+                    <h3 className="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2 relative z-10">
+                        🐛 Beta Programme
+                    </h3>
+                    <Link
+                        href="/dashboard/feedback"
+                        className="block rounded-2xl border border-amber-500/20 bg-white/5 p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98] group relative z-10"
+                    >
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-bold text-white">Feedback & Bug Reports</p>
+                                <p className="text-xs text-zinc-400 font-medium mt-0.5">Report bugs, request features, earn rewards.</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-zinc-500 shrink-0 group-hover:text-zinc-300 transition-colors" />
+                        </div>
+                    </Link>
+                </CardContent>
+            </Card>
+            {/* END BETA-ONLY */}
+
             {/* App Installation */}
             <AppInstallSection />
 
