@@ -214,6 +214,9 @@ export default function InvoiceDetailPage() {
 
   async function handleResendInvoice() {
     setActiveAction("resend");
+    // Open a blank window NOW while still in the user-gesture context,
+    // before any awaits — otherwise popup blockers will silently swallow it.
+    const waWindow = window.open("", "_blank", "noopener,noreferrer");
 
     try {
       await generatePdf.mutateAsync({ invoiceId });
@@ -223,9 +226,15 @@ export default function InvoiceDetailPage() {
       ]);
 
       const result = await resendInvoice.mutateAsync({ invoiceId });
-      window.open(result.waLink, "_blank", "noopener,noreferrer");
+      if (waWindow) {
+        waWindow.location.href = result.waLink;
+      } else {
+        // Fallback for mobile PWA where window.open may return null
+        window.location.href = result.waLink;
+      }
       toast.success("WhatsApp receipt ready to send");
     } catch (error) {
+      waWindow?.close();
       toast.error(error instanceof Error ? error.message : "Failed to prepare WhatsApp receipt");
     } finally {
       setActiveAction(null);
