@@ -81,7 +81,7 @@ export default function SettingsPage() {
     const loadProfile = useCallback(async () => {
         const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { push("/auth/login"); return; }
+        if (!user) { push('/login'); return; }
         setProfile({ id: user.id, email: user.email ?? null });
         setLoading(false);
     }, [push]);
@@ -94,7 +94,7 @@ export default function SettingsPage() {
         const supabase = createSupabaseBrowserClient();
         await supabase.auth.signOut();
         toast.success("Logged out successfully");
-        push("/auth/login");
+        push('/login');
     };
 
     const handleDeleteAccount = () => {

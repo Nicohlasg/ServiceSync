@@ -78,7 +78,7 @@ export default function ProfilePage() {
     const loadProfile = useCallback(async () => {
         const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { push("/auth/login"); return; }
+        if (!user) { push('/login'); return; }
 
         const { data, error } = await supabase
             .from("profiles")
@@ -147,7 +147,7 @@ export default function ProfilePage() {
         const supabase = createSupabaseBrowserClient();
         await supabase.auth.signOut();
         toast.success("Logged out successfully");
-        push("/auth/login");
+        push('/login');
     };
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

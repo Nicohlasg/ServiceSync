@@ -278,7 +278,7 @@ export default function DashboardPage() {
     const handleLogout = async () => {
         const supabase = createSupabaseBrowserClient();
         await supabase.auth.signOut();
-        push('/auth/login');
+        push('/login');
     };
 
     // Lock body scroll when job details modal is open
