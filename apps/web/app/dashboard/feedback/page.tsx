@@ -73,7 +73,7 @@ export default function FeedbackPage() {
         <CardContent className="p-4">
           <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">Reward Tiers</p>
           <p className="text-xs text-zinc-300 leading-relaxed">
-            $1 per 2 verified bugs · Bonus $3 at milestones 5 / 10 / 15 / 20 bugs
+            $1 per verified bug · Bonus $3 at milestones 5 / 10 / 15 / 20 bugs
           </p>
         </CardContent>
       </Card>
