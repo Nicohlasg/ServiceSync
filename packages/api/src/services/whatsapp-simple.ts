@@ -158,6 +158,130 @@ export function generateQuickReplyTemplate(bookingUrl: string): string {
 See all available slots in real-time and secure your booking immediately! 📅`;
 }
 
+export interface ReviewMessageParams {
+  clientName: string;
+  serviceType: string;
+  reviewUrl: string;
+}
+
+/**
+ * Generate post-job review request message
+ */
+export function generateReviewMessage(params: ReviewMessageParams): string {
+  return `Hi ${params.clientName}! ✅ Your ${params.serviceType} is complete.
+
+Could you spare 30 seconds for a quick review? ⭐
+
+${params.reviewUrl}
+
+Thank you so much — it really helps!`;
+}
+
+export interface PlanReachOutParams {
+  clientName: string;
+  serviceType: string;
+  intervalLabel: string;  // e.g. "every 3 months"
+  bookingUrl: string;
+}
+
+/**
+ * Generate recurring plan reach-out message
+ */
+export function generatePlanReachOutMessage(params: PlanReachOutParams): string {
+  return `Hi ${params.clientName}! 👋
+
+It's time for your ${params.serviceType} (${params.intervalLabel}).
+
+Book your preferred slot here: ${params.bookingUrl}
+
+See live availability and lock in your time instantly — no back-and-forth needed! 🗓️`;
+}
+
+export interface QuoteMessageParams {
+  clientName: string;
+  quoteNumber: string;
+  lineItems: Array<{ description: string; amountCents: number }>;
+  taxCents: number;
+  totalCents: number;
+  validUntil?: string;
+  technicianName: string;
+}
+
+/**
+ * Generate WhatsApp quote message with line item breakdown
+ */
+export function generateQuoteMessage(params: QuoteMessageParams): string {
+  const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const items = params.lineItems
+    .map(i => `• ${i.description}: ${fmt(i.amountCents)}`)
+    .join('\n');
+
+  let msg = `Hi ${params.clientName}! 👋\n\nHere's your quote from ${params.technicianName}:\n\n📋 *${params.quoteNumber}*\n\n${items}`;
+  if (params.taxCents > 0) {
+    msg += `\n• GST: ${fmt(params.taxCents)}`;
+  }
+  msg += `\n${'─'.repeat(20)}\n*Total: ${fmt(params.totalCents)}*`;
+  if (params.validUntil) {
+    msg += `\n\nValid until: ${params.validUntil}`;
+  }
+  msg += `\n\nLet me know if you'd like to proceed and I'll get started! 🔧`;
+  return msg;
+}
+
+export interface DayBeforeReminderParams {
+  clientName: string;
+  serviceType: string;
+  dateLabel: string;  // e.g. "tomorrow, 7 May"
+  timeLabel: string;  // e.g. "10:00 AM – 12:00 PM"
+}
+
+/**
+ * Day-before appointment reminder sent by the technician
+ */
+export function generateDayBeforeReminderMessage(params: DayBeforeReminderParams): string {
+  return `Hi ${params.clientName}! 👋
+
+Just a reminder that I'll be coming over for your *${params.serviceType}* ${params.dateLabel} at *${params.timeLabel}*.
+
+Please ensure someone is home and the area is accessible. See you then! 🔧
+
+Reply if you need to reschedule.`;
+}
+
+export interface MorningConfirmationParams {
+  clientName: string;
+  serviceType: string;
+  timeLabel: string;  // e.g. "10:00 AM"
+}
+
+/**
+ * Morning-of confirmation message
+ */
+export function generateMorningConfirmationMessage(params: MorningConfirmationParams): string {
+  return `Good morning ${params.clientName}! ☀️
+
+Confirming your *${params.serviceType}* appointment today at *${params.timeLabel}*.
+
+I'm getting ready and will be with you shortly. Please make sure the area is accessible. 🙏`;
+}
+
+export interface OnMyWayParams {
+  clientName: string;
+  serviceType: string;
+  etaLabel: string;  // e.g. "~20 minutes"
+}
+
+/**
+ * "On my way" message sent just before arrival
+ */
+export function generateOnMyWayMessage(params: OnMyWayParams): string {
+  return `Hi ${params.clientName}! 🚗
+
+I'm on my way for your *${params.serviceType}*. ETA: *${params.etaLabel}*.
+
+Please be ready — see you soon! 👋`;
+}
+
 // ---------------------------------------------------------------------------
 // Digital Handshake (No API Version)
 // ---------------------------------------------------------------------------
@@ -257,8 +381,14 @@ export const WhatsAppSimple = {
   generateInvoiceMessage,
   generateReminderMessage,
   generateJobCompleteMessage,
+  generateReviewMessage,
   generateGreetingMessageTemplate,
   generateQuickReplyTemplate,
+  generatePlanReachOutMessage,
+  generateQuoteMessage,
+  generateDayBeforeReminderMessage,
+  generateMorningConfirmationMessage,
+  generateOnMyWayMessage,
   generateDigitalHandshakeLink,
   generateJobRequestNotification,
   shortenUrl,

@@ -34,12 +34,21 @@ interface ServiceData {
     duration_minutes: number;
 }
 
+interface ReviewData {
+    id: string;
+    client_name: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+}
+
 export default function ProviderProfilePage() {
     const params = useParams();
     const slug = params.providerId as string;
 
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [services, setServices] = useState<ServiceData[]>([]);
+    const [reviews, setReviews] = useState<ReviewData[]>([]);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -82,6 +91,16 @@ export default function ProviderProfilePage() {
                 .order("sort_order");
 
             setServices(servicesData ?? []);
+
+            const { data: reviewsData } = await supabase
+                .from("reviews")
+                .select("id, client_name, rating, comment, created_at")
+                .eq("provider_id", profileData.id)
+                .eq("is_public", true)
+                .order("created_at", { ascending: false })
+                .limit(10);
+
+            setReviews(reviewsData ?? []);
             setLoading(false);
         }
 
@@ -301,6 +320,36 @@ export default function ProviderProfilePage() {
                         </div>
                     )}
                 </motion.div>
+
+                {reviews.length > 0 && (
+                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="space-y-4">
+                        <h3 className="font-bold text-lg text-foreground px-2">
+                            What Clients Say
+                        </h3>
+                        <div className="grid gap-3">
+                            {reviews.map((review) => (
+                                <Card key={review.id} variant="premium" className="overflow-hidden bg-card/60 backdrop-blur-xl">
+                                    <CardContent className="p-4 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-semibold text-sm text-foreground">{review.client_name}</span>
+                                            <div className="flex gap-0.5">
+                                                {[1, 2, 3, 4, 5].map((s) => (
+                                                    <Star
+                                                        key={s}
+                                                        className={`h-3.5 w-3.5 ${s <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {review.comment && (
+                                            <p className="text-sm text-muted-foreground leading-relaxed">&ldquo;{review.comment}&rdquo;</p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
             {/* Sticky Bottom Bar */}

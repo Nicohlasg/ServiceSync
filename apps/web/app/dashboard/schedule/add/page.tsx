@@ -40,6 +40,8 @@ function AddEvent() {
     const searchParams = useSearchParams();
     const bookingId = searchParams.get("bookingId");
     const isEditMode = !!bookingId;
+    const prefilledClientId = searchParams.get("clientId");
+    const prefilledServiceType = searchParams.get("serviceType");
 
     // Real DB state
     const [clients, setClients] = useState<ClientWithUnit[]>([]);
@@ -71,10 +73,27 @@ function AddEvent() {
                     brand: c.brand || '',
                     notes: c.notes || ''
                 })));
+
+                if (!bookingId) {
+                    if (prefilledClientId) {
+                        const match = clientsData.find((c: any) => c.id === prefilledClientId);
+                        if (match) {
+                            setClientId(match.id);
+                            if (match.address) {
+                                setAddress(match.address);
+                                setAddressLat(match.lat ?? null);
+                                setAddressLng(match.lng ?? null);
+                            }
+                        }
+                    }
+                    if (prefilledServiceType) {
+                        setService(prefilledServiceType);
+                    }
+                }
             }
         }
         loadClients();
-    }, []);
+    }, [bookingId, prefilledClientId, prefilledServiceType]);
 
     // Simple Form State
     const [isManualClient, setIsManualClient] = useState(false);

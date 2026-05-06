@@ -278,6 +278,38 @@ export const scheduleRouter = router({
       return { message: 'Default lunch blocks created (Mon-Fri 12:00-13:00)' };
     }),
 
+  /**
+   * Returns all non-cancelled bookings for a date with client contact info —
+   * used by the Reminders page to send WhatsApp messages.
+   */
+  getRemindersForDate: protectedProcedure
+    .input(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('bookings')
+        .select('id, client_name, service_type, arrival_window_start, status, clients(name, phone)')
+        .eq('provider_id', ctx.user.id)
+        .eq('scheduled_date', input.date)
+        .neq('status', 'cancelled')
+        .order('arrival_window_start');
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+
+      return (data ?? []).map(b => {
+        const client = b.clients as unknown as { name: string; phone: string | null } | null;
+        return {
+          id: b.id as string,
+          clientName: (client?.name ?? b.client_name) as string,
+          clientPhone: (client?.phone ?? null) as string | null,
+          serviceType: b.service_type as string,
+          arrivalWindowStart: b.arrival_window_start as string,
+          status: b.status as string,
+        };
+      });
+    }),
+
   // -------------------------------------------------------------------------
   // SEC-H6: Provider-side job CRUD (migrated from direct Supabase on client)
   // -------------------------------------------------------------------------
@@ -414,5 +446,52 @@ export const scheduleRouter = router({
       }
 
       return { success: true };
+    }),
+
+  /**
+   * Returns all non-cancelled bookings for a given date with coordinates,
+   * plus the provider's base (home) location — used by the Day Route View page.
+   */
+  getRouteJobs: protectedProcedure
+    .input(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
+    .query(async ({ ctx, input }) => {
+      const [jobsRes, profileRes] = await Promise.all([
+        ctx.supabase
+          .from('bookings')
+          .select('id, client_name, address, lat, lng, arrival_window_start, service_type, status, estimated_duration_minutes')
+          .eq('provider_id', ctx.user.id)
+          .eq('scheduled_date', input.date)
+          .neq('status', 'cancelled')
+          .order('arrival_window_start'),
+        ctx.supabase
+          .from('profiles')
+          .select('base_lat, base_lng, name')
+          .eq('id', ctx.user.id)
+          .single(),
+      ]);
+
+      if (jobsRes.error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: jobsRes.error.message });
+      }
+
+      return {
+        jobs: (jobsRes.data ?? []).map(j => ({
+          id: j.id as string,
+          clientName: j.client_name as string,
+          address: j.address as string,
+          lat: j.lat as number | null,
+          lng: j.lng as number | null,
+          arrivalTime: j.arrival_window_start as string,
+          serviceType: j.service_type as string,
+          status: j.status as string,
+          durationMinutes: (j.estimated_duration_minutes as number) ?? 60,
+        })),
+        home: profileRes.data
+          ? {
+              lat: profileRes.data.base_lat as number | null,
+              lng: profileRes.data.base_lng as number | null,
+            }
+          : null,
+      };
     }),
 });

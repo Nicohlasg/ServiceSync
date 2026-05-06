@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Phone, MapPin, Wrench, Calendar, FileText, Pencil,
   Trash2, X, ChevronDown, CheckCircle2, Clock, Search, Filter, ChevronRight, Loader2,
+  RefreshCw, Plus, Repeat2,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkeletonCard, SkeletonLine, SkeletonCircle } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -76,6 +78,16 @@ function ClientDetails() {
 
   // ── Delete confirmation ──
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // ── Recurring Plans state ──
+  const [showAddPlan, setShowAddPlan] = useState(false);
+  const [planForm, setPlanForm] = useState({
+    serviceType: '',
+    intervalMonths: 3 as 1 | 2 | 3 | 6 | 12,
+    priceCents: 0,
+    nextDueDateStr: new Date().toISOString().slice(0, 10),
+    notes: '',
+  });
 
   // ── Transaction filter state ──
   const [txTab, setTxTab] = useState<"all" | "invoices" | "jobs">("all");
@@ -171,6 +183,33 @@ function ClientDetails() {
     },
     onError: (err) => toast.error(err.message || "Failed to delete client"),
   });
+
+  // ── Recurring Plans mutations ──
+  const { data: plans = [], refetch: refetchPlans } = api.plans.list.useQuery(
+    { clientId },
+    { enabled: !!clientId, staleTime: 30_000 }
+  );
+
+  const createPlanMutation = api.plans.create.useMutation({
+    onSuccess: () => { toast.success('Plan created'); setShowAddPlan(false); refetchPlans(); },
+    onError: (err) => toast.error(err.message || 'Failed to create plan'),
+  });
+
+  const markServicedMutation = api.plans.markServiced.useMutation({
+    onSuccess: () => { toast.success('Marked as serviced — next due date updated'); refetchPlans(); },
+    onError: (err) => toast.error(err.message || 'Failed to update plan'),
+  });
+
+  const removePlanMutation = api.plans.remove.useMutation({
+    onSuccess: () => { toast.success('Plan removed'); refetchPlans(); },
+    onError: (err) => toast.error(err.message || 'Failed to remove plan'),
+  });
+
+  const intervalLabel = (months: number) => {
+    if (months === 1) return 'Monthly';
+    if (months === 12) return 'Yearly';
+    return `Every ${months} months`;
+  };
 
   const startEdit = () => {
     if (!client) return;
@@ -393,6 +432,210 @@ function ClientDetails() {
           </Card>
         </motion.div>
       )}
+
+      {/* ── Recurring Plans ── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-1">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <Repeat2 className="h-4 w-4 text-blue-400" /> Recurring Plans
+          </h2>
+          <button
+            onClick={() => setShowAddPlan(v => !v)}
+            className="h-9 px-4 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-blue-600/30 transition-colors active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add Plan
+          </button>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {showAddPlan && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="overflow-hidden mb-4"
+            >
+              <Card variant="premium" className="rounded-2xl backdrop-blur-xl">
+                <CardContent className="p-5 space-y-4">
+                  <p className="text-xs font-black text-blue-400 uppercase tracking-widest">New Recurring Plan</p>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Service Type</Label>
+                    <Input
+                      value={planForm.serviceType}
+                      onChange={e => setPlanForm(p => ({ ...p, serviceType: e.target.value }))}
+                      placeholder="e.g. Aircon Servicing"
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Frequency</Label>
+                      <Select
+                        value={String(planForm.intervalMonths)}
+                        onValueChange={v => setPlanForm(p => ({ ...p, intervalMonths: Number(v) as 1 | 2 | 3 | 6 | 12 }))}
+                      >
+                        <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-xl text-white font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-950/95 border-white/10 text-white">
+                          <SelectItem value="1">Monthly</SelectItem>
+                          <SelectItem value="2">Every 2 months</SelectItem>
+                          <SelectItem value="3">Every 3 months</SelectItem>
+                          <SelectItem value="6">Every 6 months</SelectItem>
+                          <SelectItem value="12">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">Price (SGD)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={planForm.priceCents > 0 ? (planForm.priceCents / 100).toFixed(2) : ''}
+                        onChange={e => setPlanForm(p => ({ ...p, priceCents: Math.round(parseFloat(e.target.value || '0') * 100) }))}
+                        placeholder="0.00"
+                        className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest ml-1">First Due Date</Label>
+                    <Input
+                      type="date"
+                      value={planForm.nextDueDateStr}
+                      onChange={e => setPlanForm(p => ({ ...p, nextDueDateStr: e.target.value }))}
+                      className="h-12 bg-white/5 border-white/10 text-white rounded-xl appearance-none px-3 font-bold"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddPlan(false)}
+                      className="flex-1 h-12 rounded-2xl border-white/10 bg-white/5 text-zinc-500 font-black uppercase tracking-widest text-[10px] hover:text-white"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (!planForm.serviceType.trim()) { toast.error('Enter a service type'); return; }
+                        createPlanMutation.mutate({
+                          clientId,
+                          serviceType: planForm.serviceType.trim(),
+                          intervalMonths: planForm.intervalMonths,
+                          priceCents: planForm.priceCents,
+                          nextDueDate: planForm.nextDueDateStr,
+                          notes: planForm.notes,
+                        });
+                      }}
+                      disabled={createPlanMutation.isPending}
+                      className="flex-1 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
+                    >
+                      {createPlanMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Plan'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {plans.length === 0 && !showAddPlan ? (
+          <div className="text-center py-10 bg-white/5 rounded-2xl border border-white/5 border-dashed">
+            <RefreshCw className="h-7 w-7 text-zinc-700 mx-auto mb-3" />
+            <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">No recurring plans yet</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {plans.map((plan: any) => {
+              const dueDate = new Date(plan.next_due_date + 'T00:00:00');
+              const today = new Date(); today.setHours(0, 0, 0, 0);
+              const daysUntil = Math.round((dueDate.getTime() - today.getTime()) / 86400000);
+              const isOverdue = daysUntil < 0;
+              const isDueSoon = daysUntil >= 0 && daysUntil <= 14;
+
+              return (
+                <Card key={plan.id} variant="premium" className="rounded-2xl backdrop-blur-xl">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-white text-sm tracking-tight truncate">{plan.service_type}</p>
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-0.5">{intervalLabel(plan.interval_months)}</p>
+                      </div>
+                      <div className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
+                        isOverdue ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                          : isDueSoon ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                          : 'bg-white/5 border-white/10 text-zinc-400'
+                      }`}>
+                        {isOverdue ? `${Math.abs(daysUntil)}d overdue`
+                          : daysUntil === 0 ? 'Due today'
+                          : `Due in ${daysUntil}d`}
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-zinc-500 font-bold mt-2">
+                      Next: {format(dueDate, 'd MMM yyyy')}
+                      {plan.price_cents > 0 ? ` · ${formatCurrency(plan.price_cents / 100)}` : ''}
+                    </p>
+
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        className="flex-1 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 font-black uppercase tracking-widest text-[9px] transition-colors"
+                        onClick={() => {
+                          const phone = client.phone?.replace(/\D/g, '') ?? '';
+                          if (!phone) { toast.error('No phone number on file'); return; }
+                          const slug = (client as any).slug ?? '';
+                          const intLabel = intervalLabel(plan.interval_months).toLowerCase();
+                          const bookingUrl = `${window.location.origin.replace('dashboard', '')}/p/${slug}/book`;
+                          const msg = `Hi ${client.name}! 👋\n\nIt's time for your ${plan.service_type} (${intLabel}).\n\nBook your preferred slot here: ${bookingUrl}\n\nSee live availability and lock in your time instantly! 🗓️`;
+                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                        }}
+                      >
+                        Reach Out
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-10 rounded-xl bg-white/5 border-white/10 text-blue-400 hover:bg-blue-600/10 font-black uppercase tracking-widest text-[9px]"
+                        onClick={() => push(`/dashboard/schedule/add?clientId=${plan.client_id}&serviceType=${encodeURIComponent(plan.service_type)}`)}
+                      >
+                        Schedule
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-10 w-10 rounded-xl bg-white/5 border-white/10 text-zinc-500 hover:text-emerald-400 hover:bg-emerald-600/10"
+                        onClick={() => markServicedMutation.mutate({ planId: plan.id })}
+                        disabled={markServicedMutation.isPending}
+                        title="Mark as serviced"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${markServicedMutation.isPending ? 'animate-spin' : ''}`} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-10 w-10 rounded-xl text-zinc-600 hover:text-rose-400 hover:bg-rose-600/10"
+                        onClick={() => removePlanMutation.mutate({ planId: plan.id })}
+                        disabled={removePlanMutation.isPending}
+                        title="Remove plan"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
 
       {/* ── Transaction History ── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-1 mt-4">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, X, Check, Trash2, Edit } from "lucide-react";
+import { Plus, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, X, Check, Trash2, Edit, Star, Camera, Map } from "lucide-react";
 import Link from "next/link";
 import {
     format,
@@ -25,6 +25,7 @@ import { MonthWheelPicker } from "@/components/ui/date-wheel-picker";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
+import { openWhatsAppWithReview, getReviewUrl } from "@/lib/whatsapp-helpers";
 import { useRouter } from "next/navigation";
 
 export default function SchedulePage() {
@@ -53,7 +54,7 @@ export default function SchedulePage() {
 
                 const { data: bookings } = await supabase
                     .from('bookings')
-                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name)')
+                    .select('id, client_id, client_name, client_phone, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name, phone)')
                     .eq('provider_id', user.id)
                     .neq('status', 'pending')
                     .gte('scheduled_date', windowStart.toISOString().slice(0, 10))
@@ -68,7 +69,7 @@ export default function SchedulePage() {
 
                         // BUG-16 fix: Supabase returns the joined row as an object, not an array.
                         // The generated type says array — cast via unknown to override.
-                        const joinedClient = b.clients as unknown as { name: string } | null;
+                        const joinedClient = b.clients as unknown as { name: string; phone?: string } | null;
 
                         return {
                             id: b.id,
@@ -86,6 +87,7 @@ export default function SchedulePage() {
                             date: new Date(b.scheduled_date + 'T00:00:00'),
                             // BUG-11 fix: read actual amount from row
                             amount: (b.amount ?? 0) / 100,
+                            clientPhone: (b as Record<string, unknown>).client_phone as string | undefined || joinedClient?.phone || undefined,
                         };
                     });
                     setJobs(mappedJobs);
@@ -96,6 +98,8 @@ export default function SchedulePage() {
         }
         loadJobs();
     }, []);
+
+    const { data: providerProfile } = api.provider.getProfile.useQuery();
 
     // SEC-H6: Use tRPC mutation instead of direct Supabase delete
     const deleteJobMutation = api.schedule.deleteJob.useMutation({
@@ -236,6 +240,11 @@ export default function SchedulePage() {
                         <ChevronRight className="h-5 w-5 text-zinc-500 rotate-90" />
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href="/dashboard/route">
+                            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white" title="Route View">
+                                <Map className="h-5 w-5" />
+                            </Button>
+                        </Link>
                         <Button variant="ghost" size="icon" onClick={() => { setSelectedDate(new Date()); setCurrentMonth(new Date()); }} className="h-11 w-11 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white">
                             <CalendarIcon className="h-5 w-5" />
                         </Button>
@@ -395,6 +404,13 @@ export default function SchedulePage() {
                                 </div>
                             </div>
 
+                            <Button
+                                className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all border-none mb-4"
+                                onClick={() => { push(`/dashboard/schedule/${editingJob.id}`); setEditingJob(null); }}
+                            >
+                                <Camera className="h-5 w-5" /> Job Report &amp; Photos
+                            </Button>
+
                             <div className="grid grid-cols-2 gap-4 pb-4">
                                 <Button
                                     variant="outline"
@@ -413,6 +429,42 @@ export default function SchedulePage() {
                                     Delete Job
                                 </Button>
                             </div>
+
+                            {editingJob.status === "completed" && (
+                                <div className="pb-4">
+                                    {editingJob.clientPhone ? (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full h-14 rounded-2xl border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all"
+                                            onClick={() => {
+                                                openWhatsAppWithReview(
+                                                    editingJob.clientPhone!,
+                                                    editingJob.clientName,
+                                                    editingJob.service,
+                                                    providerProfile?.slug ?? '',
+                                                    editingJob.id,
+                                                );
+                                            }}
+                                        >
+                                            <Star className="h-5 w-5" />
+                                            Send Review Link
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full h-14 rounded-2xl border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all"
+                                            onClick={async () => {
+                                                const url = getReviewUrl(providerProfile?.slug ?? '', editingJob.id);
+                                                await navigator.clipboard.writeText(url);
+                                                toast.success("Review link copied!");
+                                            }}
+                                        >
+                                            <Star className="h-5 w-5" />
+                                            Copy Review Link
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         </motion.div>
                     </>
                 )}

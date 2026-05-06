@@ -245,11 +245,18 @@ export default function InvoicesPage() {
                 className="flex items-center justify-between"
             >
                 <h1 className="text-2xl font-black text-white tracking-tight leading-none">Invoices</h1>
-                <Link href="/dashboard/invoices/new">
-                    <Button size="icon" className="rounded-full h-12 w-12 shadow-xl shadow-blue-600/30 bg-blue-600 hover:bg-blue-700 active:scale-90 transition-transform">
-                        <Plus className="h-6 w-6" />
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link href="/dashboard/quotes">
+                        <Button variant="outline" className="h-10 px-4 rounded-xl bg-white/5 border-white/10 text-zinc-400 hover:text-white font-black uppercase tracking-widest text-[10px] gap-2">
+                            <FileText className="h-4 w-4" /> Quotes
+                        </Button>
+                    </Link>
+                    <Link href="/dashboard/invoices/new">
+                        <Button size="icon" className="rounded-full h-12 w-12 shadow-xl shadow-blue-600/30 bg-blue-600 hover:bg-blue-700 active:scale-90 transition-transform">
+                            <Plus className="h-6 w-6" />
+                        </Button>
+                    </Link>
+                </div>
             </motion.div>
 
             {/* Summary Cards */}

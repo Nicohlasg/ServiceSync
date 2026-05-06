@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Mail, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut } from "lucide-react";
+import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Mail, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, TrendingUp, Package, Map } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Job } from "@/lib/types";
 import { getRouteDetails, calculateLeaveTime, RouteResult } from "@/lib/maps";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { api } from "@/lib/api";
 import { SkeletonCard, SkeletonStat, SkeletonLine } from "@/components/ui/skeleton";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { PayNowPreviewModal } from "@/components/onboarding/PayNowPreviewModal";
@@ -45,6 +46,9 @@ export default function DashboardPage() {
     const [originLabel, setOriginLabel] = useState<string>("Home");
     const [noHomeAddress, setNoHomeAddress] = useState(false);
     const { push } = useRouter();
+
+    const { data: duePlans = [] } = api.plans.listDueSoon.useQuery(undefined, { staleTime: 2 * 60 * 1000 });
+    const { data: lowStockItems = [] } = api.inventory.getLowStock.useQuery(undefined, { staleTime: 60_000 });
 
     useEffect(() => {
         async function loadDashboardData() {
@@ -460,6 +464,144 @@ export default function DashboardPage() {
                     </Button>
                 </Link>
             </div>
+
+            {/* Analytics shortcut */}
+            <Link href="/dashboard/analytics" className="block">
+              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-white text-sm">Analytics</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Revenue &amp; job insights</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-600" />
+              </div>
+            </Link>
+
+            {/* Route shortcut */}
+            <Link href="/dashboard/route" className="block">
+              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <Map className="h-4 w-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-white text-sm">Today&apos;s Route</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Optimised driving order</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-600" />
+              </div>
+            </Link>
+
+            {/* Reminders shortcut */}
+            <Link href="/dashboard/reminders" className="block">
+              <Card variant="premium" className="rounded-2xl backdrop-blur-2xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform">
+                <CardContent className="p-4 flex items-center gap-3 relative z-10">
+                  <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <Bell className="h-4 w-4 text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-white text-sm">Reminders</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Send WhatsApp reminders</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-zinc-600 shrink-0" />
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Stock Alerts widget */}
+            {lowStockItems.length > 0 ? (
+              <Link href="/dashboard/inventory" className="block">
+                <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 transition-all active:scale-[0.98]">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center relative">
+                      <Package className="h-4 w-4 text-amber-400" />
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-rose-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">{lowStockItems.length}</span>
+                    </div>
+                    <div>
+                      <p className="font-black text-amber-400 text-sm">{lowStockItems.length} item{lowStockItems.length > 1 ? 's' : ''} low on stock</p>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest truncate max-w-[180px]">
+                        {(lowStockItems as any[]).slice(0, 2).map((i: any) => i.name).join(', ')}{lowStockItems.length > 2 ? ` +${lowStockItems.length - 2}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-zinc-600" />
+                </div>
+              </Link>
+            ) : (
+              <Link href="/dashboard/inventory" className="block">
+                <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                      <Package className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <div>
+                      <p className="font-black text-white text-sm">Inventory</p>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Stock levels &amp; usage</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-zinc-600" />
+                </div>
+              </Link>
+            )}
+
+            {/* Plans Due */}
+            {duePlans.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-black text-white flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse inline-block" />
+                    Plans Due
+                  </h2>
+                  <Link href="/dashboard/clients" className="text-blue-400 font-bold text-sm hover:text-blue-300">
+                    View Clients
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {duePlans.slice(0, 3).map((plan: any) => {
+                    const dueDate = new Date(plan.next_due_date + 'T00:00:00');
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const daysUntil = Math.round((dueDate.getTime() - today.getTime()) / 86400000);
+                    const isOverdue = daysUntil < 0;
+
+                    return (
+                      <Card key={plan.id} variant="premium" className="rounded-2xl backdrop-blur-xl">
+                        <CardContent className="p-4 flex items-center gap-4 relative z-10">
+                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center border shrink-0 ${
+                            isOverdue ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                              : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                          }`}>
+                            <RefreshCw className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-white text-sm truncate">{plan.clients?.name ?? 'Client'}</p>
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-0.5 truncate">
+                              {plan.service_type} · {isOverdue ? `${Math.abs(daysUntil)}d overdue` : daysUntil === 0 ? 'Due today' : `Due in ${daysUntil}d`}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="h-9 px-4 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 font-black uppercase tracking-widest text-[9px] shrink-0"
+                            onClick={() => {
+                              const phone = plan.clients?.phone?.replace(/\D/g, '') ?? '';
+                              if (!phone) { return; }
+                              const msg = `Hi ${plan.clients?.name ?? 'there'}! 👋\n\nIt's time for your ${plan.service_type}.\n\nLet me know when works for you!`;
+                              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                            }}
+                          >
+                            Reach Out
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Today's Jobs (Clustered List) */}
             <div className="space-y-4">

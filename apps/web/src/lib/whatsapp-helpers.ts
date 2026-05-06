@@ -5,7 +5,7 @@
  * No API keys required - uses native WhatsApp app
  */
 
-import { generateWALink, generateInvoiceMessage, generateReminderMessage, generateJobCompleteMessage, generateGreetingMessageTemplate, generateQuickReplyTemplate } from '@/server/services/whatsapp-simple';
+import { generateWALink, generateInvoiceMessage, generateReminderMessage, generateJobCompleteMessage, generateGreetingMessageTemplate, generateQuickReplyTemplate, generateReviewMessage, generatePlanReachOutMessage, generateDayBeforeReminderMessage, generateMorningConfirmationMessage, generateOnMyWayMessage } from '@/server/services/whatsapp-simple';
 
 export interface TechnicianProfile {
   name: string;
@@ -50,6 +50,46 @@ export function openWhatsAppWithInvoice(
     technicianName,
   });
 
+  const waLink = generateWALink({ phone: clientPhone, message });
+  window.open(waLink, '_blank');
+}
+
+/**
+ * Get the public review URL for a completed booking
+ */
+export function getReviewUrl(providerSlug: string, bookingId: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://servicesync.sg';
+  return `${baseUrl}/r/${providerSlug}/${bookingId}`;
+}
+
+/**
+ * Open WhatsApp with post-job review request message
+ */
+export function openWhatsAppWithReview(
+  clientPhone: string,
+  clientName: string,
+  serviceType: string,
+  providerSlug: string,
+  bookingId: string
+): void {
+  const reviewUrl = getReviewUrl(providerSlug, bookingId);
+  const message = generateReviewMessage({ clientName, serviceType, reviewUrl });
+  const waLink = generateWALink({ phone: clientPhone, message });
+  window.open(waLink, '_blank');
+}
+
+/**
+ * Open WhatsApp with recurring plan reach-out message
+ */
+export function openWhatsAppWithPlanReachOut(
+  clientPhone: string,
+  clientName: string,
+  serviceType: string,
+  intervalLabel: string,
+  technicianSlug: string
+): void {
+  const bookingUrl = getBookingUrl(technicianSlug);
+  const message = generatePlanReachOutMessage({ clientName, serviceType, intervalLabel, bookingUrl });
   const waLink = generateWALink({ phone: clientPhone, message });
   window.open(waLink, '_blank');
 }
@@ -117,6 +157,46 @@ export function getQuickReplyTemplate(technicianSlug: string): string {
 }
 
 /**
+ * Open WhatsApp with day-before appointment reminder
+ */
+export function openWhatsAppWithDayBeforeReminder(
+  clientPhone: string,
+  clientName: string,
+  serviceType: string,
+  dateLabel: string,
+  timeLabel: string,
+): void {
+  const message = generateDayBeforeReminderMessage({ clientName, serviceType, dateLabel, timeLabel });
+  window.open(generateWALink({ phone: clientPhone, message }), '_blank');
+}
+
+/**
+ * Open WhatsApp with morning-of confirmation message
+ */
+export function openWhatsAppWithMorningConfirmation(
+  clientPhone: string,
+  clientName: string,
+  serviceType: string,
+  timeLabel: string,
+): void {
+  const message = generateMorningConfirmationMessage({ clientName, serviceType, timeLabel });
+  window.open(generateWALink({ phone: clientPhone, message }), '_blank');
+}
+
+/**
+ * Open WhatsApp with "on my way" message
+ */
+export function openWhatsAppWithOnMyWay(
+  clientPhone: string,
+  clientName: string,
+  serviceType: string,
+  etaLabel: string,
+): void {
+  const message = generateOnMyWayMessage({ clientName, serviceType, etaLabel });
+  window.open(generateWALink({ phone: clientPhone, message }), '_blank');
+}
+
+/**
  * Copy text to clipboard (for setting up greeting messages)
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
@@ -137,8 +217,14 @@ export function useWhatsApp() {
     openInvoice: openWhatsAppWithInvoice,
     openReminder: openWhatsAppWithReminder,
     openCompletion: openWhatsAppWithCompletion,
+    openReview: openWhatsAppWithReview,
+    openPlanReachOut: openWhatsAppWithPlanReachOut,
+    openDayBeforeReminder: openWhatsAppWithDayBeforeReminder,
+    openMorningConfirmation: openWhatsAppWithMorningConfirmation,
+    openOnMyWay: openWhatsAppWithOnMyWay,
     getBookingUrl,
     getInvoiceUrl,
+    getReviewUrl,
     getGreetingTemplate: getGreetingMessageTemplate,
     getQuickReplyTemplate,
     copyToClipboard,
@@ -150,4 +236,6 @@ export {
   generateInvoiceMessage,
   generateReminderMessage,
   generateJobCompleteMessage,
+  generateReviewMessage,
+  generatePlanReachOutMessage,
 };
