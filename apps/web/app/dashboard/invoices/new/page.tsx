@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Download, Send, CheckCircle2, QrCode, Banknote, DollarSign, ChevronRight, Loader2 } from "lucide-react";
+import { Download, Send, CheckCircle2, QrCode, Banknote, DollarSign, ChevronRight, Loader2, Package, Plus, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
@@ -30,6 +30,15 @@ interface ClientOption {
   phone: string;
 }
 
+interface MaterialLine {
+  itemId: string;
+  name: string;
+  unit: string;
+  unitCostCents: number;
+  qty: number;
+  maxQty: number;
+}
+
 function NewInvoice() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "preview">("form");
@@ -47,6 +56,13 @@ function NewInvoice() {
   const [serviceSearch, setServiceSearch] = useState("");
   const [serviceDropdownOpen, setServiceDropdownOpen] = useState(false);
   const servicesQuery = api.provider.getServices.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+
+  // Inventory / materials — opt-in section
+  const inventoryQuery = (api as any).inventory.list.useQuery(undefined, { staleTime: 60_000 });
+  const [selectedMaterials, setSelectedMaterials] = useState<MaterialLine[]>([]);
+  const [materialPickerOpen, setMaterialPickerOpen] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState("");
+  const stockOutMutation = (api as any).inventory.stockOut.useMutation();
 
   useEffect(() => {
     async function loadClients() {
@@ -247,16 +263,48 @@ function NewInvoice() {
       const amountCents = Math.round(parseFloat(formData.amount) * 100);
       const depositCents = Math.round(parseFloat(formData.depositPaid || "0") * 100);
 
+      // Build line items: service + each selected material
+      const lineItems = [
+        { description: formData.serviceDescription || "Service", amountCents },
+        ...selectedMaterials.map((m) => ({
+          description: `${m.name} × ${m.qty} ${m.unit}`,
+          amountCents: Math.round(m.qty * m.unitCostCents),
+        })),
+      ];
+
       // 1. Create invoice via tRPC
       const invoice = await createInvoice.mutateAsync({
         clientId: finalClientId !== "new" ? finalClientId : undefined,
         bookingId: bookingIdParam || undefined,
-        lineItems: [{ description: formData.serviceDescription || "Service", amountCents }],
+        lineItems,
         taxCents: 0,
         depositAmountCents: depositCents,
       });
 
       setInvoiceId(invoice.id);
+
+      // 1b. Decrement inventory for each selected material — fire after invoice exists.
+      // Uses Promise.allSettled so a single stockOut failure (e.g. concurrent write
+      // dropped stock below qty) doesn't unwind the invoice that already saved.
+      if (selectedMaterials.length > 0) {
+        const stockResults = await Promise.allSettled(
+          selectedMaterials.map((m) =>
+            stockOutMutation.mutateAsync({
+              itemId: m.itemId,
+              quantity: m.qty,
+              bookingId: bookingIdParam || undefined,
+              createExpense: false, // already on the invoice
+              notes: `Used on invoice ${invoice.invoice_number ?? invoice.id}`,
+            }),
+          ),
+        );
+        const failedCount = stockResults.filter((r) => r.status === "rejected").length;
+        if (failedCount > 0) {
+          toast.warning(
+            `Invoice saved, but ${failedCount} material${failedCount > 1 ? "s" : ""} couldn't be auto-deducted. Adjust stock manually.`,
+          );
+        }
+      }
 
       // 2. Generate PDF (this also builds the real PayNow QR from the provider's key)
       try {
@@ -345,18 +393,63 @@ function NewInvoice() {
   // -------------------------------------------------------------------------
   // WhatsApp share
   // -------------------------------------------------------------------------
+  const materialsTotalCents = selectedMaterials.reduce(
+    (sum, m) => sum + Math.round(m.qty * m.unitCostCents),
+    0,
+  );
+  const serviceCents = Math.round((parseFloat(formData.amount || "0") || 0) * 100);
+  const depositCents = Math.round((parseFloat(formData.depositPaid || "0") || 0) * 100);
+  const grandTotalCents = serviceCents + materialsTotalCents;
+  const balanceDue = Math.max(0, (grandTotalCents - depositCents) / 100);
+
   const handleWhatsApp = () => {
     const phone = formData.phone.replace(/\s/g, "");
     const sgPhone = phone.startsWith("+") ? phone : `+65${phone}`;
     const message = encodeURIComponent(
       `Hi ${formData.clientName}, here is your invoice for ${formData.serviceDescription || "service"}. ` +
-      `Amount: ${formatCurrency(parseFloat(formData.amount))}. ` +
+      `Amount: ${formatCurrency(grandTotalCents / 100)}. ` +
       (pdfUrl ? `View receipt: ${pdfUrl}` : "Thank you!")
     );
     window.open(`https://wa.me/${sgPhone.replace("+", "")}?text=${message}`, "_blank");
   };
 
-  const balanceDue = Math.max(0, parseFloat(formData.amount || "0") - parseFloat(formData.depositPaid || "0"));
+  const inventoryItems = (inventoryQuery.data ?? []) as Array<{
+    id: string; name: string; unit: string; unit_cost_cents: number; quantity_on_hand: number;
+  }>;
+  const filteredInventory = inventoryItems.filter(
+    (i) =>
+      Number(i.quantity_on_hand) > 0 &&
+      !selectedMaterials.some((m) => m.itemId === i.id) &&
+      i.name.toLowerCase().includes(materialSearch.toLowerCase()),
+  );
+
+  const addMaterial = (item: { id: string; name: string; unit: string; unit_cost_cents: number; quantity_on_hand: number }) => {
+    setSelectedMaterials((prev) => [
+      ...prev,
+      {
+        itemId: item.id,
+        name: item.name,
+        unit: item.unit,
+        unitCostCents: Number(item.unit_cost_cents) || 0,
+        qty: 1,
+        maxQty: Number(item.quantity_on_hand) || 0,
+      },
+    ]);
+    setMaterialPickerOpen(false);
+    setMaterialSearch("");
+  };
+
+  const updateMaterialQty = (itemId: string, qty: number) => {
+    setSelectedMaterials((prev) =>
+      prev.map((m) =>
+        m.itemId === itemId ? { ...m, qty: Math.max(0, Math.min(m.maxQty, qty)) } : m,
+      ),
+    );
+  };
+
+  const removeMaterial = (itemId: string) => {
+    setSelectedMaterials((prev) => prev.filter((m) => m.itemId !== itemId));
+  };
 
   return (
     <div className="space-y-6 pt-4 pb-20">
@@ -581,9 +674,121 @@ function NewInvoice() {
                     </div>
                   </div>
 
+                  {/* Materials Used — opt-in inventory linkage */}
+                  {inventoryItems.length > 0 && (
+                    <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-slate-800 font-bold text-lg flex items-center gap-2">
+                          <Package className="h-5 w-5 text-amber-500" />
+                          Materials Used <span className="text-slate-400 text-sm font-medium">(Optional)</span>
+                        </Label>
+                        {selectedMaterials.length > 0 && (
+                          <span className="text-sm font-bold text-slate-700 font-mono">
+                            +{formatCurrency(materialsTotalCents / 100)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Selected materials */}
+                      {selectedMaterials.length > 0 && (
+                        <div className="space-y-2">
+                          {selectedMaterials.map((m) => (
+                            <div key={m.itemId} className="flex items-center gap-2 bg-amber-50/60 border border-amber-200/60 rounded-xl p-2.5">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-800 text-sm truncate">{m.name}</p>
+                                <p className="text-[11px] text-slate-500 font-mono">{formatCurrency(m.unitCostCents / 100)} / {m.unit} · {m.maxQty} in stock</p>
+                              </div>
+                              <input
+                                type="number"
+                                min={0}
+                                max={m.maxQty}
+                                step={0.01}
+                                value={m.qty}
+                                onChange={(e) => updateMaterialQty(m.itemId, parseFloat(e.target.value) || 0)}
+                                className="w-16 h-10 bg-white border border-slate-300 rounded-lg text-center font-bold text-sm shadow-sm focus:outline-none focus:border-amber-400"
+                              />
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider w-10 text-center shrink-0">{m.unit}</span>
+                              <span className="text-sm font-bold font-mono text-slate-800 w-16 text-right shrink-0">
+                                {formatCurrency((m.qty * m.unitCostCents) / 100)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeMaterial(m.itemId)}
+                                className="text-slate-400 hover:text-red-500 shrink-0 p-1"
+                                aria-label={`Remove ${m.name}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Picker */}
+                      {!materialPickerOpen ? (
+                        <button
+                          type="button"
+                          onClick={() => setMaterialPickerOpen(true)}
+                          className="w-full h-12 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50/50 transition-all flex items-center justify-center gap-2 font-bold text-sm"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Material
+                        </button>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Search className="absolute left-4 top-3 h-5 w-5 text-slate-400 z-10" />
+                            <Input
+                              autoFocus
+                              value={materialSearch}
+                              onChange={(e) => setMaterialSearch(e.target.value)}
+                              placeholder="Search inventory..."
+                              className="pl-11 pr-11 h-12 bg-white border-slate-300 rounded-xl text-base font-medium shadow-sm text-slate-800"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setMaterialPickerOpen(false); setMaterialSearch(""); }}
+                              className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                              aria-label="Close picker"
+                            >
+                              <XIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="bg-white border border-slate-200 rounded-xl shadow-md max-h-56 overflow-y-auto">
+                            {filteredInventory.length === 0 ? (
+                              <p className="text-center py-4 text-slate-400 text-sm font-medium">
+                                {inventoryItems.length === selectedMaterials.length
+                                  ? "All items already added"
+                                  : materialSearch
+                                    ? "No matching items"
+                                    : "No items in stock"}
+                              </p>
+                            ) : (
+                              filteredInventory.map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => addMaterial(item)}
+                                  className="w-full text-left px-4 py-3 hover:bg-amber-50 transition-colors border-b border-slate-100 last:border-0 flex justify-between items-center gap-3"
+                                >
+                                  <span className="font-medium text-slate-800 truncate">{item.name}</span>
+                                  <span className="text-xs text-slate-500 font-mono shrink-0">
+                                    {formatCurrency(Number(item.unit_cost_cents) / 100)} · {Number(item.quantity_on_hand)} {item.unit}
+                                  </span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-800 font-bold text-lg">Total Cost (SGD)</Label>
+                      <Label className="text-slate-800 font-bold text-lg">
+                        {selectedMaterials.length > 0 ? "Service Cost (SGD)" : "Total Cost (SGD)"}
+                      </Label>
                       <div className="relative">
                         <DollarSign className="absolute left-4 top-4 h-6 w-6 text-slate-400" />
                         <Input id="amount" name="amount" type="number" step="0.01" placeholder="0.00" className="pl-12 h-14 bg-white border-slate-300 rounded-xl text-xl font-bold font-mono shadow-sm text-slate-800 placeholder:text-slate-300" value={formData.amount} onChange={handleInputChange} required />
@@ -598,6 +803,24 @@ function NewInvoice() {
                       <p className="text-xs text-slate-500 font-medium">Escrow held by ServiceSync</p>
                     </div>
                   </div>
+
+                  {/* Running total — visible only when materials present */}
+                  {selectedMaterials.length > 0 && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600 font-medium">Service</span>
+                        <span className="font-mono font-bold text-slate-800">{formatCurrency(serviceCents / 100)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600 font-medium">Materials ({selectedMaterials.length})</span>
+                        <span className="font-mono font-bold text-slate-800">{formatCurrency(materialsTotalCents / 100)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-base pt-2 border-t border-blue-200">
+                        <span className="text-slate-800 font-bold">Invoice Total</span>
+                        <span className="font-mono font-extrabold text-blue-600 text-lg">{formatCurrency(grandTotalCents / 100)}</span>
+                      </div>
+                    </div>
+                  )}
 
                   <Button type="submit" className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold shadow-lg shadow-blue-500/30 mt-8 active:scale-[0.98] transition-all" disabled={!formData.clientId || !formData.amount || loading}>
                     {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (<>Generate Invoice <ChevronRight className="ml-2 h-6 w-6" /></>)}

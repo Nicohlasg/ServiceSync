@@ -18,18 +18,22 @@ export default function UpdatePasswordPage() {
     const { push } = useRouter();
 
     useEffect(() => {
-        // Ensure user actually holds an authenticated session
-        const init = async () => {
-            const supabase = createSupabaseBrowserClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+        const supabase = createSupabaseBrowserClient();
+
+        // Listen for auth state changes — the session from the password reset
+        // link arrives asynchronously after the auth callback redirect, so a
+        // one-shot getSession() can race and return null before it's ready.
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                setIsVerifying(false);
+            } else if (event === 'INITIAL_SESSION') {
+                // No session on initial load — link is invalid or already used.
                 toast.error("Invalid or expired password reset link.");
                 push("/login");
-            } else {
-                setIsVerifying(false);
             }
-        };
-        init();
+        });
+
+        return () => subscription.unsubscribe();
     }, [push]);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {

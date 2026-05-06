@@ -152,6 +152,21 @@ export const bookingRouter = router({
       }
       const amount = service.price_cents;
 
+      // Phone-to-client matching: if an existing client record for this provider has the
+      // same phone number, link the booking to that client so reminders, history, and
+      // the client detail page all show it correctly — even when the homeowner books via
+      // the public page under a different name.
+      let matchedClientId: string | null = null;
+      if (clientPhone) {
+        const { data: matchedClient } = await ctx.supabase
+          .from('clients')
+          .select('id')
+          .eq('provider_id', providerId)
+          .eq('phone', clientPhone)
+          .maybeSingle();
+        matchedClientId = matchedClient?.id ?? null;
+      }
+
       // Use a raw SQL transaction with SELECT FOR UPDATE for race condition handling
       const { data: result, error: txError } = await ctx.supabase.rpc(
         'create_booking_with_lock',
@@ -225,6 +240,7 @@ export const bookingRouter = router({
             client_phone: clientPhone,
             client_email: clientEmail,
             notes: notes ?? '',
+            ...(matchedClientId && { client_id: matchedClientId }),
           })
           .select()
           .single();
@@ -297,6 +313,18 @@ export const bookingRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to create booking',
         });
+      }
+
+      // Best-effort: link booking to existing client record if phone matched.
+      // Non-blocking — a failure here doesn't affect the confirmed booking.
+      if (matchedClientId) {
+        ctx.supabase
+          .from('bookings')
+          .update({ client_id: matchedClientId })
+          .eq('id', bookingId)
+          .then(({ error }) => {
+            if (error) console.warn('[Booking] client_id patch failed:', error.message);
+          });
       }
 
       const extra =

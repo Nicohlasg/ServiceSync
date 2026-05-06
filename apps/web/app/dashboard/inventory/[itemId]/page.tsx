@@ -33,10 +33,11 @@ const CATEGORIES = [
   { value: 'other', label: 'Others' },
 ] as const;
 
-function getStockStatus(qty: number, minQty: number) {
+function getStockStatus(qty: number, minQty: number, maxQty = 0) {
   if (qty <= 0) return 'out';
   if (minQty > 0 && qty <= minQty) return 'low';
-  if (minQty > 0 && qty <= minQty * 2) return 'warn';
+  const warnLevel = maxQty > 0 ? maxQty * 0.5 : minQty * 2;
+  if (minQty > 0 && qty <= warnLevel) return 'warn';
   return 'ok';
 }
 
@@ -86,6 +87,7 @@ export default function InventoryItemPage() {
   const [editCategory, setEditCategory] = useState('');
   const [editUnit, setEditUnit] = useState('');
   const [editMinQty, setEditMinQty] = useState('');
+  const [editMaxQty, setEditMaxQty] = useState('');
   const [editCost, setEditCost] = useState('');
   const [editSupplierName, setEditSupplierName] = useState('');
   const [editSupplierContact, setEditSupplierContact] = useState('');
@@ -155,6 +157,7 @@ export default function InventoryItemPage() {
     setEditCategory(item.category ?? '');
     setEditUnit(item.unit ?? '');
     setEditMinQty(String(item.min_quantity ?? 0));
+    setEditMaxQty(item.max_quantity ? String(item.max_quantity) : '');
     setEditCost(String((item.unit_cost_cents ?? 0) / 100));
     setEditSupplierName(item.supplier_name ?? '');
     setEditSupplierContact(item.supplier_contact ?? '');
@@ -198,7 +201,8 @@ export default function InventoryItemPage() {
   const transactions = data.transactions as any[];
   const qty = Number(item.quantity_on_hand);
   const minQty = Number(item.min_quantity);
-  const status = getStockStatus(qty, minQty);
+  const maxQty = Number(item.max_quantity ?? 0);
+  const status = getStockStatus(qty, minQty, maxQty);
   const catColor = CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS.other;
   const visibleTxns = historyExpanded ? transactions : transactions.slice(0, 5);
 
@@ -564,7 +568,7 @@ export default function InventoryItemPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-2">
                     <p className="text-xs font-black text-zinc-500">Reorder at</p>
                     <Input
@@ -574,6 +578,18 @@ export default function InventoryItemPage() {
                       value={editMinQty}
                       onChange={(e) => setEditMinQty(e.target.value)}
                       className="h-12 bg-white/5 border-white/10 text-white rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-black text-zinc-500">Full stock</p>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      placeholder="opt."
+                      value={editMaxQty}
+                      onChange={(e) => setEditMaxQty(e.target.value)}
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold"
                     />
                   </div>
                   <div className="space-y-2">
@@ -630,6 +646,7 @@ export default function InventoryItemPage() {
                         category: editCategory as any || undefined,
                         unit: editUnit || undefined,
                         minQuantity: parseFloat(editMinQty) || 0,
+                        maxQuantity: editMaxQty.trim() ? parseFloat(editMaxQty) : null,
                         unitCostCents: Math.round((parseFloat(editCost) || 0) * 100),
                         supplierName: editSupplierName.trim() || undefined,
                         supplierContact: editSupplierContact.trim() || undefined,

@@ -210,20 +210,22 @@ export default function OnboardingPage() {
             <div className="w-full max-w-lg space-y-6">
 
                 {/* Progress Header */}
-                <div className="text-center space-y-3 relative">
-                    <BackButton
-                        onClick={step > 1 ? () => setStep(step - 1) : undefined}
-                        href={step === 1 ? "/dashboard/settings" : undefined}
-                        className="absolute left-0 top-0"
-                    />
-                    <button
-                        onClick={() => push("/dashboard")}
-                        className="absolute right-0 top-0 h-12 w-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-sm hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-                        aria-label="Close wizard"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                    <h1 className="text-3xl font-black text-white tracking-tight pt-14">
+                <div className="text-center space-y-3">
+                    {/* Top-row controls — flex layout keeps Back/X aligned and avoids absolute-positioning glyph drift */}
+                    <div className="flex items-center justify-between">
+                        <BackButton
+                            onClick={step > 1 ? () => setStep(step - 1) : undefined}
+                            href={step === 1 ? "/dashboard/settings" : undefined}
+                        />
+                        <button
+                            onClick={() => push("/dashboard")}
+                            className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-sm hover:bg-white/20 text-white flex items-center justify-center transition-colors shrink-0"
+                            aria-label="Close wizard"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+                    <h1 className="text-3xl font-black text-white tracking-tight">
                         {isRerun ? t("rerunTitle") : t("title")}
                     </h1>
                     <p className="text-slate-400 text-sm">

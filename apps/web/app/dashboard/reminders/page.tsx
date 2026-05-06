@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { format, parseISO, addDays, subDays } from "date-fns";
 import { motion } from "framer-motion";
-import { Bell, ChevronLeft, ChevronRight, MessageCircle, Clock } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, MessageCircle, Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { BackButton } from "@/components/ui/back-button";
@@ -113,9 +113,15 @@ export default function RemindersPage() {
         <button
           type="button"
           onClick={() => dateInputRef.current?.showPicker()}
-          className="font-black text-white text-base hover:text-blue-300 transition-colors"
+          className="flex items-center gap-2 font-black text-white text-base hover:text-blue-300 transition-colors"
         >
+          <Calendar className="h-4 w-4 text-blue-400" />
           {format(parseISO(date), "EEEE, d MMMM")}
+          {date === format(new Date(), "yyyy-MM-dd") && (
+            <span className="px-1.5 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 text-[8px] font-black uppercase tracking-widest text-blue-300">
+              Today
+            </span>
+          )}
         </button>
         <button
           onClick={() => setDate((d) => format(addDays(parseISO(d), 1), "yyyy-MM-dd"))}
@@ -142,7 +148,9 @@ export default function RemindersPage() {
         <div className="space-y-4">
           {(jobs as any[]).map((j: any, index: number) => {
             const timeLabel = format(parseISO(j.arrivalWindowStart), "h:mm a");
-            const isCompleted = j.status === "completed";
+            // Mark as completed if DB status is completed OR if the scheduled time
+            // has already passed (covers public bookings that stay "pending" forever).
+            const isCompleted = j.status === "completed" || parseISO(j.arrivalWindowStart) < new Date();
 
             return (
               <motion.div

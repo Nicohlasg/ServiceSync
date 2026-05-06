@@ -19,6 +19,7 @@ import { expensesRouter } from './expenses';
 import { analyticsRouter } from './analytics';
 import { inventoryRouter } from './inventory';
 import { notificationsRouter } from './notifications';
+import { gstRouter } from './gst';
 
 export const appRouter = router({
   cash: cashRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   inventory: inventoryRouter,
   notifications: notificationsRouter,
+  gst: gstRouter,
   // BETA-ONLY: REMOVE FOR PUBLIC LAUNCH
   beta: betaRouter,
 });

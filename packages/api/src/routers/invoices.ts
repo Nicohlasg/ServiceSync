@@ -686,6 +686,52 @@ export const invoicesRouter = router({
       };
     }),
 
+  /** Daily revenue breakdown for a single month — used by analytics expand/drill-down view */
+  getDailyBreakdown: protectedProcedure
+    .input(z.object({
+      year: z.number().int().min(2020).max(2100),
+      month: z.number().int().min(1).max(12),
+    }))
+    .query(async ({ ctx, input }) => {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const startDate = `${input.year}-${pad(input.month)}-01`;
+      const nextMonth = input.month === 12 ? 1 : input.month + 1;
+      const nextYear = input.month === 12 ? input.year + 1 : input.year;
+      const endDate = `${nextYear}-${pad(nextMonth)}-01`;
+
+      const { data, error } = await ctx.supabase
+        .from('invoices')
+        .select('total_cents, paid_at, created_at')
+        .eq('provider_id', ctx.user.id)
+        .gte('created_at', startDate)
+        .lt('created_at', endDate)
+        .in('status', ['paid_cash', 'paid_qr']);
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+
+      const daysInMonth = new Date(input.year, input.month, 0).getDate();
+      const days: Record<number, { revenue: number; count: number }> = {};
+      for (let d = 1; d <= daysInMonth; d++) days[d] = { revenue: 0, count: 0 };
+
+      for (const inv of data ?? []) {
+        const day = parseInt(
+          new Date(inv.paid_at ?? inv.created_at)
+            .toLocaleDateString('en-SG', { day: 'numeric', timeZone: 'Asia/Singapore' }),
+          10
+        );
+        if (days[day]) {
+          days[day].revenue += inv.total_cents;
+          days[day].count += 1;
+        }
+      }
+
+      return Array.from({ length: daysInMonth }, (_, i) => ({
+        day: i + 1,
+        revenueCents: days[i + 1].revenue,
+        invoiceCount: days[i + 1].count,
+      }));
+    }),
+
   /**
    * Gets yearly breakdown across multiple years.
    */

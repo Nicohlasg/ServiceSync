@@ -83,7 +83,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       mutationCache: new MutationCache({ onError: handleError }),
       defaultOptions: {
         queries: {
-          staleTime: 5000,
+          staleTime: 2 * 60 * 1000,
+          gcTime: 10 * 60 * 1000,
           refetchOnWindowFocus: false,
         },
         mutations: {

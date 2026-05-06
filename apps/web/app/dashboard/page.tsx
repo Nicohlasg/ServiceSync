@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, Package, Map } from "lucide-react";
+import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, Package, Map, FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,28 +59,45 @@ export default function DashboardPage() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
-                // 1. Fetch Profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('name, avatar_url, base_lat, base_lng')
-                    .eq('id', user.id)
-                    .single();
-
-                if (profile) setUserProfile({ name: profile.name ?? 'Technician', avatar_url: profile.avatar_url, base_lat: profile.base_lat, base_lng: profile.base_lng });
-
                 const todayStr = new Date().toISOString().split('T')[0];
 
-                // 2. Fetch Today's Bookings (Exclude pending)
-                const { data: bookings } = await supabase
-                    .from('bookings')
-                    .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name)')
-                    .eq('provider_id', user.id)
-                    .eq('scheduled_date', todayStr)
-                    .neq('status', 'pending')
-                    .order('arrival_window_start', { ascending: true });
+                // Fetch all 4 dashboard queries in parallel — was sequential, ~3× faster
+                const [profileRes, bookingsRes, invoicesRes, pendingCountRes] = await Promise.all([
+                    supabase
+                        .from('profiles')
+                        .select('name, avatar_url, base_lat, base_lng')
+                        .eq('id', user.id)
+                        .single(),
+                    supabase
+                        .from('bookings')
+                        .select('id, client_id, client_name, status, scheduled_date, arrival_window_start, service_type, address, lat, lng, amount, clients(name)')
+                        .eq('provider_id', user.id)
+                        .eq('scheduled_date', todayStr)
+                        .neq('status', 'pending')
+                        .order('arrival_window_start', { ascending: true }),
+                    supabase
+                        .from('invoices')
+                        .select('total_cents, paid_at, status, payment_method')
+                        .eq('provider_id', user.id)
+                        .in('status', ['paid_cash', 'paid_qr']),
+                    supabase
+                        .from('bookings')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('provider_id', user.id)
+                        .eq('status', 'pending'),
+                ]);
 
-                if (bookings) {
-                    const mappedJobs: Job[] = bookings.map(b => {
+                if (profileRes.data) {
+                    setUserProfile({
+                        name: profileRes.data.name ?? 'Technician',
+                        avatar_url: profileRes.data.avatar_url,
+                        base_lat: profileRes.data.base_lat,
+                        base_lng: profileRes.data.base_lng,
+                    });
+                }
+
+                if (bookingsRes.data) {
+                    const mappedJobs: Job[] = bookingsRes.data.map(b => {
                         const dateObj = new Date(b.arrival_window_start);
                         const timeStr = dateObj.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: true });
                         const isCompleted = b.status === 'completed';
@@ -111,35 +128,20 @@ export default function DashboardPage() {
                     setJobs(mappedJobs);
                 }
 
-                // 3. Fetch Today's Earnings (from invoices paid today)
-                const { data: invoices } = await supabase
-                    .from('invoices')
-                    .select('total_cents, paid_at, status, payment_method')
-                    .eq('provider_id', user.id)
-                    .in('status', ['paid_cash', 'paid_qr']);
-
-                if (invoices) {
+                if (invoicesRes.data) {
                     let cashCents = 0;
                     let bankCents = 0;
-                    
-                    invoices.forEach(inv => {
+                    invoicesRes.data.forEach(inv => {
                         if (inv.paid_at && inv.paid_at.startsWith(todayStr)) {
                             if (inv.payment_method === 'cash') cashCents += (inv.total_cents ?? 0);
                             else bankCents += (inv.total_cents ?? 0);
                         }
                     });
-
                     setCashInPocket(cashCents / 100);
                     setBankTransfers(bankCents / 100);
                 }
 
-                // 4. Fetch Pending Requests Count
-                const { count } = await supabase
-                    .from('bookings')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('provider_id', user.id)
-                    .eq('status', 'pending');
-                setPendingRequestsCount(count || 0);
+                setPendingRequestsCount(pendingCountRes.count || 0);
 
             } catch (err) {
                 console.error("Failed to load dashboard data", err);
@@ -473,34 +475,40 @@ export default function DashboardPage() {
                 </Link>
             </div>
 
-            {/* Route shortcut */}
-            <Link href="/dashboard/route" className="block">
-              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                    <Map className="h-4 w-4 text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="font-black text-white text-sm">Today&apos;s Route</p>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Optimised driving order</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-zinc-600" />
-              </div>
-            </Link>
-
-            {/* Reminders shortcut */}
+            {/* Reminders — shows today's upcoming jobs as mini chips */}
             <Link href="/dashboard/reminders" className="block">
               <Card variant="premium" className="rounded-2xl backdrop-blur-2xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform">
-                <CardContent className="p-4 flex items-center gap-3 relative z-10">
-                  <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                    <Bell className="h-4 w-4 text-indigo-400" />
+                <CardContent className="p-4 relative z-10 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                      <Bell className="h-4 w-4 text-indigo-400" />
+                      {upcomingJobs.filter(j => j.status !== 'completed').length > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-indigo-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">
+                          {upcomingJobs.filter(j => j.status !== 'completed').length}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-white text-sm">Reminders</p>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        {upcomingJobs.filter(j => j.status !== 'completed').length > 0
+                          ? `${upcomingJobs.filter(j => j.status !== 'completed').length} job${upcomingJobs.filter(j => j.status !== 'completed').length > 1 ? 's' : ''} today — tap to send reminders`
+                          : 'Send WhatsApp reminders'}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-zinc-600 shrink-0" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-white text-sm">Reminders</p>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Send WhatsApp reminders</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-zinc-600 shrink-0" />
+                  {upcomingJobs.filter(j => j.status !== 'completed').length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {upcomingJobs.filter(j => j.status !== 'completed').slice(0, 3).map(job => (
+                        <div key={job.id} className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2 py-1">
+                          <Clock className="h-3 w-3 text-indigo-400 shrink-0" />
+                          <span className="text-[10px] font-black text-indigo-300 truncate max-w-[90px]">{job.clientName}</span>
+                          <span className="text-[10px] font-black text-indigo-500">{job.time.split(' ')[0]}{job.time.split(' ')[1]?.toLowerCase()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </Link>
@@ -537,9 +545,12 @@ export default function DashboardPage() {
                       {(inventoryItems as any[]).slice(0, 5).map((item: any) => {
                         const qty = Number(item.quantity_on_hand ?? 0);
                         const minQty = Number(item.min_quantity ?? 0);
-                        const pct = minQty > 0
-                          ? Math.min(100, Math.round((qty / (minQty * 2)) * 100))
-                          : qty > 0 ? 80 : 0;
+                        const maxQty = Number(item.max_quantity ?? 0);
+                        const pct = maxQty > 0
+                          ? Math.min(100, Math.round((qty / maxQty) * 100))
+                          : minQty > 0
+                            ? Math.min(100, Math.round((qty / (minQty * 2)) * 100))
+                            : qty > 0 ? 80 : 0;
                         const barColor = qty <= 0 ? 'bg-rose-500' : (minQty > 0 && qty <= minQty) ? 'bg-amber-500' : 'bg-emerald-500';
                         return (
                           <div key={item.id} className="flex items-center gap-2">
@@ -555,6 +566,26 @@ export default function DashboardPage() {
                       })}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* GST / Tax Reports shortcut */}
+            <Link href="/dashboard/gst" className="block">
+              <Card variant="premium" className="rounded-2xl backdrop-blur-2xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform">
+                <CardContent className="p-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                        <FileText className="h-4 w-4 text-violet-400" />
+                      </div>
+                      <div>
+                        <p className="font-black text-white text-sm">GST / Tax Reports</p>
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Quarterly revenue &amp; IRAS filing</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-zinc-600 shrink-0" />
+                  </div>
                 </CardContent>
               </Card>
             </Link>
@@ -619,9 +650,15 @@ export default function DashboardPage() {
                     <h2 className="text-2xl font-black text-white flex items-center gap-3">
                         Today&apos;s Route <span className="bg-blue-600 text-sm font-bold text-white px-3 py-1 rounded-full shadow-sm">{upcomingJobs.length} Jobs</span>
                     </h2>
-                    <Link href="/dashboard/schedule" className="text-blue-400 font-bold text-base hover:text-blue-300 hover:underline">
-                        See All
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link href="/dashboard/route" className="h-9 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5 hover:bg-emerald-500/20 transition-colors">
+                            <Map className="h-3.5 w-3.5 text-emerald-400" />
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Route</span>
+                        </Link>
+                        <Link href="/dashboard/schedule" className="text-blue-400 font-bold text-base hover:text-blue-300 hover:underline">
+                            See All
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="space-y-4 relative pb-2 overflow-x-hidden">
@@ -703,7 +740,7 @@ export default function DashboardPage() {
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                            transition={{ type: "tween", duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
                             className="fixed inset-x-0 bottom-0 top-12 z-[100] bg-zinc-950 shadow-2xl rounded-t-[2rem] overflow-hidden flex flex-col border-t border-white/10 will-change-transform"
                         >
                             {/* Header Image / Map */}
@@ -724,9 +761,8 @@ export default function DashboardPage() {
                                         src="https://images.unsplash.com/photo-1625322086987-feece9d1b9cc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzaW5nYXBvcmUlMjBtYXAlMjBsb2NhdGlvbiUyMG5hdmlnYXRpb24lMjBtYXB8ZW58MXx8fHwxNzcwMzIwODc2fDA&ixlib=rb-4.1.0&q=80&w=1080"
                                         alt="Map"
                                         fill
-                                        sizes="100vw"
+                                        sizes="(max-width: 640px) 100vw, 640px"
                                         className="object-cover opacity-50"
-                                        unoptimized
                                     />
                                 )}
 

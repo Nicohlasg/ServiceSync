@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,20 @@ export default function InvoicesPage() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const selectMode = selectedIds.size > 0;
     const utils = api.useUtils();
+    const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const justLongPressed = useRef(false);
+
+    function startLongPress(id: string) {
+        pressTimer.current = setTimeout(() => {
+            justLongPressed.current = true;
+            window.navigator?.vibrate?.(10);
+            setSelectedIds(prev => { const next = new Set(prev); next.add(id); return next; });
+        }, 500);
+    }
+
+    function cancelLongPress() {
+        if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; }
+    }
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev => {
@@ -520,8 +534,14 @@ export default function InvoicesPage() {
                                                         className={`active:scale-[0.98] transition-all cursor-pointer group rounded-2xl border ${
                                                             isSelected ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-600/10' : 'border-white/10 hover:border-blue-500/40'
                                                         }`}
-                                                        onClick={() => selectMode ? toggleSelect(invoice.id) : push(`/dashboard/invoices/${invoice.id}`)}
-                                                        onContextMenu={(e) => { e.preventDefault(); toggleSelect(invoice.id); }}
+                                                        onClick={() => {
+                                                            if (justLongPressed.current) { justLongPressed.current = false; return; }
+                                                            if (selectMode) { toggleSelect(invoice.id); } else { push(`/dashboard/invoices/${invoice.id}`); }
+                                                        }}
+                                                        onPointerDown={() => startLongPress(invoice.id)}
+                                                        onPointerUp={cancelLongPress}
+                                                        onPointerLeave={cancelLongPress}
+                                                        onPointerCancel={cancelLongPress}
                                                     >
                                                         <CardContent className="p-4 flex items-center justify-between relative z-10">
                                                             <div className="flex items-center gap-4">
@@ -607,24 +627,33 @@ export default function InvoicesPage() {
                                     Deselect
                                 </button>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                                 <Button
                                     size="lg"
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-xl shadow-lg shadow-emerald-600/20"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[9px] h-12 rounded-xl shadow-lg shadow-emerald-600/20 px-2"
                                     disabled={isBulkBusy}
                                     onClick={() => bulkUpdateStatus.mutate({ invoiceIds: Array.from(selectedIds), status: 'paid_cash' })}
                                 >
-                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                                    Mark Paid
+                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
+                                    Cash
+                                </Button>
+                                <Button
+                                    size="lg"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[9px] h-12 rounded-xl shadow-lg shadow-blue-600/20 px-2"
+                                    disabled={isBulkBusy}
+                                    onClick={() => bulkUpdateStatus.mutate({ invoiceIds: Array.from(selectedIds), status: 'paid_qr' })}
+                                >
+                                    {bulkUpdateStatus.isPending ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-1 h-3.5 w-3.5" />}
+                                    PayNow
                                 </Button>
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="flex-1 border-white/10 bg-white/5 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 font-black uppercase tracking-widest text-[10px] h-12 rounded-xl"
+                                    className="border-white/10 bg-white/5 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 font-black uppercase tracking-widest text-[9px] h-12 rounded-xl px-2"
                                     disabled={isBulkBusy}
                                     onClick={() => bulkDelete.mutate({ invoiceIds: Array.from(selectedIds) })}
                                 >
-                                    {bulkDelete.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                    {bulkDelete.isPending ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1 h-3.5 w-3.5" />}
                                     Delete
                                 </Button>
                             </div>

@@ -62,13 +62,12 @@ export function LocalePicker({
           await setPreferredLocale.mutateAsync({ locale: next });
         } catch (err) {
           // UNAUTHORIZED is expected pre-auth (landing/signup) — cookie is
-          // enough, the profile row doesn't exist yet. Any other error is
-          // a real failure and we surface it.
+          // enough, the profile row doesn't exist yet.
+          // For any other error, warn but still apply the locale change locally
+          // so the UI language switch is never blocked by a server write failure.
           const code = (err as { data?: { code?: string } })?.data?.code;
           if (code && code !== 'UNAUTHORIZED') {
-            toast.error("Couldn't save your language. Please try again.");
-            setPending(null);
-            return;
+            toast.error("Language saved locally — couldn't sync to server.");
           }
         }
       }

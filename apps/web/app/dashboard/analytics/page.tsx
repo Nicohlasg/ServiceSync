@@ -1,21 +1,23 @@
 "use client";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import { AnimatePresence, motion as m } from "framer-motion";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BackButton } from "@/components/ui/back-button";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Briefcase, Users, Receipt, Loader2, Star } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
+import { TrendingUp, TrendingDown, Briefcase, Users, Receipt, Loader2, Star, Maximize2, X } from "lucide-react";
+
+const RevenueChart = dynamic(() => import("@/components/analytics/RevenueChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-40 flex items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
+    </div>
+  ),
+});
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LAUNCH_YEAR = 2026;
@@ -24,6 +26,9 @@ export default function AnalyticsPage() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const [year, setYear] = useState(currentYear);
+  const [expandedChart, setExpandedChart] = useState(false);
+  const [chartView, setChartView] = useState<'month' | 'day'>('month');
+  const [selectedChartMonth, setSelectedChartMonth] = useState(currentMonth);
 
   const yearOptions = Array.from(
     { length: Math.max(1, currentYear - LAUNCH_YEAR + 1) },
@@ -45,12 +50,23 @@ export default function AnalyticsPage() {
     { staleTime: 2 * 60 * 1000 }
   );
 
+  const { data: dailyData, isLoading: dailyLoading } = (api as any).invoices.getDailyBreakdown.useQuery(
+    { year, month: selectedChartMonth },
+    { staleTime: 5 * 60 * 1000, enabled: expandedChart && chartView === 'day' }
+  );
+
   const months = (monthlyData?.months ?? []) as Array<{ month: number; revenueCents: number; invoiceCount: number }>;
 
   const chartData = months.map(m => ({
-    month: MONTHS_SHORT[m.month - 1],
+    label: MONTHS_SHORT[m.month - 1],
     revenue: m.revenueCents / 100,
     count: m.invoiceCount,
+  }));
+
+  const dailyChartData = ((dailyData ?? []) as Array<{ day: number; revenueCents: number; invoiceCount: number }>).map(d => ({
+    label: String(d.day),
+    revenue: d.revenueCents / 100,
+    count: d.invoiceCount,
   }));
 
   const bestMonth = months.reduce<{ month: number; revenueCents: number; invoiceCount: number } | null>(
@@ -189,29 +205,179 @@ export default function AnalyticsPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-1">
         <Card variant="premium" className="rounded-2xl backdrop-blur-xl">
           <CardContent className="p-5 relative z-10">
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Monthly Revenue</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Monthly Revenue</p>
+              <button
+                onClick={() => setExpandedChart(true)}
+                className="h-7 w-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
+              >
+                <Maximize2 className="h-3.5 w-3.5 text-zinc-400" />
+              </button>
+            </div>
             {monthlyLoading ? (
               <div className="h-40 flex items-center justify-center">
                 <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="month" tick={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#a1a1aa', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 12, fontWeight: 700 }}
-                    formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  />
-                  <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                </BarChart>
-              </ResponsiveContainer>
+              <RevenueChart data={chartData} />
             )}
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Expanded Chart Overlay */}
+      <AnimatePresence>
+        {expandedChart && (
+          <>
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-zinc-950/90 z-[80] backdrop-blur-md"
+              onClick={() => setExpandedChart(false)}
+            />
+            <m.div
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ type: "tween", duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-4 top-12 bottom-12 z-[90] bg-zinc-950 border border-white/10 rounded-3xl flex flex-col overflow-hidden shadow-2xl"
+            >
+              {/* Overlay header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+                <div>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Revenue Breakdown</p>
+                  <p className="text-lg font-black text-white mt-0.5">{year}</p>
+                </div>
+                <button
+                  onClick={() => setExpandedChart(false)}
+                  className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
+                >
+                  <X className="h-4 w-4 text-zinc-400" />
+                </button>
+              </div>
+
+              {/* View toggle */}
+              <div className="px-5 pb-3 shrink-0">
+                <div className="flex gap-1 bg-white/5 rounded-xl p-1">
+                  <button
+                    onClick={() => setChartView('month')}
+                    className={`flex-1 h-8 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                      chartView === 'month'
+                        ? 'bg-white/10 text-white border border-white/20'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    By Month
+                  </button>
+                  <button
+                    onClick={() => setChartView('day')}
+                    className={`flex-1 h-8 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                      chartView === 'day'
+                        ? 'bg-white/10 text-white border border-white/20'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    By Day
+                  </button>
+                </div>
+              </div>
+
+              {/* Month selector (day view only) */}
+              {chartView === 'day' && (
+                <div className="px-5 pb-3 shrink-0">
+                  <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+                    {MONTHS_SHORT.map((label, i) => {
+                      const monthNum = i + 1;
+                      const hasData = months.some(m => m.month === monthNum);
+                      return (
+                        <button
+                          key={monthNum}
+                          onClick={() => setSelectedChartMonth(monthNum)}
+                          className={`shrink-0 h-8 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                            selectedChartMonth === monthNum
+                              ? 'bg-blue-600 text-white'
+                              : hasData
+                                ? 'bg-white/5 text-zinc-300 border border-white/10 hover:bg-white/10'
+                                : 'bg-white/5 text-zinc-600 border border-white/5'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Chart area */}
+              <div className="flex-1 min-h-0 px-5 pb-4">
+                {chartView === 'month' ? (
+                  monthlyLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
+                    </div>
+                  ) : (
+                    <RevenueChart data={chartData} height={220} />
+                  )
+                ) : (
+                  dailyLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
+                    </div>
+                  ) : dailyChartData.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">No paid invoices in {MONTHS_SHORT[selectedChartMonth - 1]}</p>
+                    </div>
+                  ) : (
+                    <RevenueChart data={dailyChartData} height={220} />
+                  )
+                )}
+              </div>
+
+              {/* Summary row */}
+              {chartView === 'month' && !monthlyLoading && (
+                <div className="px-5 pb-5 grid grid-cols-3 gap-2 shrink-0 border-t border-white/5 pt-4">
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Total</p>
+                    <p className="text-sm font-black text-emerald-400">{formatCurrency(months.reduce((s, m) => s + m.revenueCents, 0) / 100)}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Avg/Month</p>
+                    <p className="text-sm font-black text-white">
+                      {formatCurrency(months.length > 0 ? (months.reduce((s, m) => s + m.revenueCents, 0) / months.length) / 100 : 0)}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Best</p>
+                    <p className="text-sm font-black text-amber-400">{bestMonth ? MONTHS_SHORT[bestMonth.month - 1] : '—'}</p>
+                  </div>
+                </div>
+              )}
+              {chartView === 'day' && !dailyLoading && dailyChartData.length > 0 && (
+                <div className="px-5 pb-5 grid grid-cols-3 gap-2 shrink-0 border-t border-white/5 pt-4">
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Month Total</p>
+                    <p className="text-sm font-black text-emerald-400">{formatCurrency(dailyChartData.reduce((s, d) => s + d.revenue, 0))}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Active Days</p>
+                    <p className="text-sm font-black text-white">{dailyChartData.filter(d => d.revenue > 0).length}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 text-center">
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Best Day</p>
+                    <p className="text-sm font-black text-amber-400">
+                      {dailyChartData.length > 0
+                        ? `Day ${dailyChartData.reduce((best, d) => d.revenue > best.revenue ? d : best).label}`
+                        : '—'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </m.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Top Services */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-1 space-y-3">

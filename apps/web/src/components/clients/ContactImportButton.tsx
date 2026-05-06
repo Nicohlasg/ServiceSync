@@ -301,9 +301,9 @@ export function ContactImportButton({ onImportComplete }: ContactImportButtonPro
     <>
       <Button
         size="icon"
-        variant="outline"
-        className="rounded-full h-12 w-12 border-white/10 text-slate-300 hover:text-white hover:bg-slate-800"
+        className="rounded-full h-11 w-11 bg-white/5 border border-white/10 text-zinc-200 hover:bg-white/10 hover:text-white shadow-lg active:scale-90 transition-transform"
         onClick={() => setModalOpen(true)}
+        aria-label="Import contacts"
       >
         <Upload className="h-5 w-5" />
       </Button>
