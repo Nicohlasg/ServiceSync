@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BackButton } from "@/components/ui/back-button";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
@@ -18,16 +17,6 @@ import {
   Loader2, Plus, Minus, AlignLeft
 } from "lucide-react";
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  refrigerant: '🧊',
-  chemical: '🧪',
-  filter: '🔲',
-  part: '🔧',
-  tool: '🛠️',
-  consumable: '📦',
-  other: '📋',
-};
-
 const CATEGORY_COLORS: Record<string, string> = {
   refrigerant: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
   chemical: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
@@ -38,16 +27,10 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'bg-zinc-500/10 border-zinc-500/20 text-zinc-400',
 };
 
-const UNITS = ['piece', 'kg', 'litre', 'roll', 'bottle', 'set', 'pair', 'metre'];
-
 const CATEGORIES = [
-  { value: 'refrigerant', label: 'Refrigerant', emoji: '🧊' },
-  { value: 'chemical', label: 'Chemical', emoji: '🧪' },
-  { value: 'filter', label: 'Filter', emoji: '🔲' },
-  { value: 'part', label: 'Part', emoji: '🔧' },
-  { value: 'tool', label: 'Tool', emoji: '🛠️' },
-  { value: 'consumable', label: 'Consumable', emoji: '📦' },
-  { value: 'other', label: 'Other', emoji: '📋' },
+  { value: 'chemical', label: 'Chemical' },
+  { value: 'part', label: 'Parts & Tools' },
+  { value: 'other', label: 'Others' },
 ] as const;
 
 function getStockStatus(qty: number, minQty: number) {
@@ -231,7 +214,7 @@ export default function InventoryItemPage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-black text-white tracking-tight leading-none truncate">{item.name}</h1>
           <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${catColor}`}>
-            {CATEGORY_EMOJIS[item.category] ?? '📋'} {item.category}
+            {item.category}
           </span>
         </div>
         <button
@@ -493,9 +476,7 @@ export default function InventoryItemPage() {
             <div className="space-y-2 divide-y divide-white/5">
               <div className="flex items-center justify-between py-2">
                 <span className="text-xs font-black text-zinc-500 uppercase tracking-wider">Category</span>
-                <span className="text-sm font-bold text-white">
-                  {CATEGORY_EMOJIS[item.category] ?? ''} {item.category}
-                </span>
+                <span className="text-sm font-bold text-white capitalize">{item.category}</span>
               </div>
               {Number(item.unit_cost_cents) > 0 && (
                 <div className="flex items-center justify-between py-2">
@@ -556,18 +537,18 @@ export default function InventoryItemPage() {
 
                 <div className="space-y-2">
                   <p className="text-xs font-black text-zinc-500">Category</p>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {CATEGORIES.map((cat) => (
                       <button
                         key={cat.value}
                         onClick={() => setEditCategory(cat.value)}
-                        className={`h-12 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all text-[9px] font-black uppercase tracking-wider ${
+                        className={`h-12 rounded-xl border flex items-center justify-center transition-all text-[10px] font-black uppercase tracking-wider px-1 ${
                           editCategory === cat.value
                             ? 'bg-white/15 border-white/30 text-white'
                             : 'bg-white/5 border-white/10 text-zinc-400'
                         }`}
                       >
-                        <span className="text-lg">{cat.emoji}</span>
+                        <span className="text-center leading-tight">{cat.label}</span>
                       </button>
                     ))}
                   </div>
@@ -575,16 +556,12 @@ export default function InventoryItemPage() {
 
                 <div className="space-y-2">
                   <p className="text-xs font-black text-zinc-500">Unit</p>
-                  <Select value={editUnit} onValueChange={setEditUnit}>
-                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-xl text-zinc-300 font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950/95 border-white/10 text-white">
-                      {UNITS.map((u) => (
-                        <SelectItem key={u} value={u}>{u}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={editUnit}
+                    onChange={(e) => setEditUnit(e.target.value)}
+                    placeholder="e.g. piece, kg, litre..."
+                    className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-500 rounded-xl font-bold"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

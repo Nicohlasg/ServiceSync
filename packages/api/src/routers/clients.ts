@@ -241,6 +241,12 @@ export const clientsRouter = router({
       contacts: z.array(z.object({
         name: z.string().min(1).max(100),
         phone: z.string().min(8).transform(normaliseE164),
+        address: z.string().max(300).optional(),
+        unitNumber: z.string().max(20).optional(),
+        postalCode: z.string().max(10).optional(),
+        lat: z.number().optional(),
+        lng: z.number().optional(),
+        notes: z.string().max(500).optional(),
       })).min(1).max(100),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -261,9 +267,13 @@ export const clientsRouter = router({
           provider_id: ctx.user.id,
           name: sanitizeHtml(c.name),
           phone: sanitizeHtml(c.phone),
-          address: '',
+          address: c.address ? sanitizeHtml(c.address) : '',
+          unit_number: c.unitNumber ? sanitizeHtml(c.unitNumber) : null,
+          postal_code: c.postalCode ? sanitizeHtml(c.postalCode) : null,
+          lat: c.lat ?? null,
+          lng: c.lng ?? null,
           brand: '',
-          notes: '',
+          notes: c.notes ? sanitizeHtml(c.notes) : '',
         }));
 
       let created = 0;
