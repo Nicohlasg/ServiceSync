@@ -287,7 +287,7 @@ export const scheduleRouter = router({
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('bookings')
-        .select('id, client_name, service_type, arrival_window_start, status, clients(name, phone)')
+        .select('id, client_name, client_phone, service_type, arrival_window_start, status, clients(name, phone)')
         .eq('provider_id', ctx.user.id)
         .eq('scheduled_date', input.date)
         .neq('status', 'cancelled')
@@ -299,10 +299,13 @@ export const scheduleRouter = router({
 
       return (data ?? []).map(b => {
         const client = b.clients as unknown as { name: string; phone: string | null } | null;
+        // Prefer phone from linked client record, fall back to the phone stored on the
+        // booking row (set when a customer books via the public page without a client_id).
+        const phone = (client?.phone ?? (b as Record<string, unknown>).client_phone ?? null) as string | null;
         return {
           id: b.id as string,
           clientName: (client?.name ?? b.client_name) as string,
-          clientPhone: (client?.phone ?? null) as string | null,
+          clientPhone: phone,
           serviceType: b.service_type as string,
           arrivalWindowStart: b.arrival_window_start as string,
           status: b.status as string,

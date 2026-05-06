@@ -14,8 +14,10 @@ import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Loader2, X } from "lucide-react";
 
-interface LineItem { description: string; amountCents: number; }
+interface LineItem { description: string; amountDisplay: string; }
 interface ClientOption { id: string; name: string; phone: string; }
+
+function displayToCents(s: string) { return Math.round(parseFloat(s || '0') * 100) || 0; }
 
 function NewQuote() {
   const { push } = useRouter();
@@ -23,8 +25,8 @@ function NewQuote() {
   const [clientId, setClientId] = useState('');
   const [clientSearch, setClientSearch] = useState('');
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
-  const [lineItems, setLineItems] = useState<LineItem[]>([{ description: '', amountCents: 0 }]);
-  const [taxCents, setTaxCents] = useState(0);
+  const [lineItems, setLineItems] = useState<LineItem[]>([{ description: '', amountDisplay: '' }]);
+  const [taxDisplay, setTaxDisplay] = useState('');
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState('');
 
@@ -44,22 +46,23 @@ function NewQuote() {
     onError: (err: any) => toast.error(err.message || 'Failed to create quote'),
   });
 
-  const subtotal = lineItems.reduce((s, i) => s + i.amountCents, 0);
+  const taxCents = displayToCents(taxDisplay);
+  const subtotal = lineItems.reduce((s, i) => s + displayToCents(i.amountDisplay), 0);
   const total = subtotal + taxCents;
 
   const filteredClients = clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()));
   const selectedClient = clients.find(c => c.id === clientId);
 
-  function updateItem(idx: number, field: keyof LineItem, value: string | number) {
+  function updateItem(idx: number, field: keyof LineItem, value: string) {
     setLineItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item));
   }
 
   function handleSubmit() {
-    const validItems = lineItems.filter(i => i.description.trim() && i.amountCents >= 0);
+    const validItems = lineItems.filter(i => i.description.trim());
     if (validItems.length === 0) { toast.error('Add at least one line item'); return; }
     createMutation.mutate({
       clientId: clientId || undefined,
-      lineItems: validItems.map(i => ({ description: i.description.trim(), amountCents: i.amountCents })),
+      lineItems: validItems.map(i => ({ description: i.description.trim(), amountCents: displayToCents(i.amountDisplay) })),
       taxCents,
       notes: notes.trim(),
       validUntil: validUntil || undefined,
@@ -122,11 +125,12 @@ function NewQuote() {
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm">$</span>
                     <Input
                       type="number"
+                      inputMode="decimal"
                       min={0}
                       step={0.01}
                       placeholder="0.00"
-                      value={item.amountCents > 0 ? (item.amountCents / 100).toFixed(2) : ''}
-                      onChange={e => updateItem(idx, 'amountCents', Math.round(parseFloat(e.target.value || '0') * 100))}
+                      value={item.amountDisplay}
+                      onChange={e => updateItem(idx, 'amountDisplay', e.target.value)}
                       className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold pl-7"
                     />
                   </div>
@@ -137,7 +141,7 @@ function NewQuote() {
                   )}
                 </div>
               ))}
-              <button onClick={() => setLineItems(prev => [...prev, { description: '', amountCents: 0 }])}
+              <button onClick={() => setLineItems(prev => [...prev, { description: '', amountDisplay: '' }])}
                 className="w-full h-10 rounded-xl border border-dashed border-white/10 text-zinc-500 hover:text-blue-400 hover:border-blue-500/30 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
                 <Plus className="h-3.5 w-3.5" /> Add Item
               </button>
@@ -150,11 +154,12 @@ function NewQuote() {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-sm">$</span>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   step={0.01}
                   placeholder="0.00"
-                  value={taxCents > 0 ? (taxCents / 100).toFixed(2) : ''}
-                  onChange={e => setTaxCents(Math.round(parseFloat(e.target.value || '0') * 100))}
+                  value={taxDisplay}
+                  onChange={e => setTaxDisplay(e.target.value)}
                   className="h-12 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold pl-7"
                 />
               </div>

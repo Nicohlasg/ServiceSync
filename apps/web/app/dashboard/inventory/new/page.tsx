@@ -25,6 +25,7 @@ export default function NewInventoryItemPage() {
   const [unit, setUnit] = useState('');
   const [qty, setQty] = useState('');
   const [minQty, setMinQty] = useState('0');
+  const [maxQty, setMaxQty] = useState('');
   const [costDollars, setCostDollars] = useState('');
   const [supplierName, setSupplierName] = useState('');
   const [supplierPhone, setSupplierPhone] = useState('');
@@ -50,6 +51,7 @@ export default function NewInventoryItemPage() {
       unit,
       quantityOnHand: parseFloat(qty) || 0,
       minQuantity: parseFloat(minQty) || 0,
+      maxQuantity: maxQty.trim() ? parseFloat(maxQty) : undefined,
       unitCostCents: Math.round((parseFloat(costDollars) || 0) * 100),
       supplierName: supplierName.trim() || undefined,
       supplierContact: supplierPhone.trim() || undefined,
@@ -172,6 +174,28 @@ export default function NewInventoryItemPage() {
               )}
             </div>
             <p className="text-xs text-zinc-600">Leave at 0 to disable reminders</p>
+          </CardContent>
+        </Card>
+
+        {/* 5b. Full stock level */}
+        <Card variant="premium" className="rounded-2xl backdrop-blur-xl">
+          <CardContent className="p-5 relative z-10 space-y-3">
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Full Stock Level <span className="text-zinc-600">(Optional)</span></p>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="e.g. 20"
+                value={maxQty}
+                onChange={(e) => setMaxQty(e.target.value)}
+                className="h-14 bg-white/5 border-white/10 text-white placeholder:text-zinc-600 rounded-xl font-bold text-lg flex-1"
+              />
+              {unit && (
+                <span className="text-sm font-black text-zinc-400 uppercase tracking-wider shrink-0">{unit}</span>
+              )}
+            </div>
+            <p className="text-xs text-zinc-600">When set, the stock bar fills to this amount — makes your dashboard levels accurate</p>
           </CardContent>
         </Card>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, X, Check, Trash2, Edit, Star, Camera, Map } from "lucide-react";
+import { Plus, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, X, Check, Trash2, Edit, Star, Camera, Map, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import {
     format,
@@ -18,14 +18,20 @@ import {
     isSameDay,
     isToday
 } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Job } from "@/lib/types";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { MonthWheelPicker } from "@/components/ui/date-wheel-picker";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { api } from "@/lib/api";
-import { openWhatsAppWithReview, getReviewUrl } from "@/lib/whatsapp-helpers";
+import {
+    openWhatsAppWithReview,
+    getReviewUrl,
+    openWhatsAppWithDayBeforeReminder,
+    openWhatsAppWithMorningConfirmation,
+    openWhatsAppWithOnMyWay,
+} from "@/lib/whatsapp-helpers";
 import { useRouter } from "next/navigation";
 
 export default function SchedulePage() {
@@ -215,6 +221,8 @@ export default function SchedulePage() {
 
     // Filter events for selected day
     const selectedEvents = jobs.filter(e => isSameDay(new Date(e.date), selectedDate));
+    const selectedDayRevenue = selectedEvents.reduce((s, e) => s + (e.amount ?? 0), 0);
+    const selectedDayCompleted = selectedEvents.filter(e => e.status === 'completed').length;
 
 
     const handleEdit = () => {
@@ -288,9 +296,19 @@ export default function SchedulePage() {
                     <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">
                         {isToday(selectedDate) ? "Today" : format(selectedDate, "EEEE, d MMM")}
                     </h2>
-                    <span className="text-[10px] font-black bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-xl">
-                        {selectedEvents.length} Jobs
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {selectedDayRevenue > 0 && (
+                            <span className="text-[10px] font-black text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 rounded-full uppercase tracking-widest backdrop-blur-xl tabular-nums">
+                                {formatCurrency(selectedDayRevenue)}
+                            </span>
+                        )}
+                        <span className="text-[10px] font-black bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-xl">
+                            {selectedDayCompleted > 0
+                                ? `${selectedDayCompleted}/${selectedEvents.length} Done`
+                                : `${selectedEvents.length} Job${selectedEvents.length !== 1 ? 's' : ''}`
+                            }
+                        </span>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -308,9 +326,23 @@ export default function SchedulePage() {
                                     </div>
                                     <div className="h-full w-px bg-white/10 my-3 rounded-full group-last:hidden shadow-[0_0_10px_rgba(255,255,255,0.1)]"></div>
                                 </div>
-                                <Card variant="premium" className="flex-1 min-w-0 mb-3 hover:border-blue-500/40 transition-all cursor-pointer group active:scale-[0.98] shadow-lg">
+                                <Card variant="premium" className={`flex-1 min-w-0 mb-3 transition-all cursor-pointer group active:scale-[0.98] shadow-lg ${event.status === 'completed' ? 'hover:border-emerald-500/40 border-emerald-500/10' : 'hover:border-blue-500/40'}`}>
                                     <CardContent className="p-4 relative z-10">
-                                        <h3 className="font-black text-white text-lg tracking-tight leading-tight group-hover:text-blue-400 transition-colors">{event.clientName}</h3>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <h3 className="font-black text-white text-lg tracking-tight leading-tight group-hover:text-blue-400 transition-colors flex-1 min-w-0 truncate">{event.clientName}</h3>
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                {(event.amount ?? 0) > 0 && (
+                                                    <span className="text-sm font-black text-white tabular-nums">{formatCurrency(event.amount ?? 0)}</span>
+                                                )}
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                                                    event.status === 'completed'
+                                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                        : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                }`}>
+                                                    {event.status === 'completed' ? 'Done' : 'Upcoming'}
+                                                </span>
+                                            </div>
+                                        </div>
                                         <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider mt-1">{event.service}</p>
                                         <div className="flex items-start gap-2 mt-3 text-xs text-zinc-500 font-medium">
                                             <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
@@ -404,8 +436,56 @@ export default function SchedulePage() {
                                 </div>
                             </div>
 
+                            {/* WhatsApp Reminders */}
+                            {editingJob.clientPhone ? (
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Send WhatsApp</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            onClick={() => openWhatsAppWithDayBeforeReminder(
+                                                editingJob.clientPhone!,
+                                                editingJob.clientName,
+                                                editingJob.service,
+                                                format(new Date(editingJob.date), "d MMM yyyy"),
+                                                editingJob.time,
+                                            )}
+                                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all active:scale-95"
+                                        >
+                                            <MessageCircle className="h-4 w-4 text-indigo-400" />
+                                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest text-center leading-tight">Day Before</span>
+                                        </button>
+                                        <button
+                                            onClick={() => openWhatsAppWithMorningConfirmation(
+                                                editingJob.clientPhone!,
+                                                editingJob.clientName,
+                                                editingJob.service,
+                                                editingJob.time,
+                                            )}
+                                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all active:scale-95"
+                                        >
+                                            <MessageCircle className="h-4 w-4 text-indigo-400" />
+                                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest text-center leading-tight">Morning</span>
+                                        </button>
+                                        <button
+                                            onClick={() => openWhatsAppWithOnMyWay(
+                                                editingJob.clientPhone!,
+                                                editingJob.clientName,
+                                                editingJob.service,
+                                                "~20 minutes",
+                                            )}
+                                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all active:scale-95"
+                                        >
+                                            <MessageCircle className="h-4 w-4 text-indigo-400" />
+                                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest text-center leading-tight">On My Way</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">No phone number — add one on the client page to enable WhatsApp reminders</p>
+                            )}
+
                             <Button
-                                className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all border-none mb-4"
+                                className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg active:scale-95 transition-all border-none"
                                 onClick={() => { push(`/dashboard/schedule/${editingJob.id}`); setEditingJob(null); }}
                             >
                                 <Camera className="h-5 w-5" /> Job Report &amp; Photos

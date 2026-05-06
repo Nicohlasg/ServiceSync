@@ -14,6 +14,7 @@ export const inventoryRouter = router({
       unit: z.string().min(1).max(20),
       quantityOnHand: z.number().min(0),
       minQuantity: z.number().min(0),
+      maxQuantity: z.number().min(0).optional(),
       unitCostCents: z.number().int().min(0),
       supplierName: z.string().max(100).optional(),
       supplierContact: z.string().max(50).optional(),
@@ -29,6 +30,7 @@ export const inventoryRouter = router({
           unit: input.unit,
           quantity_on_hand: input.quantityOnHand,
           min_quantity: input.minQuantity,
+          max_quantity: input.maxQuantity ?? null,
           unit_cost_cents: input.unitCostCents,
           supplier_name: input.supplierName ?? null,
           supplier_contact: input.supplierContact ?? null,
@@ -98,6 +100,7 @@ export const inventoryRouter = router({
       category: categoryEnum.optional(),
       unit: z.string().min(1).max(20).optional(),
       minQuantity: z.number().min(0).optional(),
+      maxQuantity: z.number().min(0).nullable().optional(),
       unitCostCents: z.number().int().min(0).optional(),
       supplierName: z.string().max(100).optional(),
       supplierContact: z.string().max(50).optional(),
@@ -110,6 +113,7 @@ export const inventoryRouter = router({
       if (rest.category !== undefined) patch.category = rest.category;
       if (rest.unit !== undefined) patch.unit = rest.unit;
       if (rest.minQuantity !== undefined) patch.min_quantity = rest.minQuantity;
+      if (rest.maxQuantity !== undefined) patch.max_quantity = rest.maxQuantity;
       if (rest.unitCostCents !== undefined) patch.unit_cost_cents = rest.unitCostCents;
       if (rest.supplierName !== undefined) patch.supplier_name = rest.supplierName;
       if (rest.supplierContact !== undefined) patch.supplier_contact = rest.supplierContact;

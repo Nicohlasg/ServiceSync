@@ -1064,6 +1064,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
   unit             TEXT          NOT NULL DEFAULT 'piece',
   quantity_on_hand NUMERIC(10,2) NOT NULL DEFAULT 0,
   min_quantity     NUMERIC(10,2) NOT NULL DEFAULT 0,
+  max_quantity     NUMERIC(10,2)             DEFAULT NULL,
   unit_cost_cents  INTEGER       NOT NULL DEFAULT 0,
   supplier_name    TEXT,
   supplier_contact TEXT,

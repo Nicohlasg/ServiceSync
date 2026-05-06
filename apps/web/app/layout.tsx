@@ -8,7 +8,7 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { BackgroundProvider } from '@/components/BackgroundProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'ServiceSync SG - Smart Payment Collection',

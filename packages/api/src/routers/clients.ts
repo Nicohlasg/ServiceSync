@@ -383,6 +383,25 @@ export const clientsRouter = router({
     }),
 
   /**
+   * Soft-deletes multiple clients in one call.
+   */
+  bulkDelete: protectedProcedure
+    .input(z.object({ clientIds: z.array(z.string().uuid()).min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('clients')
+        .update({ is_deleted: true })
+        .in('id', input.clientIds)
+        .eq('provider_id', ctx.user.id);
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+      }
+
+      return { deleted: input.clientIds.length };
+    }),
+
+  /**
    * Smart client matching: finds an existing client by phone (primary)
    * or address + unit_number (fallback). Used during job creation to
    * auto-link bookings from public forms or contact imports.
