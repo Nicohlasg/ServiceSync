@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format, parseISO, addDays, subDays } from "date-fns";
 import { motion } from "framer-motion";
 import { Bell, ChevronLeft, ChevronRight, MessageCircle, Clock } from "lucide-react";
@@ -28,6 +28,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export default function RemindersPage() {
   const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const { data: jobs = [], isLoading } = api.schedule.getRemindersForDate.useQuery(
     { date },
@@ -102,9 +103,20 @@ export default function RemindersPage() {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <p className="font-black text-white text-base">
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={date}
+          onChange={(e) => e.target.value && setDate(e.target.value)}
+          className="sr-only"
+        />
+        <button
+          type="button"
+          onClick={() => dateInputRef.current?.showPicker()}
+          className="font-black text-white text-base hover:text-blue-300 transition-colors"
+        >
           {format(parseISO(date), "EEEE, d MMMM")}
-        </p>
+        </button>
         <button
           onClick={() => setDate((d) => format(addDays(parseISO(d), 1), "yyyy-MM-dd"))}
           className="h-9 w-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"

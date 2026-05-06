@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Mail, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, TrendingUp, Package, Map } from "lucide-react";
+import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, Package, Map } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +49,7 @@ export default function DashboardPage() {
 
     const { data: duePlans = [] } = api.plans.listDueSoon.useQuery(undefined, { staleTime: 2 * 60 * 1000 });
     const { data: lowStockItems = [] } = api.inventory.getLowStock.useQuery(undefined, { staleTime: 60_000 });
+    const { data: inventoryItems = [] } = (api as any).inventory.list.useQuery(undefined, { staleTime: 60_000 });
 
     useEffect(() => {
         async function loadDashboardData() {
@@ -395,23 +396,30 @@ export default function DashboardPage() {
 
             {/* Stats Overview: Till Management */}
             <div className="space-y-3">
-                {/* Main Earnings */}
-                <Card variant="premium" className="bg-blue-600 border-blue-500/50 text-white shadow-xl rounded-2xl overflow-hidden relative border-2">
-                    <CardContent className="p-6 flex items-center justify-between relative z-10 w-full">
-                        <div>
-                            <p className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">Total Earned Today</p>
-                            <p className="text-4xl font-black tracking-tight">{formatCurrency(todayEarnings || 0)}</p>
-                            {!hasEarningsToday && (
-                                <p className="text-blue-100/90 text-sm font-medium mt-2 max-w-[220px] leading-snug">
-                                    No payments recorded for today yet. Paid invoices will appear here.
-                                </p>
-                            )}
-                        </div>
-                        <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
-                            <DollarSign className="h-7 w-7 text-white" />
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Main Earnings — tap to view analytics */}
+                <Link href="/dashboard/analytics" className="block">
+                    <Card variant="premium" className="bg-blue-600 border-blue-500/50 text-white shadow-xl rounded-2xl overflow-hidden relative border-2 hover:bg-blue-500/90 active:scale-[0.98] transition-all cursor-pointer">
+                        <CardContent className="p-6 relative z-10 w-full">
+                            <div className="flex items-center justify-between w-full">
+                                <div>
+                                    <p className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">Total Earned Today</p>
+                                    <p className="text-4xl font-black tracking-tight">{formatCurrency(todayEarnings || 0)}</p>
+                                    {!hasEarningsToday && (
+                                        <p className="text-blue-100/90 text-sm font-medium mt-2 max-w-[220px] leading-snug">
+                                            No payments recorded for today yet. Paid invoices will appear here.
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center border border-white/20 shadow-inner shrink-0">
+                                    <DollarSign className="h-7 w-7 text-white" />
+                                </div>
+                            </div>
+                            <p className="text-blue-200/80 text-[10px] font-black uppercase tracking-widest mt-3 flex items-center gap-1">
+                                View Analytics <ChevronRight className="h-3 w-3" />
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
 
                 {/* Cash vs Bank Split */}
                 <div className="grid grid-cols-2 gap-4">
@@ -465,22 +473,6 @@ export default function DashboardPage() {
                 </Link>
             </div>
 
-            {/* Analytics shortcut */}
-            <Link href="/dashboard/analytics" className="block">
-              <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="font-black text-white text-sm">Analytics</p>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Revenue &amp; job insights</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-zinc-600" />
-              </div>
-            </Link>
-
             {/* Route shortcut */}
             <Link href="/dashboard/route" className="block">
               <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
@@ -513,41 +505,59 @@ export default function DashboardPage() {
               </Card>
             </Link>
 
-            {/* Stock Alerts widget */}
-            {lowStockItems.length > 0 ? (
-              <Link href="/dashboard/inventory" className="block">
-                <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 transition-all active:scale-[0.98]">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center relative">
-                      <Package className="h-4 w-4 text-amber-400" />
-                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-rose-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">{lowStockItems.length}</span>
+            {/* Inventory quick overview */}
+            <Link href="/dashboard/inventory" className="block">
+              <Card variant="premium" className="rounded-2xl backdrop-blur-2xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform">
+                <CardContent className="p-4 relative z-10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center border relative ${
+                        lowStockItems.length > 0
+                          ? 'bg-amber-500/10 border-amber-500/20'
+                          : 'bg-violet-500/10 border-violet-500/20'
+                      }`}>
+                        <Package className={`h-4 w-4 ${lowStockItems.length > 0 ? 'text-amber-400' : 'text-violet-400'}`} />
+                        {lowStockItems.length > 0 && (
+                          <span className="absolute -top-1 -right-1 h-4 w-4 bg-rose-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">{lowStockItems.length}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-black text-white text-sm">Inventory</p>
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                          {lowStockItems.length > 0 ? `${lowStockItems.length} item${lowStockItems.length > 1 ? 's' : ''} need restocking` : 'All stock levels healthy'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-black text-amber-400 text-sm">{lowStockItems.length} item{lowStockItems.length > 1 ? 's' : ''} low on stock</p>
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest truncate max-w-[180px]">
-                        {(lowStockItems as any[]).slice(0, 2).map((i: any) => i.name).join(', ')}{lowStockItems.length > 2 ? ` +${lowStockItems.length - 2}` : ''}
-                      </p>
-                    </div>
+                    <ChevronRight className="h-4 w-4 text-zinc-600 shrink-0" />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-zinc-600" />
-                </div>
-              </Link>
-            ) : (
-              <Link href="/dashboard/inventory" className="block">
-                <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-[0.98]">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                      <Package className="h-4 w-4 text-violet-400" />
+
+                  {/* Stock level bars — printer-style overview */}
+                  {(inventoryItems as any[]).length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      {(inventoryItems as any[]).slice(0, 5).map((item: any) => {
+                        const qty = Number(item.quantity_on_hand ?? 0);
+                        const minQty = Number(item.min_quantity ?? 0);
+                        const pct = minQty > 0
+                          ? Math.min(100, Math.round((qty / (minQty * 2)) * 100))
+                          : qty > 0 ? 80 : 0;
+                        const barColor = qty <= 0 ? 'bg-rose-500' : (minQty > 0 && qty <= minQty) ? 'bg-amber-500' : 'bg-emerald-500';
+                        return (
+                          <div key={item.id} className="flex items-center gap-2">
+                            <p className="text-[10px] font-black text-zinc-400 w-20 truncate shrink-0">{item.name}</p>
+                            <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(3, pct)}%` }} />
+                            </div>
+                            <span className="text-[10px] font-black text-zinc-500 w-14 text-right shrink-0 truncate">
+                              {qty} {item.unit}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div>
-                      <p className="font-black text-white text-sm">Inventory</p>
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Stock levels &amp; usage</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-zinc-600" />
-                </div>
-              </Link>
-            )}
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Plans Due */}
             {duePlans.length > 0 && (

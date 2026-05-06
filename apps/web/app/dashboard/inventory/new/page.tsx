@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BackButton } from "@/components/ui/back-button";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -13,16 +12,10 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = [
-  { value: 'refrigerant', label: 'Refrigerant', emoji: '🧊' },
-  { value: 'chemical', label: 'Chemical', emoji: '🧪' },
-  { value: 'filter', label: 'Filter', emoji: '🔲' },
-  { value: 'part', label: 'Part', emoji: '🔧' },
-  { value: 'tool', label: 'Tool', emoji: '🛠️' },
-  { value: 'consumable', label: 'Consumable', emoji: '📦' },
-  { value: 'other', label: 'Other', emoji: '📋' },
+  { value: 'chemical', label: 'Chemical' },
+  { value: 'part', label: 'Parts & Tools' },
+  { value: 'other', label: 'Others' },
 ] as const;
-
-const UNITS = ['piece', 'kg', 'litre', 'roll', 'bottle', 'set', 'pair', 'metre'];
 
 export default function NewInventoryItemPage() {
   const router = useRouter();
@@ -49,7 +42,7 @@ export default function NewInventoryItemPage() {
   const handleSave = () => {
     if (!name.trim()) { toast.error('Item name is required'); return; }
     if (!category) { toast.error('Please select a category'); return; }
-    if (!unit) { toast.error('Please select a unit of measurement'); return; }
+    if (!unit.trim()) { toast.error('Please enter a unit of measurement'); return; }
 
     createMutation.mutate({
       name: name.trim(),
@@ -104,21 +97,20 @@ export default function NewInventoryItemPage() {
         <Card variant="premium" className="rounded-2xl backdrop-blur-xl">
           <CardContent className="p-5 relative z-10 space-y-3">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Category</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {CATEGORIES.map((cat) => {
                 const isActive = category === cat.value;
                 return (
                   <button
                     key={cat.value}
                     onClick={() => setCategory(cat.value)}
-                    className={`h-16 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.97] ${
+                    className={`h-14 rounded-2xl border flex items-center justify-center transition-all active:scale-[0.97] ${
                       isActive
                         ? 'bg-white/15 border-white/30 text-white'
                         : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
                     }`}
                   >
-                    <span className="text-2xl">{cat.emoji}</span>
-                    <span className="text-[10px] font-black uppercase tracking-wider">{cat.label}</span>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-center px-2 leading-tight">{cat.label}</span>
                   </button>
                 );
               })}
@@ -130,16 +122,12 @@ export default function NewInventoryItemPage() {
         <Card variant="premium" className="rounded-2xl backdrop-blur-xl">
           <CardContent className="p-5 relative z-10 space-y-3">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Measured in</p>
-            <Select value={unit} onValueChange={setUnit}>
-              <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-xl text-zinc-300 font-bold text-base">
-                <SelectValue placeholder="Select unit..." />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-950/95 border-white/10 text-white">
-                {UNITS.map((u) => (
-                  <SelectItem key={u} value={u} className="capitalize">{u}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              placeholder="e.g. piece, kg, litre, bottle..."
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              className="h-14 bg-white/5 border-white/10 text-white placeholder:text-zinc-500 rounded-xl font-bold text-base"
+            />
           </CardContent>
         </Card>
 
