@@ -871,3 +871,265 @@ CREATE POLICY "beta_votes_select_authenticated" ON beta_feature_votes
 
 COMMENT ON TABLE beta_feature_votes IS
   'BETA-ONLY: One up/down vote per user per feature request. UNIQUE(feature_id, provider_id).';
+
+-- -----------------------------------------------------------------------------
+-- 12. service_plans — Recurring maintenance / service plans per client
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS service_plans (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id      UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  client_id        UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  service_type     TEXT NOT NULL,
+  interval_months  INTEGER NOT NULL CHECK (interval_months IN (1, 2, 3, 6, 12)),
+  price_cents      INTEGER NOT NULL DEFAULT 0,
+  next_due_date    DATE NOT NULL,
+  last_serviced_at TIMESTAMPTZ,
+  status           TEXT NOT NULL DEFAULT 'active'
+                   CHECK (status IN ('active', 'paused', 'cancelled')),
+  notes            TEXT NOT NULL DEFAULT '',
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_service_plans_provider ON service_plans(provider_id);
+CREATE INDEX IF NOT EXISTS idx_service_plans_client   ON service_plans(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_plans_due      ON service_plans(provider_id, next_due_date)
+  WHERE status = 'active';
+
+ALTER TABLE service_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "plans_select_own" ON service_plans
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "plans_insert_own" ON service_plans
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "plans_update_own" ON service_plans
+  FOR UPDATE USING (auth.uid() = provider_id);
+CREATE POLICY "plans_delete_own" ON service_plans
+  FOR DELETE USING (auth.uid() = provider_id);
+
+CREATE TRIGGER trg_service_plans_updated_at BEFORE UPDATE ON service_plans
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE service_plans IS
+  'Recurring maintenance plans linking a provider to a client with a service interval. '
+  'next_due_date advances only when markServiced is called — technician controls timing.';
+
+-- -----------------------------------------------------------------------------
+-- 13. job_photos — Before/after/other photos attached to a booking
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS job_photos (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id   UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  provider_id  UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  storage_path TEXT NOT NULL,
+  photo_type   TEXT NOT NULL DEFAULT 'other'
+               CHECK (photo_type IN ('before', 'after', 'other')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_photos_booking ON job_photos(booking_id);
+CREATE INDEX IF NOT EXISTS idx_job_photos_provider ON job_photos(provider_id);
+
+ALTER TABLE job_photos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "job_photos_select_own" ON job_photos
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "job_photos_insert_own" ON job_photos
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "job_photos_delete_own" ON job_photos
+  FOR DELETE USING (auth.uid() = provider_id);
+
+COMMENT ON TABLE job_photos IS
+  'Before/after/other photos taken at a job site. storage_path is the Supabase Storage key '
+  'inside the job-photos bucket. Provider uploads from the browser, records path here.';
+
+-- -----------------------------------------------------------------------------
+-- 14. job_checklist_items — Per-job checklist items
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS job_checklist_items (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id  UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  label       TEXT NOT NULL,
+  is_checked  BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_checklist_booking ON job_checklist_items(booking_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_provider ON job_checklist_items(provider_id);
+
+ALTER TABLE job_checklist_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "checklist_select_own" ON job_checklist_items
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "checklist_insert_own" ON job_checklist_items
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "checklist_update_own" ON job_checklist_items
+  FOR UPDATE USING (auth.uid() = provider_id);
+CREATE POLICY "checklist_delete_own" ON job_checklist_items
+  FOR DELETE USING (auth.uid() = provider_id);
+
+COMMENT ON TABLE job_checklist_items IS
+  'Technician checklist items per booking. sort_order determines display order.';
+
+-- -----------------------------------------------------------------------------
+-- 15. quotes — Estimates / quotes sent to clients before invoicing
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS quotes (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id    UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  client_id      UUID REFERENCES clients(id) ON DELETE SET NULL,
+  booking_id     UUID REFERENCES bookings(id) ON DELETE SET NULL,
+  quote_number   TEXT NOT NULL DEFAULT '',
+  line_items     JSONB NOT NULL DEFAULT '[]',
+  subtotal_cents INTEGER NOT NULL DEFAULT 0,
+  tax_cents      INTEGER NOT NULL DEFAULT 0,
+  total_cents    INTEGER NOT NULL DEFAULT 0,
+  notes          TEXT NOT NULL DEFAULT '',
+  valid_until    DATE,
+  status         TEXT NOT NULL DEFAULT 'draft'
+                 CHECK (status IN ('draft', 'sent', 'accepted', 'declined')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quotes_provider ON quotes(provider_id);
+CREATE INDEX IF NOT EXISTS idx_quotes_client   ON quotes(client_id);
+CREATE INDEX IF NOT EXISTS idx_quotes_status   ON quotes(provider_id, status);
+
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "quotes_select_own" ON quotes
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "quotes_insert_own" ON quotes
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "quotes_update_own" ON quotes
+  FOR UPDATE USING (auth.uid() = provider_id);
+CREATE POLICY "quotes_delete_own" ON quotes
+  FOR DELETE USING (auth.uid() = provider_id);
+
+CREATE TRIGGER trg_quotes_updated_at BEFORE UPDATE ON quotes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE quotes IS
+  'Client quotes/estimates. Accepted quotes convert to invoices via convertToInvoice. '
+  'quote_number is set by the create mutation (Q-XXXX format).';
+
+-- -----------------------------------------------------------------------------
+-- 16. expenses — Per-job cost tracking (parts, fuel, labour, other)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  booking_id  UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  label       TEXT NOT NULL,
+  amount_cents INTEGER NOT NULL DEFAULT 0,
+  category    TEXT NOT NULL DEFAULT 'other'
+              CHECK (category IN ('parts', 'fuel', 'labour', 'other')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_expenses_booking  ON expenses(booking_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_provider ON expenses(provider_id);
+
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "expenses_select_own" ON expenses
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "expenses_insert_own" ON expenses
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "expenses_delete_own" ON expenses
+  FOR DELETE USING (auth.uid() = provider_id);
+
+COMMENT ON TABLE expenses IS
+  'Per-job cost items (parts, fuel, labour, other). '
+  'Profit = booking.amount - SUM(expenses.amount_cents) for a given booking.';
+
+-- -----------------------------------------------------------------------------
+-- 17. inventory_items — Technician stock catalog (what they keep on hand)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS inventory_items (
+  id               UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id      UUID          NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name             TEXT          NOT NULL,
+  category         TEXT          NOT NULL DEFAULT 'other'
+                                 CHECK (category IN ('refrigerant','chemical','filter','part','tool','consumable','other')),
+  unit             TEXT          NOT NULL DEFAULT 'piece',
+  quantity_on_hand NUMERIC(10,2) NOT NULL DEFAULT 0,
+  min_quantity     NUMERIC(10,2) NOT NULL DEFAULT 0,
+  unit_cost_cents  INTEGER       NOT NULL DEFAULT 0,
+  supplier_name    TEXT,
+  supplier_contact TEXT,
+  notes            TEXT,
+  status           TEXT          NOT NULL DEFAULT 'active'
+                                 CHECK (status IN ('active','archived')),
+  created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_inventory_items_provider        ON inventory_items(provider_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_provider_status ON inventory_items(provider_id, status);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_category        ON inventory_items(provider_id, category);
+
+ALTER TABLE inventory_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "inventory_items_select_own" ON inventory_items
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "inventory_items_insert_own" ON inventory_items
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "inventory_items_update_own" ON inventory_items
+  FOR UPDATE USING (auth.uid() = provider_id);
+CREATE POLICY "inventory_items_delete_own" ON inventory_items
+  FOR DELETE USING (auth.uid() = provider_id);
+
+CREATE TRIGGER trg_inventory_items_updated_at BEFORE UPDATE ON inventory_items
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE inventory_items IS
+  'Stock items tracked per service provider. '
+  'quantity_on_hand is the denormalized current count, updated on every inventory_transaction. '
+  'min_quantity = 0 means no reorder alert. unit = piece/kg/litre/roll/bottle/set/pair/metre.';
+
+-- -----------------------------------------------------------------------------
+-- 18. inventory_transactions — Immutable ledger of all stock movements
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS inventory_transactions (
+  id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id     UUID          NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  item_id         UUID          NOT NULL REFERENCES inventory_items(id) ON DELETE CASCADE,
+  type            TEXT          NOT NULL
+                                CHECK (type IN ('stock_in','stock_out','adjustment','waste')),
+  quantity        NUMERIC(10,2) NOT NULL,
+  booking_id      UUID          REFERENCES bookings(id) ON DELETE SET NULL,
+  unit_cost_cents INTEGER       NOT NULL DEFAULT 0,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_inv_txn_provider ON inventory_transactions(provider_id);
+CREATE INDEX IF NOT EXISTS idx_inv_txn_item     ON inventory_transactions(item_id);
+CREATE INDEX IF NOT EXISTS idx_inv_txn_booking  ON inventory_transactions(booking_id) WHERE booking_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_inv_txn_created  ON inventory_transactions(provider_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_inv_txn_type     ON inventory_transactions(provider_id, type, created_at DESC);
+
+ALTER TABLE inventory_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "inv_txn_select_own" ON inventory_transactions
+  FOR SELECT USING (auth.uid() = provider_id);
+CREATE POLICY "inv_txn_insert_own" ON inventory_transactions
+  FOR INSERT WITH CHECK (auth.uid() = provider_id);
+CREATE POLICY "inv_txn_delete_own" ON inventory_transactions
+  FOR DELETE USING (auth.uid() = provider_id);
+
+COMMENT ON TABLE inventory_transactions IS
+  'Immutable ledger of all stock movements. quantity is signed: positive = in, negative = out. '
+  'booking_id links stock_out transactions to the job where items were consumed. '
+  'Reconstruct stock level at any point in time = SUM(quantity) up to that date.';

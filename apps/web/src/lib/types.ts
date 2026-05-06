@@ -19,6 +19,7 @@ export interface Job {
   id: string;
   clientId: string;
   clientName: string;
+  clientPhone?: string;
   address: string;
   lat?: number;
   lng?: number;

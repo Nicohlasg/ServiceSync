@@ -67,9 +67,13 @@ eslint-output.txt
 
 # Codex/Swarm agent directories
 .codex/
+**/.codex/
 .claude-flow/
+**/.claude-flow/
 .hive-mind/
+**/.hive-mind/
 .swarm/
+**/.swarm/
 
 # AI assistant config files (local dev only)
 AGENTS.md
