@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, X, Check, Trash2, Edit, Star, Camera, Map, MessageCircle } from "lucide-react";
@@ -20,7 +20,7 @@ import {
 } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Job } from "@/lib/types";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import { MonthWheelPicker } from "@/components/ui/date-wheel-picker";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -155,69 +155,84 @@ export default function SchedulePage() {
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
     // Swipe Logic
-    const x = useMotionValue(0);
-    const opacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
+    const dragX = useMotionValue(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(0);
 
-    const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number } }) => {
-        if (info.offset.x > 100) {
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const measure = () => setContainerWidth(el.offsetWidth);
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        measure();
+        return () => ro.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (containerWidth > 0) dragX.set(-containerWidth);
+    }, [currentMonth, containerWidth]);
+
+    const handleDragEnd = async (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number } }) => {
+        const threshold = Math.max(60, containerWidth * 0.2);
+        if (info.offset.x > threshold) {
+            await animate(dragX, 0, { duration: 0.18, ease: [0.32, 0.72, 0, 1] });
             prevMonth();
-        } else if (info.offset.x < -100) {
+        } else if (info.offset.x < -threshold) {
+            await animate(dragX, -2 * containerWidth, { duration: 0.18, ease: [0.32, 0.72, 0, 1] });
             nextMonth();
+        } else {
+            animate(dragX, -containerWidth, { duration: 0.25, ease: "easeOut" });
         }
     };
 
     const onDateClick = (day: Date) => setSelectedDate(day);
 
     // Calendar Generation Logic
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
-
-    const dateFormat = "d";
-    const rows = [];
-    let days = [];
-    let day = startDate;
-    let formattedDate = "";
-
-    while (day <= endDate) {
-        for (let i = 0; i < 7; i++) {
-            formattedDate = format(day, dateFormat);
-            const cloneDay = day;
-
-            const hasEvents = jobs.some(e => isSameDay(new Date(e.date), day));
-            const isSelected = isSameDay(day, selectedDate);
-            const isCurrentMonth = isSameMonth(day, monthStart);
-
-            days.push(
-                <motion.div
-                    key={day.toString()}
-                    whileTap={{ scale: 0.9 }}
-                    className={cn(
-                        "relative h-10 w-10 md:h-12 md:w-12 mx-auto flex items-center justify-center rounded-full text-[15px] font-bold cursor-pointer transition-all select-none",
-                        !isCurrentMonth ? "text-white/20" : "text-white",
-                        isSelected ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40" : "hover:bg-white/5",
-                        isToday(day) && !isSelected && "text-blue-400 font-black ring-1 ring-blue-500/30"
-                    )}
-                    onClick={() => onDateClick(cloneDay)}
-                >
-                    {formattedDate}
-                    {hasEvents && !isSelected && (
-                        <div
-                            className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.8)]"
-                        />
-                    )}
-                </motion.div>
+    const generateCalendarRows = (month: Date) => {
+        const mStart = startOfMonth(month);
+        const mEnd = endOfMonth(mStart);
+        const startDate = startOfWeek(mStart);
+        const endDate = endOfWeek(mEnd);
+        const rows = [];
+        let days: JSX.Element[] = [];
+        let day = startDate;
+        while (day <= endDate) {
+            for (let i = 0; i < 7; i++) {
+                const formattedDate = format(day, "d");
+                const cloneDay = day;
+                const hasEvents = jobs.some(e => isSameDay(new Date(e.date), day));
+                const isSelected = isSameDay(day, selectedDate);
+                const isCurrentMonth = isSameMonth(day, mStart);
+                days.push(
+                    <motion.div
+                        key={day.toString()}
+                        whileTap={{ scale: 0.9 }}
+                        className={cn(
+                            "relative h-10 w-10 md:h-12 md:w-12 mx-auto flex items-center justify-center rounded-full text-[15px] font-bold cursor-pointer transition-all select-none",
+                            !isCurrentMonth ? "text-white/20" : "text-white",
+                            isSelected ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40" : "hover:bg-white/5",
+                            isToday(day) && !isSelected && "text-blue-400 font-black ring-1 ring-blue-500/30"
+                        )}
+                        onClick={() => onDateClick(cloneDay)}
+                    >
+                        {formattedDate}
+                        {hasEvents && !isSelected && (
+                            <div className="absolute bottom-1.5 h-1.5 w-1.5 bg-blue-500 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.8)]" />
+                        )}
+                    </motion.div>
+                );
+                day = addDays(day, 1);
+            }
+            rows.push(
+                <div className="grid grid-cols-7 gap-y-6 gap-x-1 mb-6" key={day.toString()}>
+                    {days}
+                </div>
             );
-            day = addDays(day, 1);
+            days = [];
         }
-        rows.push(
-            <div className="grid grid-cols-7 gap-y-6 gap-x-1 mb-6" key={day.toString()}>
-                {days}
-            </div>
-        );
-        days = [];
-    }
+        return rows;
+    };
 
     // Filter events for selected day
     const selectedEvents = jobs.filter(e => isSameDay(new Date(e.date), selectedDate));
@@ -249,13 +264,11 @@ export default function SchedulePage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <Link href="/dashboard/route">
-                            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white" title="Route View">
-                                <Map className="h-5 w-5" />
+                            <Button variant="ghost" className="h-11 px-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                                <Map className="h-4 w-4" />
+                                Route
                             </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" onClick={() => { setSelectedDate(new Date()); setCurrentMonth(new Date()); }} className="h-11 w-11 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm hover:bg-white/10 text-white">
-                            <CalendarIcon className="h-5 w-5" />
-                        </Button>
                         <Link href="/dashboard/schedule/add">
                             <Button size="icon" className="h-11 w-11 bg-blue-600 hover:bg-blue-700 rounded-full shadow-xl shadow-blue-600/30 active:scale-90 transition-transform">
                                 <Plus className="h-6 w-6" />
@@ -264,28 +277,40 @@ export default function SchedulePage() {
                     </div>
                 </div>
 
-                <motion.div
-                    style={{ x, opacity }}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.2}
-                    onDragEnd={handleDragEnd}
-                >
-                    <Card variant="premium" className="bg-zinc-900/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl">
-                        <CardContent className="p-0">
-                            <div className="grid grid-cols-7 mb-6 text-center">
-                                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
-                                    <div key={i} className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                        {d}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="px-0">
-                                {rows}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                <Card variant="premium" className="bg-zinc-900/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl overflow-hidden">
+                    <CardContent className="p-0">
+                        <div className="grid grid-cols-7 mb-6 text-center">
+                            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
+                                <div key={i} className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                    {d}
+                                </div>
+                            ))}
+                        </div>
+                        <div ref={containerRef} className="overflow-hidden">
+                            {containerWidth > 0 ? (
+                                <motion.div
+                                    className="flex"
+                                    style={{ x: dragX }}
+                                    drag="x"
+                                    dragConstraints={{ left: -(2 * containerWidth), right: 0 }}
+                                    dragElastic={0.08}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    {[-1, 0, 1].map((offset) => {
+                                        const month = offset === -1 ? subMonths(currentMonth, 1) : offset === 1 ? addMonths(currentMonth, 1) : currentMonth;
+                                        return (
+                                            <div key={offset} className="shrink-0" style={{ width: containerWidth }}>
+                                                {generateCalendarRows(month)}
+                                            </div>
+                                        );
+                                    })}
+                                </motion.div>
+                            ) : (
+                                <div>{generateCalendarRows(currentMonth)}</div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Scrollable Events List */}
