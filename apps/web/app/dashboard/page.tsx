@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, Package, Map, FileText } from "lucide-react";
+import { MapPin, DollarSign, ChevronRight, Navigation, Clock, Calendar, X, Banknote, Building2, CheckCircle2, UserCircle, Bell, Settings, LogOut, RefreshCw, Package, FileText } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -646,19 +646,10 @@ export default function DashboardPage() {
 
             {/* Today's Jobs (Clustered List) */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div>
                     <h2 className="text-2xl font-black text-white flex items-center gap-3">
                         Today&apos;s Route <span className="bg-blue-600 text-sm font-bold text-white px-3 py-1 rounded-full shadow-sm">{upcomingJobs.length} Jobs</span>
                     </h2>
-                    <div className="flex items-center gap-2">
-                        <Link href="/dashboard/route" className="h-9 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5 hover:bg-emerald-500/20 transition-colors">
-                            <Map className="h-3.5 w-3.5 text-emerald-400" />
-                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Route</span>
-                        </Link>
-                        <Link href="/dashboard/schedule" className="text-blue-400 font-bold text-base hover:text-blue-300 hover:underline">
-                            See All
-                        </Link>
-                    </div>
                 </div>
 
                 <div className="space-y-4 relative pb-2 overflow-x-hidden">

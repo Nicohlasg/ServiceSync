@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useMemo, useRef, useEffect, Suspense } from "react";
-import dynamic from "next/dynamic";
 import { format, parseISO, addDays, subDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
@@ -9,10 +8,6 @@ import { SkeletonCard } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Navigation, ChevronLeft, ChevronRight, Copy, Check, Crosshair, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
-
-import type RouteMapType from "@/components/ui/RouteMap";
-type RouteMapProps = React.ComponentProps<typeof RouteMapType>;
-const RouteMap = dynamic<RouteMapProps>(() => import("@/components/ui/RouteMap"), { ssr: false });
 
 // ─── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -116,11 +111,6 @@ function RoutePage() {
           : encodeURIComponent(destStop.address)
       }&travelmode=driving`
     : '';
-
-  const mapOriginForLeaflet = (effectiveOriginLat && effectiveOriginLng)
-    ? { lat: effectiveOriginLat, lng: effectiveOriginLng }
-    : null;
-  const mapJobsForLeaflet = destStop?.jobData ? [destStop.jobData] : [];
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -314,10 +304,23 @@ function RoutePage() {
             </CardContent>
           </Card>
 
-          {/* Leg map (2-point Leaflet) */}
-          {mapOriginForLeaflet && mapJobsForLeaflet.length > 0 && (
+          {/* Leg map (Google Maps embed) */}
+          {destStop && (
             <div className="rounded-2xl overflow-hidden border border-white/10 h-52">
-              <RouteMap jobs={mapJobsForLeaflet} home={mapOriginForLeaflet} />
+              <iframe
+                src={`https://maps.google.com/maps?saddr=${
+                  effectiveOriginLat && effectiveOriginLng
+                    ? `${effectiveOriginLat},${effectiveOriginLng}`
+                    : encodeURIComponent(effectiveOriginAddress)
+                }&daddr=${
+                  destStop.lat && destStop.lng
+                    ? `${destStop.lat},${destStop.lng}`
+                    : encodeURIComponent(destStop.address)
+                }&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                className="w-full h-full pointer-events-none"
+                loading="lazy"
+                title="Route map"
+              />
             </div>
           )}
 
